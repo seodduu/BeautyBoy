@@ -1,12 +1,13 @@
 package com.beautyboy.member;
 
+import com.beautyboy.auth.TokenProvider;
 import com.beautyboy.config.SecurityConfig;
 import com.beautyboy.member.dto.SignupRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -25,8 +26,13 @@ class MemberControllerTest {
     @Autowired
     ObjectMapper objectMapper;
 
-    @MockBean
+    @MockitoBean
     MemberService memberService;
+
+    // SecurityConfig가 TokenProvider를 필수 생성자 파라미터로 요구하므로,
+    // 이 슬라이스 컨텍스트(@WebMvcTest, auth 관련 빈 미로딩)에는 스텁 빈을 공급해야 한다.
+    @MockitoBean
+    TokenProvider tokenProvider;
 
     @Test
     void 이메일_형식이_잘못되면_400을_반환한다() throws Exception {

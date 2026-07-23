@@ -49,6 +49,14 @@ class AuthApiTest {
     }
 
     @Test
+    void 인증없이_보호된_경로에_접근하면_공통_에러_계약_형태의_바디를_반환한다() throws Exception {
+        mockMvc.perform(get("/api/v1/members/me"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value("UNAUTHORIZED"))
+                .andExpect(jsonPath("$.message").value("인증이 필요합니다"));
+    }
+
+    @Test
     void 로그인하면_액세스토큰과_리프레시_쿠키를_내려준다() throws Exception {
         MvcResult result = login("auth@b.com", "pw123456");
 
