@@ -1,9 +1,6 @@
 spring:
   application:
     name: beautyboy
-  # TODO(Task 4): 인증/인가 구현 후 아래 exclude 제거
-  autoconfigure:
-    exclude: org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
   datasource:
     url: ${DB_URL:jdbc:mysql://localhost:3306/beautyboy}
     username: ${DB_USERNAME:beautyboy}
