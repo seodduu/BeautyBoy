@@ -3,6 +3,7 @@ import { Layout } from './components/layout/Layout';
 import { Home } from './pages/Home';
 import { Login } from './pages/Login';
 import { Signup } from './pages/Signup';
+import { Showcase } from './pages/dev/Showcase';
 
 export const router = createBrowserRouter([
   {
@@ -14,4 +15,6 @@ export const router = createBrowserRouter([
       { path: 'signup', element: <Signup /> },
     ],
   },
+  // 헤더/푸터 없이 토큰·프리미티브·카드 상태만 대조하는 dev 전용 화면. 상용 라우트가 아니다.
+  { path: 'dev/components', element: <Showcase /> },
 ]);
