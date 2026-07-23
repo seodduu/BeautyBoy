@@ -5,7 +5,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 
 import java.time.LocalDateTime;
@@ -38,8 +37,9 @@ public class Payment {
     @Column(nullable = false, length = 20)
     private String status;
 
-    @Lob
-    @Column(name = "raw_response", nullable = false)
+    // DDL(V32)이 TEXT라 @Lob(=CLOB/TINYTEXT)을 쓰면 실 MySQL validate에서 타입이 어긋난다.
+    // 스키마가 진실이므로 엔티티를 TEXT에 맞춘다(catalog.Goods.description과 같은 방식).
+    @Column(name = "raw_response", nullable = false, columnDefinition = "TEXT")
     private String rawResponse;
 
     @Column(name = "approved_at", nullable = false)
