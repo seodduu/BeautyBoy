@@ -1,0 +1,58 @@
+/*
+  DESIGN.md 대응:
+  bb-field__input             → {form-field}
+  bb-field__input:focus       → {form-field-focused}
+  bb-field__input--error      → {form-field-error}
+*/
+.bb-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.bb-field__label {
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  color: var(--color-ink);
+  font-weight: 600;
+}
+
+.bb-field__input {
+  height: auto;
+  padding: var(--space-sm) 0;
+  border: none;
+  border-bottom: 1px solid var(--color-hairline-soft);
+  border-radius: var(--rounded-none);
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  transition: border-color 0.15s ease;
+}
+
+.bb-field__input::placeholder {
+  color: var(--color-stone);
+}
+
+.bb-field__input:focus {
+  outline: none;
+  border-bottom-color: var(--color-ink);
+}
+
+.bb-field__input--error {
+  border-bottom-color: var(--color-signal-danger);
+}
+
+.bb-field__hint {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--fs-meta);
+  color: var(--color-stone);
+}
+
+.bb-field__error {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--fs-meta);
+  color: var(--color-signal-danger);
+}
