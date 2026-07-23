@@ -11,11 +11,12 @@
 }
 
 .bb-skin-step__legend {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  letter-spacing: 0.08em;
+  font-family: var(--font-body);
+  font-size: var(--fs-eyebrow);
+  font-weight: var(--fw-eyebrow);
+  letter-spacing: var(--ls-eyebrow);
   text-transform: uppercase;
-  color: var(--muted-dim);
+  color: var(--color-slate);
   margin-bottom: 12px;
   padding: 0;
 }
@@ -32,9 +33,9 @@
   flex-direction: column;
   gap: 4px;
   padding: 14px 16px;
-  border-radius: 6px;
-  background: var(--surface-raised);
-  border: 1px solid var(--line);
+  border-radius: var(--rounded-sm);
+  background: var(--color-canvas);
+  border: 1px solid var(--color-hairline);
   cursor: pointer;
   transition: border-color 0.15s ease, background 0.15s ease;
 }
@@ -46,23 +47,23 @@
 }
 
 .bb-skin-type-card:hover {
-  border-color: var(--line-strong);
+  border-color: var(--color-hairline-soft);
 }
 
 .bb-skin-type-card--active {
-  border-color: var(--accent);
-  background: rgba(192, 133, 82, 0.12);
+  border-color: var(--color-ink);
+  background: var(--color-hairline);
 }
 
 .bb-skin-type-card__label {
   font-size: 14px;
   font-weight: 700;
-  color: var(--paper);
+  color: var(--color-ink);
 }
 
 .bb-skin-type-card__desc {
   font-size: 12px;
-  color: var(--muted-dim);
+  color: var(--color-stone);
 }
 
 .bb-skin-step__chip-row {
@@ -73,23 +74,23 @@
 
 .bb-chip {
   padding: 8px 16px;
-  border-radius: 999px;
-  background: var(--surface-raised);
-  border: 1px solid var(--line);
-  color: var(--muted);
+  border-radius: var(--rounded-full);
+  background: var(--color-canvas);
+  border: 1px solid var(--color-hairline);
+  color: var(--color-graphite);
   font-size: 13px;
   cursor: pointer;
   transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
 }
 
 .bb-chip:hover {
-  border-color: var(--line-strong);
+  border-color: var(--color-hairline-soft);
 }
 
 .bb-chip--active {
-  border-color: var(--accent);
-  background: rgba(192, 133, 82, 0.16);
-  color: var(--accent-strong);
+  border-color: var(--color-ink);
+  background: var(--color-hairline);
+  color: var(--color-ink);
 }
 
 @media (max-width: 480px) {

@@ -1,0 +1,33 @@
+/*
+  DESIGN.md 대응:
+  bb-price__rate → {price-discount-rate}
+  bb-price__sale → {price-sale}
+  bb-price__list → {price-list-struck}
+*/
+.bb-price {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+}
+
+.bb-price__rate {
+  font-family: var(--font-body);
+  font-size: var(--fs-body-strong);
+  font-weight: var(--fw-body-strong);
+  color: var(--color-signal-sale);
+}
+
+.bb-price__sale {
+  font-family: var(--font-body);
+  font-size: var(--fs-body-strong);
+  font-weight: var(--fw-body-strong);
+  color: var(--color-ink);
+}
+
+.bb-price__list {
+  font-family: var(--font-body);
+  font-size: var(--fs-meta);
+  color: var(--color-ash);
+  text-decoration: line-through;
+}

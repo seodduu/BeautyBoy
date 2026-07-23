@@ -1,0 +1,101 @@
+/*
+  DESIGN.md 대응:
+  bb-btn--primary        → {button-primary}
+  bb-btn--primary-on-dark → {button-primary-on-dark}
+  bb-btn--ghost          → {button-ghost}
+  bb-btn--text-link      → {button-text-link}
+*/
+.bb-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  height: 40px;
+  padding: 0 var(--space-lg);
+  border-radius: var(--rounded-full);
+  border: none;
+  font-family: var(--font-body);
+  font-size: var(--fs-button);
+  font-weight: var(--fw-button);
+  line-height: var(--lh-button);
+  letter-spacing: var(--ls-button);
+  cursor: pointer;
+  transition: background 0.15s ease, opacity 0.15s ease, color 0.15s ease;
+  white-space: nowrap;
+}
+
+.bb-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.bb-btn--primary {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+.bb-btn--primary:hover:not(:disabled) {
+  background: var(--color-ink-soft);
+}
+
+.bb-btn--primary-on-dark {
+  background: var(--color-on-primary);
+  color: var(--color-primary);
+}
+
+.bb-btn--ghost {
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  border: 1px solid var(--color-ink);
+}
+
+.bb-btn--ghost:hover:not(:disabled) {
+  background: var(--color-hairline);
+}
+
+.bb-btn--text-link {
+  height: auto;
+  padding: 4px;
+  border-radius: var(--rounded-xs);
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-size: var(--fs-link-sm);
+  font-weight: var(--fw-link-sm);
+  line-height: var(--lh-link-sm);
+}
+
+.bb-btn--text-link:hover:not(:disabled) {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.bb-btn__spinner {
+  width: 14px;
+  height: 14px;
+  border-radius: var(--rounded-full);
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  animation: bb-btn-spin 0.7s linear infinite;
+}
+
+@keyframes bb-btn-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bb-btn__spinner {
+    animation: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .bb-btn {
+    height: 48px;
+  }
+
+  .bb-btn--text-link {
+    height: auto;
+  }
+}

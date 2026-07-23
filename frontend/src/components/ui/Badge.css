@@ -1,0 +1,31 @@
+/*
+  DESIGN.md 대응:
+  bb-badge--sale        → {badge-sale}
+  bb-badge--neutral     → {badge-neutral}
+  bb-badge--today-dream → {badge-today-dream}
+*/
+.bb-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px;
+  border-radius: var(--rounded-none);
+  background: var(--color-canvas);
+  font-family: var(--font-body);
+  font-size: var(--fs-micro-caps);
+  font-weight: var(--fw-micro-caps);
+  line-height: var(--lh-micro-caps);
+  letter-spacing: var(--ls-micro-caps);
+  text-transform: uppercase;
+}
+
+.bb-badge--sale {
+  color: var(--color-signal-sale);
+}
+
+.bb-badge--neutral {
+  color: var(--color-graphite);
+}
+
+.bb-badge--today-dream {
+  color: var(--color-signal-success);
+}

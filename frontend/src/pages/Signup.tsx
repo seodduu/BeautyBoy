@@ -5,6 +5,8 @@ import './Auth.css';
 import { SkinProfileStep } from '../components/signup/SkinProfileStep';
 import { fetchMe, login, signup, type AgeBand, type Concern, type SkinType } from '../api/auth';
 import { useAuthStore } from '../stores/authStore';
+import { Button } from '../components/ui/Button';
+import { Field } from '../components/ui/Field';
 
 interface AccountFields {
   email: string;
@@ -82,49 +84,41 @@ export function Signup() {
 
       {step === 1 ? (
         <form className="bb-auth__form" onSubmit={goToProfileStep}>
-          <div className="bb-auth__field">
-            <label htmlFor="signup-email">이메일</label>
-            <input
-              id="signup-email"
-              type="email"
-              required
-              autoComplete="email"
-              value={account.email}
-              onChange={(e) => setAccount((prev) => ({ ...prev, email: e.target.value }))}
-            />
-          </div>
+          <Field
+            id="signup-email"
+            label="이메일"
+            type="email"
+            required
+            autoComplete="email"
+            value={account.email}
+            onChange={(value) => setAccount((prev) => ({ ...prev, email: value }))}
+          />
 
-          <div className="bb-auth__field">
-            <label htmlFor="signup-password">비밀번호</label>
-            <input
-              id="signup-password"
-              type="password"
-              required
-              minLength={8}
-              autoComplete="new-password"
-              value={account.password}
-              onChange={(e) => setAccount((prev) => ({ ...prev, password: e.target.value }))}
-            />
-            <p className="bb-auth__hint">8자 이상 입력해주세요.</p>
-          </div>
+          <Field
+            id="signup-password"
+            label="비밀번호"
+            type="password"
+            required
+            minLength={8}
+            autoComplete="new-password"
+            value={account.password}
+            onChange={(value) => setAccount((prev) => ({ ...prev, password: value }))}
+            hint="8자 이상 입력해주세요."
+          />
 
-          <div className="bb-auth__field">
-            <label htmlFor="signup-nickname">닉네임</label>
-            <input
-              id="signup-nickname"
-              type="text"
-              required
-              autoComplete="nickname"
-              value={account.nickname}
-              onChange={(e) => setAccount((prev) => ({ ...prev, nickname: e.target.value }))}
-            />
-          </div>
+          <Field
+            id="signup-nickname"
+            label="닉네임"
+            type="text"
+            required
+            autoComplete="nickname"
+            value={account.nickname}
+            onChange={(value) => setAccount((prev) => ({ ...prev, nickname: value }))}
+          />
 
           {error && <p className="bb-auth__error">{error}</p>}
 
-          <button type="submit" className="bb-auth__submit">
-            다음
-          </button>
+          <Button type="submit">다음</Button>
         </form>
       ) : (
         <div className="bb-auth__form">
@@ -145,22 +139,12 @@ export function Signup() {
           {error && <p className="bb-auth__error">{error}</p>}
 
           <div className="bb-auth__actions">
-            <button
-              type="button"
-              className="bb-auth__submit bb-auth__submit--ghost"
-              disabled={submitting}
-              onClick={() => completeSignup(false)}
-            >
+            <Button variant="ghost" loading={submitting} onClick={() => completeSignup(false)}>
               건너뛰기
-            </button>
-            <button
-              type="button"
-              className="bb-auth__submit"
-              disabled={submitting}
-              onClick={() => completeSignup(true)}
-            >
+            </Button>
+            <Button loading={submitting} onClick={() => completeSignup(true)}>
               가입 완료
-            </button>
+            </Button>
           </div>
         </div>
       )}

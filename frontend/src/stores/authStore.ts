@@ -22,17 +22,26 @@ interface AuthState {
    */
   accessToken: string | null;
   member: MemberInfo | null;
+  /**
+   * 앱 부트스트랩(최초 `/auth/refresh` 시도) 진행 중 여부.
+   * Header는 이 값이 true인 동안 로그인/로그아웃 영역 대신 스켈레톤을 보여준다 —
+   * 복구 완료 전에 "로그인" 링크를 먼저 보여줬다가 닉네임으로 바뀌는 깜빡임을 막기 위함.
+   */
+  isBootstrapping: boolean;
   setAuth: (accessToken: string, member?: MemberInfo) => void;
   clear: () => void;
+  setBootstrapping: (value: boolean) => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
   accessToken: null,
   member: null,
+  isBootstrapping: true,
   setAuth: (accessToken, member) =>
     set((state) => ({
       accessToken,
       member: member ?? state.member,
     })),
   clear: () => set({ accessToken: null, member: null }),
+  setBootstrapping: (value) => set({ isBootstrapping: value }),
 }));

@@ -1,22 +1,25 @@
+/* DESIGN.md에서 footer는 유일하게 다크로 남는 영역이다
+   (colors.footer #030303 배경 + colors.on-primary 흰 글자). */
 .bb-footer {
   margin-top: auto;
-  background: var(--surface);
-  border-top: 1px solid var(--line);
+  background: var(--color-footer);
+  border-top: 1px solid var(--color-footer);
+  color: var(--color-on-primary);
 }
 
 .bb-footer__tick-rule {
   height: 14px;
   background-image: repeating-linear-gradient(
     to right,
-    var(--line-strong) 0,
-    var(--line-strong) 1px,
+    var(--color-slate) 0,
+    var(--color-slate) 1px,
     transparent 1px,
     transparent 12px
   );
   background-position: bottom;
   background-repeat: repeat-x;
   background-size: auto 100%;
-  opacity: 0.7;
+  opacity: 0.5;
 }
 
 .bb-footer__inner {
@@ -34,25 +37,27 @@
   letter-spacing: 0.02em;
   text-transform: uppercase;
   margin-bottom: 10px;
+  color: var(--color-on-primary);
 }
 
 .bb-footer__brand-dot {
-  color: var(--accent);
+  color: var(--color-on-primary);
 }
 
 .bb-footer__desc {
   font-size: 13px;
   line-height: 1.7;
-  color: var(--muted);
+  color: var(--color-slate-soft);
   max-width: 34ch;
 }
 
 .bb-footer__heading {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.08em;
+  font-family: var(--font-body);
+  font-size: var(--fs-eyebrow);
+  font-weight: var(--fw-eyebrow);
+  letter-spacing: var(--ls-eyebrow);
   text-transform: uppercase;
-  color: var(--muted-dim);
+  color: var(--color-stone);
   margin-bottom: 12px;
 }
 
@@ -64,7 +69,7 @@
   flex-direction: column;
   gap: 8px;
   font-size: 13px;
-  color: var(--muted);
+  color: var(--color-on-primary);
 }
 
 .bb-footer__bottom {
@@ -74,9 +79,9 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 11px;
-  color: var(--muted-dim);
+  color: var(--color-stone);
 }
 
 @media (max-width: 640px) {
