@@ -73,6 +73,12 @@ typography:
     fontSize: 20px
     fontWeight: 400
     lineHeight: 1
+  nav-link:
+    # 헤더 내비 전용. body(16px)는 헤더에서 작고 subtitle(20px)은 본문 위계를 침범한다.
+    fontFamily: abcNormal
+    fontSize: 18px
+    fontWeight: 400
+    lineHeight: 1.4
   body:
     fontFamily: abcNormal
     fontSize: 16px

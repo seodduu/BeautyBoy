@@ -83,6 +83,10 @@
   --lh-heading-sm: 1.2;
   --ls-heading-sm: 0;
 
+  /* 헤더 내비 전용 (DESIGN.md typography.nav-link) */
+  --fs-nav-link: 18px;
+  --lh-nav-link: 1.4;
+
   --fs-subtitle: 20px;
   --fw-subtitle: 400;
   --lh-subtitle: 1.3;

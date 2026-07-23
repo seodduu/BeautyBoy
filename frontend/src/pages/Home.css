@@ -36,8 +36,8 @@
   justify-self: end;
   text-align: right;
   font-family: var(--font-body);
-  /* 레퍼런스와 나란히 재보니 body(16px)는 이 화면에서 작다 — subtitle로 올린다 */
-  font-size: var(--fs-subtitle);
+  /* 레퍼런스의 줄간격(23px)을 역산하면 16px이다 — subtitle로 올렸던 것을 되돌린다 */
+  font-size: var(--fs-body);
   line-height: var(--lh-body);
   color: var(--color-on-primary);
   word-break: keep-all;

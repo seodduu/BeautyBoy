@@ -3,7 +3,8 @@ import './Header.css';
 import { useAuthStore } from '../../stores/authStore';
 import { logout } from '../../api/auth';
 
-const LANDING_NAV = ['About', 'Work', 'Services', 'Packages', 'Contact'] as const;
+/* 라우트가 없는 자리표시 항목들. Login은 실제 화면이 있으므로 아래에서 링크로 따로 낸다. */
+const LANDING_NAV = ['About', 'Work', 'Services', 'Packages'] as const;
 
 /**
  * 올리브영식 헤더: 로고 / 검색바 자리(실제 검색은 후속 웨이브) / 장바구니·로그인.
@@ -39,12 +40,15 @@ export function Header() {
           </Link>
 
           {/* 해당 화면들은 후속 웨이브 범위 — 기존 헤더의 "준비 중" 항목과 같이 자리만 잡는다 */}
-          <nav className="bb-landing-nav" aria-label="주요 메뉴(준비 중)">
+          <nav className="bb-landing-nav" aria-label="주요 메뉴">
             {LANDING_NAV.map((label) => (
               <span className="bb-landing-nav__item" key={label}>
                 {label}
               </span>
             ))}
+            <Link to="/login" className="bb-landing-nav__item bb-landing-nav__item--link">
+              Login
+            </Link>
           </nav>
         </div>
       </header>

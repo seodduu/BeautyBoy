@@ -25,16 +25,25 @@
 .bb-landing-nav {
   display: flex;
   align-items: center;
-  gap: var(--space-lg);
+  /* 레퍼런스는 항목 간격이 글자폭의 0.7배쯤 된다 — lg(24px)로는 붙어 보인다 */
+  gap: var(--space-xl);
 }
 
 .bb-landing-nav__item {
   font-family: var(--font-body);
-  /* 레퍼런스 대비 실측했을 때 body(16px)는 작다 */
-  font-size: var(--fs-subtitle);
-  line-height: var(--lh-body);
+  font-size: var(--fs-nav-link);
+  line-height: var(--lh-nav-link);
   color: var(--color-on-primary);
   white-space: nowrap;
+}
+
+/* Login만 실제 링크다 — 호버로 눌리는 항목임을 알린다 */
+.bb-landing-nav__item--link {
+  transition: opacity 0.15s ease;
+}
+
+.bb-landing-nav__item--link:hover {
+  opacity: 0.7;
 }
 
 @media (max-width: 768px) {
