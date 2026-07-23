@@ -88,6 +88,7 @@ export function Signup() {
             id="signup-email"
             label="이메일"
             type="email"
+            inputMode="email"
             required
             autoComplete="email"
             value={account.email}
