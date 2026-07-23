@@ -19,8 +19,12 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+// SecurityConfig는 전역 인가 경계를 가진다(모든 요청 인증 필요).
+// 이 테스트는 GlobalExceptionHandler의 예외 변환 로직만 검증하는 것이 목적이므로,
+// 실제 보안 정책과 무관한 임시 TestController 경로(/test/dup, /test/validate)에 대해
+// 서블릿 필터체인을 비활성화한다. 프로덕션 SecurityConfig는 변경하지 않는다.
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
-@AutoConfigureMockMvc
+@AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("test")
 @Import(GlobalExceptionHandlerTest.TestController.class)
 class GlobalExceptionHandlerTest {
