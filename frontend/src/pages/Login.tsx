@@ -52,6 +52,7 @@ export function Login() {
           id="login-email"
           label="이메일"
           type="email"
+          inputMode="email"
           required
           autoComplete="email"
           value={email}

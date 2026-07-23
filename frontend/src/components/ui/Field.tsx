@@ -32,7 +32,7 @@ export function Field({ id, label, value, onChange, error, hint, ...rest }: Fiel
         {...rest}
       />
       {error && (
-        <p id={helperId} className="bb-field__error">
+        <p id={helperId} className="bb-field__error" role="alert">
           {error}
         </p>
       )}

@@ -10,8 +10,11 @@ import './Layout.css';
 export function Layout() {
   return (
     <div className="bb-layout">
+      <a className="bb-skip-link" href="#main-content">
+        본문 바로가기
+      </a>
       <Header />
-      <main className="bb-layout__main">
+      <main id="main-content" className="bb-layout__main">
         <Outlet />
       </main>
       <Footer />

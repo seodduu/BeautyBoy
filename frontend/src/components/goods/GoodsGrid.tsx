@@ -1,4 +1,5 @@
 import type { GoodsListItem } from '../../types/goods';
+import { EmptyState } from '../common/EmptyState';
 import { GoodsCard } from './GoodsCard';
 import { GoodsCardSkeleton } from './GoodsCardSkeleton';
 import './GoodsGrid.css';
@@ -28,6 +29,10 @@ export function GoodsGrid({
         ))}
       </div>
     );
+  }
+
+  if (items.length === 0) {
+    return <EmptyState title="표시할 상품이 없어요" description="다른 조건으로 다시 찾아보세요" />;
   }
 
   return (
