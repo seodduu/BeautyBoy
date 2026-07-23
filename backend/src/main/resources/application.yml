@@ -21,3 +21,7 @@ jwt:
   secret: ${JWT_SECRET:}
   access-exp-minutes: 30
   refresh-exp-days: 14
+
+toss:
+  secret-key: ${TOSS_SECRET_KEY:}
+  base-url: ${TOSS_BASE_URL:https://api.tosspayments.com}
