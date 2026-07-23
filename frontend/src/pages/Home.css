@@ -8,7 +8,12 @@
       rgba(255, 255, 255, 0.08),
       transparent 55%
     ),
-    linear-gradient(155deg, #232323 0%, var(--color-scrim) 55%, #0f0f0f 100%);
+    linear-gradient(
+      155deg,
+      color-mix(in srgb, var(--color-scrim), white 6%) 0%,
+      var(--color-scrim) 55%,
+      color-mix(in srgb, var(--color-scrim), black 45%) 100%
+    );
   padding: var(--space-section-lg) 24px;
 }
 
