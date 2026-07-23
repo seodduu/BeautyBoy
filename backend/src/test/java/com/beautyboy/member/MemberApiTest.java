@@ -251,6 +251,34 @@ class MemberApiTest {
     }
 
     @Test
+    void 배송지가_3개일때_이미_비기본인_배송지를_수정해도_기본배송지는_정확히_1개_유지된다() throws Exception {
+        Long firstId = createAddress(tokenA, "A집", false);
+        createAddress(tokenA, "B집", false);
+        createAddress(tokenA, "C집", true);
+
+        // A는 원래도 비기본이었다. 다른 필드만 바꾸며 isDefault=false로 수정 요청한다.
+        String body = objectMapper.writeValueAsString(addressFixture("A집갱신", false));
+        mockMvc.perform(put("/api/v1/members/me/addresses/" + firstId)
+                        .header("Authorization", "Bearer " + tokenA)
+                        .contentType("application/json")
+                        .content(body))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.isDefault").value(false));
+
+        MvcResult listResult = mockMvc.perform(get("/api/v1/members/me/addresses").header("Authorization", "Bearer " + tokenA))
+                .andExpect(status().isOk())
+                .andReturn();
+        JsonNode list = objectMapper.readTree(listResult.getResponse().getContentAsString()).get("data");
+        long defaultCount = 0;
+        for (JsonNode node : list) {
+            if (node.get("isDefault").asBoolean()) {
+                defaultCount++;
+            }
+        }
+        assertThat(defaultCount).isEqualTo(1);
+    }
+
+    @Test
     void 배송지가_2개일때_기본배송지를_삭제하면_남은_배송지가_기본이_된다() throws Exception {
         Long firstId = createAddress(tokenA, "첫집", true);
         Long secondId = createAddress(tokenA, "둘째집", false);

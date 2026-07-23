@@ -52,19 +52,20 @@ public class AddressService {
 
         List<Address> memberAddresses = addressRepository.findByMemberId(memberId);
         boolean isOnlyAddress = memberAddresses.size() == 1;
+        boolean wasDefault = address.isDefault();
         // 회원의 유일한 배송지라면 기본배송지 지정을 해제하는 요청이 와도 불변식을 지키기 위해 기본을 유지한다.
         boolean shouldBeDefault = request.isDefault() || isOnlyAddress;
 
-        if (shouldBeDefault && !address.isDefault()) {
+        if (shouldBeDefault && !wasDefault) {
             unmarkExistingDefault(memberId);
         }
 
         address.update(request.receiver(), request.phone(), request.zipcode(), request.address1(),
                 request.address2(), request.latitude(), request.longitude(), shouldBeDefault);
 
-        // 현재 기본배송지를 비기본으로 바꾸는 요청이면서 다른 배송지가 남아 있다면,
+        // 원래 기본배송지였는데 이번 수정으로 비기본이 되는 경우에만,
         // "기본배송지 1개 보장" 불변식을 지키기 위해 남은 배송지 중 id가 가장 작은 것을 새 기본으로 승격한다.
-        if (!shouldBeDefault) {
+        if (wasDefault && !shouldBeDefault) {
             memberAddresses.stream()
                     .filter(a -> !a.getId().equals(address.getId()))
                     .min(Comparator.comparing(Address::getId))
