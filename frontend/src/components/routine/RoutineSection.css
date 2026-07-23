@@ -3,8 +3,11 @@
 .bb-routine {
   padding: var(--space-section-lg) 0;
   border-top: 1px solid var(--color-hairline);
-  /* 앵커로 점프할 때 Main의 sticky 네비 아래로 섹션이 숨지 않게 여유를 준다. */
-  scroll-margin-top: var(--space-section);
+  /* 앵커로 점프할 때 실제로 화면 위를 덮는 것은 sticky 헤더(64px) + sticky 네비(약 53px) 합계다.
+     두 값은 Main.css의 .bb-main에서 정의하는 레이아웃 지역 상수(--bb-header-h, --bb-nav-h)이며,
+     .bb-routine이 .bb-main 안에 렌더될 때는 상속되어 그대로 쓰인다. RoutineSection이 /main 밖에서
+     단독으로 쓰일 경우를 대비해 동일한 값을 fallback으로 둔다. */
+  scroll-margin-top: calc(var(--bb-header-h, 64px) + var(--bb-nav-h, 53px));
 }
 
 .bb-routine:first-of-type {
