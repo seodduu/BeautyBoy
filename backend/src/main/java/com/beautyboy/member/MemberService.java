@@ -2,6 +2,7 @@ package com.beautyboy.member;
 
 import com.beautyboy.common.BusinessException;
 import com.beautyboy.common.ErrorCode;
+import com.beautyboy.member.dto.MemberCredentials;
 import com.beautyboy.member.dto.MemberResponse;
 import com.beautyboy.member.dto.SignupRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -34,6 +35,30 @@ public class MemberService {
 
         Member saved = memberRepository.save(member);
         return MemberResponse.from(saved);
+    }
+
+    /**
+     * auth 도메인이 로그인 시 자격증명을 검증하기 위한 진입점.
+     * 이메일 미존재/비밀번호 불일치를 구분하지 않고 동일한 예외를 던진다(정보 노출 방지).
+     */
+    public MemberCredentials authenticate(String email, String rawPassword) {
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_LOGIN_FAILED));
+
+        if (!passwordEncoder.matches(rawPassword, member.getPasswordHash())) {
+            throw new BusinessException(ErrorCode.MEMBER_LOGIN_FAILED);
+        }
+
+        return new MemberCredentials(member.getId(), member.getRole().name());
+    }
+
+    /**
+     * auth 도메인이 리프레시 로테이션 시 최신 role을 조회하기 위한 진입점.
+     */
+    public MemberCredentials getCredentials(Long memberId) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.UNAUTHORIZED));
+        return new MemberCredentials(member.getId(), member.getRole().name());
     }
 
     private boolean hasProfileData(SignupRequest request) {
