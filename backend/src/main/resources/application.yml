@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: beautyboy
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/beautyboy}
+    username: ${DB_USERNAME:beautyboy}
+    password: ${DB_PASSWORD:}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+
+jwt:
+  secret: ${JWT_SECRET:}
+  access-exp-minutes: 30
+  refresh-exp-days: 14

@@ -1,0 +1,17 @@
+# application-local.yml (example)
+#
+# 사용법: 이 파일을 같은 디렉터리에 application-local.yml 로 복사해서 사용한다.
+# application-local.yml 은 .gitignore 대상이며 커밋되지 않는다.
+#
+# 아래 비밀번호(local1234)는 docker-compose.yml의 로컬 전용 MySQL 컨테이너 값과 짝을 이루는
+# 예시로, 이 저장소에서 커밋되는 유일한 자격증명 예시다. 실제 운영/스테이징 값은 절대 넣지 않는다.
+#
+# JWT 시크릿(jwt.secret)은 이 파일이 아니라 환경변수 JWT_SECRET으로 주입한다(README 참고).
+# TokenProvider가 Base64.decode(secret)로 HMAC 키를 만들기 때문에 반드시 Base64로 인코딩된
+# 값이어야 한다. 예: export JWT_SECRET="$(openssl rand -base64 48)"
+# 평문 문자열을 그대로 넣으면 DecodingException으로 컨텍스트 로딩이 실패한다.
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/beautyboy
+    username: root
+    password: local1234

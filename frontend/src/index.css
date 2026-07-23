@@ -1,0 +1,92 @@
+/*
+  뷰티보이 디자인 토큰
+  ------------------------------------------------------------
+  방향: 남성 그루밍 제품 특유의 "실험실/이발소" 절제미.
+  올리브영의 밝은 화이트+올리브그린과 의도적으로 대비되는
+  다크 차콜 베이스 + 황동(brass) 포인트로 브랜드를 분리한다.
+  이 프로젝트는 하나의 정체성을 가진 커머스 셸이므로
+  라이트/다크 시스템 설정과 무관하게 다크 톤을 고정한다.
+*/
+:root {
+  --ink: #15181b;
+  --surface: #1c2024;
+  --surface-raised: #23282c;
+  --paper: #ece7e0;
+  --muted: #9aa0a3;
+  --muted-dim: #6b7174;
+  --accent: #c08552;
+  --accent-strong: #dd9c66;
+  --accent-dim: #8c6039;
+  --line: rgba(236, 231, 224, 0.1);
+  --line-strong: rgba(236, 231, 224, 0.18);
+
+  --font-body:
+    'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont,
+    'Apple SD Gothic Neo', 'Malgun Gothic', system-ui, sans-serif;
+  --font-mono:
+    ui-monospace, 'SFMono-Regular', 'Menlo', 'Consolas', monospace;
+
+  color-scheme: dark;
+  font: 16px/1.6 var(--font-body);
+  color: var(--paper);
+  background: var(--ink);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100svh;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100svh;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-body);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--paper);
+  margin: 0;
+}
+
+p {
+  margin: 0;
+  color: var(--muted);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font-family: inherit;
+}
+
+/* 접근성: 키보드 포커스 표시는 항상 유지 */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

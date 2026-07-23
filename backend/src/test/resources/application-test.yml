@@ -1,0 +1,10 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:beautyboy;MODE=MySQL;DATABASE_TO_LOWER=TRUE
+  jpa:
+    hibernate: { ddl-auto: create-drop }
+  flyway: { enabled: false }
+jwt:
+  secret: dGVzdC1zZWNyZXQtdGVzdC1zZWNyZXQtdGVzdC1zZWNyZXQ=
+  access-exp-minutes: 30
+  refresh-exp-days: 14

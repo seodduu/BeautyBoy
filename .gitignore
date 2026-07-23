@@ -1,0 +1,9 @@
+# 로컬 전용 설정/시크릿
+application-local.yml
+.env.local
+
+# Node
+node_modules/
+
+# 빌드 산출물
+build/
