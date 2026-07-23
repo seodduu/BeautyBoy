@@ -723,23 +723,27 @@ git add docs/plans/2026-07-23-wave1-catalog-frontbase.md
 git commit -m "docs(plan): Wave 1 카탈로그·프론트 기반 계획"
 ```
 
-### 1) 그 커밋을 기점으로 worktree 2개를 만든다
+### 1) worktree 생성은 아래 각 터미널 블록에 포함돼 있다
+
+§2·§3의 bash 블록이 `git worktree add` + 진입 + **기점 확인**까지 자체 완결로 담고 있다.
+터미널마다 그 블록을 통째로 실행한 뒤 프롬프트를 붙여넣는다 — 프롬프트만 복사해 즉흥으로
+브랜치를 만들면 기점이 어긋난다.
+
+두 브랜치 모두 §0의 계획서 커밋을 가리켜야 하며, 어긋나면 해당 커밋에서 브랜치를 다시 따거나
+cherry-pick 한다. 전체 현황은 `git worktree list`로 확인한다.
+
+### 2) 터미널 A (T1 — 카탈로그)
+
+**먼저 이 명령을 실행해 worktree를 만들고 진입한다.** 브랜치를 즉흥으로 만들면 기점이 어긋난다.
 
 ```bash
+cd "/Users/doo._.hyun/Study/Project/Beauty Boy"
 git worktree add ../BeautyBoy-w1-catalog -b feat/catalog
-git worktree add ../BeautyBoy-w1-front   -b feat/front-base
+cd ../BeautyBoy-w1-catalog
+git log --oneline -1     # "docs(plan): Wave 1 ..." 커밋이어야 한다. 아니면 중단하고 보고
 ```
 
-**브랜치 기점 확인 (필수)** — 두 브랜치가 모두 계획서 커밋을 포함해야 한다:
-
-```bash
-git log --oneline -1 feat/catalog
-git log --oneline -1 feat/front-base
-# 둘 다 위 "docs(plan): Wave 1 ..." 커밋을 가리켜야 한다.
-# 어긋나면 해당 커밋에서 브랜치를 다시 따거나 cherry-pick 한다.
-```
-
-### 2) 터미널 A — `cd ../BeautyBoy-w1-catalog` 후 Claude Code에 붙여넣기
+그 디렉터리에서 Claude Code를 열고 아래를 붙여넣는다:
 
 ```
 CLAUDE.md와 docs/plans/2026-07-23-wave1-catalog-frontbase.md를 읽고, 그중 "터미널 T1 — feat/catalog"
@@ -760,7 +764,19 @@ Task 1-5 서브에이전트 브리프에는 GoodsQueryService.exists(Long) 인�
 전 태스크 완료 후 ./gradlew test 결과와 Task 1-8의 curl 시나리오 출력을 전부 보고해.
 ```
 
-### 3) 터미널 B — `cd ../BeautyBoy-w1-front` 후 Claude Code에 붙여넣기
+### 3) 터미널 B (T2 — 프론트 기반)
+
+**먼저 이 명령을 실행해 worktree를 만들고 진입한다.**
+
+```bash
+cd "/Users/doo._.hyun/Study/Project/Beauty Boy"
+git worktree add ../BeautyBoy-w1-front -b feat/front-base
+cd ../BeautyBoy-w1-front
+git log --oneline -1     # "docs(plan): Wave 1 ..." 커밋이어야 한다. 아니면 중단하고 보고
+ls DESIGN.md             # 이 파일이 없으면 커밋이 안 된 것 — 중단하고 보고
+```
+
+그 디렉터리에서 Claude Code를 열고 아래를 붙여넣는다:
 
 ```
 CLAUDE.md, 루트 DESIGN.md, docs/plans/2026-07-23-wave1-catalog-frontbase.md를 읽고, 그중
