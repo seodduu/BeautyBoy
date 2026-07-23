@@ -82,6 +82,29 @@
   font-weight: 600;
 }
 
+.bb-header__logout {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--color-ink-soft);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.bb-header__logout:hover {
+  color: var(--color-ink);
+}
+
+.bb-header__auth-skeleton {
+  display: inline-block;
+  width: 56px;
+  height: 16px;
+  border-radius: var(--rounded-xs);
+  background: var(--color-hairline);
+}
+
 .bb-header__cart-count {
   display: inline-flex;
   align-items: center;
@@ -100,11 +123,20 @@
 
 @media (max-width: 640px) {
   .bb-header__bar {
-    gap: 16px;
+    gap: 12px;
     padding: 0 16px;
   }
 
   .bb-header__search-text {
     display: none;
+  }
+
+  .bb-header__search {
+    padding: 0 10px;
+  }
+
+  .bb-header__nav {
+    gap: 10px;
+    font-size: 12px;
   }
 }

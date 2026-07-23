@@ -1,13 +1,27 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import './Header.css';
 import { useAuthStore } from '../../stores/authStore';
+import { logout } from '../../api/auth';
 
 /**
  * 올리브영식 헤더: 로고 / 검색바 자리(실제 검색은 후속 웨이브) / 장바구니·로그인.
- * 로그인 상태(authStore.member)면 "로그인" 링크 대신 닉네임을 표시한다.
+ * 로그인 상태(authStore.member)면 "로그인" 링크 대신 닉네임 + 로그아웃 버튼을 표시한다.
+ * 앱 부트스트랩(세션 복구) 진행 중에는 이 영역을 스켈레톤으로 대체해 깜빡임을 막는다.
  */
 export function Header() {
   const member = useAuthStore((state) => state.member);
+  const isBootstrapping = useAuthStore((state) => state.isBootstrapping);
+  const clear = useAuthStore((state) => state.clear);
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } finally {
+      clear();
+      navigate('/');
+    }
+  };
 
   return (
     <header className="bb-header">
@@ -31,10 +45,17 @@ export function Header() {
             장바구니
             <span className="bb-header__cart-count">0</span>
           </span>
-          {member ? (
-            <span className="bb-header__nav-link bb-header__nav-link--member" aria-label="로그인됨">
-              {member.nickname}님
-            </span>
+          {isBootstrapping ? (
+            <span className="bb-header__auth-skeleton" aria-hidden="true" />
+          ) : member ? (
+            <>
+              <span className="bb-header__nav-link bb-header__nav-link--member" aria-label="로그인됨">
+                {member.nickname}님
+              </span>
+              <button type="button" className="bb-header__logout" onClick={handleLogout}>
+                로그아웃
+              </button>
+            </>
           ) : (
             <Link to="/login" className="bb-header__nav-link">
               로그인
