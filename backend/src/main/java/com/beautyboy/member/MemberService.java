@@ -3,7 +3,9 @@ package com.beautyboy.member;
 import com.beautyboy.common.BusinessException;
 import com.beautyboy.common.ErrorCode;
 import com.beautyboy.member.dto.MemberCredentials;
+import com.beautyboy.member.dto.MemberMeResponse;
 import com.beautyboy.member.dto.MemberResponse;
+import com.beautyboy.member.dto.ProfileRequest;
 import com.beautyboy.member.dto.SignupRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -59,6 +61,29 @@ public class MemberService {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.UNAUTHORIZED));
         return new MemberCredentials(member.getId(), member.getRole().name());
+    }
+
+    @Transactional(readOnly = true)
+    public MemberMeResponse getMe(Long memberId) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND));
+        return MemberMeResponse.from(member);
+    }
+
+    /**
+     * PUT 시맨틱에 맞춰 프로필을 통째로 교체(upsert)한다. 기존 값과의 병합(partial update)은 하지 않는다.
+     * MemberProfile은 값객체 성격(세터 없음)이라 Member의 cascade(ALL)+orphanRemoval을 이용해
+     * 기존 프로필을 고아 제거하고 새 프로필을 그 자리에 대입한다.
+     */
+    @Transactional
+    public MemberMeResponse updateProfile(Long memberId, ProfileRequest request) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND));
+
+        MemberProfile profile = new MemberProfile(request.skinType(), request.concerns(), request.ageBand());
+        member.assignProfile(profile);
+
+        return MemberMeResponse.from(member);
     }
 
     private boolean hasProfileData(SignupRequest request) {

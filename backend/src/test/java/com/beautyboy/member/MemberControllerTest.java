@@ -29,6 +29,10 @@ class MemberControllerTest {
     @MockitoBean
     MemberService memberService;
 
+    // Task 6에서 MemberController 생성자에 AddressService가 추가되어 슬라이스 컨텍스트에도 필요하다.
+    @MockitoBean
+    AddressService addressService;
+
     // SecurityConfig가 TokenProvider를 필수 생성자 파라미터로 요구하므로,
     // 이 슬라이스 컨텍스트(@WebMvcTest, auth 관련 빈 미로딩)에는 스텁 빈을 공급해야 한다.
     @MockitoBean
