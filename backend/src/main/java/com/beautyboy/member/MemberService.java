@@ -72,16 +72,24 @@ public class MemberService {
 
     /**
      * PUT 시맨틱에 맞춰 프로필을 통째로 교체(upsert)한다. 기존 값과의 병합(partial update)은 하지 않는다.
-     * MemberProfile은 값객체 성격(세터 없음)이라 Member의 cascade(ALL)+orphanRemoval을 이용해
-     * 기존 프로필을 고아 제거하고 새 프로필을 그 자리에 대입한다.
+     * MemberProfile은 member_profile 테이블에 @MapsId로 공유 PK 매핑되어 있고 Member가
+     * cascade(ALL)+orphanRemoval로 소유한다. 이미 프로필이 있는데 새 인스턴스로 재할당하면
+     * orphanRemoval이 기존 인스턴스를 삭제 대상으로 표시한 채로 같은 PK를 가진 새 인스턴스가
+     * 다시 저장되려 해서 Hibernate가 거부한다(ObjectDeletedException). 따라서 이미 프로필이
+     * 있으면 기존 인스턴스의 필드만 갱신하고, 없을 때만 새로 만들어 연관을 맺는다.
      */
     @Transactional
     public MemberMeResponse updateProfile(Long memberId, ProfileRequest request) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND));
 
-        MemberProfile profile = new MemberProfile(request.skinType(), request.concerns(), request.ageBand());
-        member.assignProfile(profile);
+        MemberProfile profile = member.getProfile();
+        if (profile == null) {
+            profile = new MemberProfile(request.skinType(), request.concerns(), request.ageBand());
+            member.assignProfile(profile);
+        } else {
+            profile.updateFields(request.skinType(), request.concerns(), request.ageBand());
+        }
 
         return MemberMeResponse.from(member);
     }

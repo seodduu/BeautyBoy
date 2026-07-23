@@ -3,6 +3,7 @@ package com.beautyboy.member;
 import com.beautyboy.member.dto.SignupRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.JsonNode;
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,6 +38,9 @@ class MemberApiTest {
 
     @Autowired
     MemberService memberService;
+
+    @Autowired
+    EntityManager entityManager;
 
     String tokenA;
     String tokenB;
@@ -137,6 +141,13 @@ class MemberApiTest {
                         .content(firstBody))
                 .andExpect(status().isOk());
 
+        // 첫 PUT의 변경을 실제로 DB에 반영하고 영속성 컨텍스트를 비운다.
+        // 이렇게 하지 않으면 두 PUT이 같은 1차 캐시(EntityManager)를 공유해서
+        // 두 번째 PUT이 실제 DB 왕복 없이 메모리상의 객체만 바꾸고 끝나버려,
+        // "deleted object would be re-saved by cascade" 결함이 재현되지 않는다.
+        entityManager.flush();
+        entityManager.clear();
+
         String secondBody = objectMapper.writeValueAsString(new ProfileRequestFixture("DRY", List.of("PORE"), "30s"));
         mockMvc.perform(put("/api/v1/members/me/profile")
                         .header("Authorization", "Bearer " + tokenA)
@@ -144,6 +155,11 @@ class MemberApiTest {
                         .content(secondBody))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.skinType").value("DRY"));
+
+        // 두 번째 PUT의 변경도 실제로 flush시켜, orphanRemoval + 재대입 충돌이
+        // 여기서 예외로 드러나는지 확인한다.
+        entityManager.flush();
+        entityManager.clear();
 
         mockMvc.perform(get("/api/v1/members/me").header("Authorization", "Bearer " + tokenA))
                 .andExpect(status().isOk())
