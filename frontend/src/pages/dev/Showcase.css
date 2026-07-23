@@ -74,7 +74,7 @@
 .bb-showcase__row--dark {
   background: var(--color-scrim);
   padding: var(--space-lg);
-  border-radius: var(--rounded-lg);
+  border-radius: var(--rounded-xl);
 }
 
 /* ---- 색 팔레트 ---- */

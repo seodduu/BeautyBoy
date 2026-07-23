@@ -17,7 +17,10 @@ colors:
   hairline: "#e7eaf0"
   hairline-soft: "#c9ccd1"
   surface-cool: "#d0d4d4"
-  canvas: "#ffffff"
+  # 캔버스는 순백이 아니라 오프화이트다 — 그래야 그 위에 놓인 surface(카드·패널)가
+  # 테두리나 그림자 없이 면의 명도차만으로 분리된다. 순백 위에서는 그 차이가 안 보인다.
+  canvas: "#f7f7f7"
+  surface: "#ebebeb"          # 카드·패널 면. canvas보다 한 단계 어둡다
   canvas-warm: "#fefefe"
   scrim: "#1a1a1a"
   footer: "#030303"
@@ -32,15 +35,18 @@ colors:
   signal-muted: "#939393"     # 품절 — stone과 동일값, 의미 이름으로 별도 노출
 
 typography:
+  # 디스플레이는 의도적으로 매우 크다. 이 시스템의 인상은 "거대한 제목 ↔ 작은 라벨"의
+  # 스케일 대비에서 나온다 — 중간 크기를 늘리는 대신 양 끝을 벌린다.
+  # 아래 px는 데스크톱 상한이며, 실제 렌더는 뷰포트에 따라 clamp로 줄어든다.
   display:
     fontFamily: abcNormal
-    fontSize: 48px
+    fontSize: 112px
     fontWeight: 400
     lineHeight: 1
     letterSpacing: -1.2px
   display-sm:
     fontFamily: abcNormal
-    fontSize: 40px
+    fontSize: 72px
     fontWeight: 400
     lineHeight: 1
     letterSpacing: -1px
@@ -110,7 +116,8 @@ rounded:
   xs: 4px
   sm: 6px
   md: 8px
-  lg: 16px
+  lg: 12px        # 카드·패널 면의 기본 라운딩
+  xl: 16px
   full: 9999px
 
 spacing:
@@ -245,11 +252,11 @@ components:
     typography: "{typography.eyebrow}"
   # --- 커머스 확장 (뷰티보이) ---
   goods-card:
-    backgroundColor: "{colors.canvas}"
+    backgroundColor: "{colors.surface}"
     textColor: "{colors.ink}"
     typography: "{typography.body-tight}"
-    rounded: "{rounded.none}"
-    padding: 0px
+    rounded: "{rounded.lg}"
+    padding: "{spacing.sm}"
   goods-thumbnail:
     backgroundColor: "{colors.surface-cool}"
     rounded: "{rounded.md}"
@@ -574,8 +581,10 @@ The system avoids drop shadows entirely. Depth is created by photographic layeri
 **`goods-card`** — 목록·검색·랭킹·추천·루틴이 **전부 재사용하는 단일 상품 카드**. 이 시스템에서 가장 많이
 반복되는 요소이므로 규칙을 여기서 못 박는다.
 
-- 배경 `{colors.canvas}`, **테두리 없음, 그림자 없음, 라운딩 없음** — 카드를 구분하는 것은 여백뿐이다.
-  플로팅 카드로 만들면 편집디자인 리듬이 깨지고 원본 시스템의 "카드 그림자 없음" 원칙과 충돌한다.
+- 배경 `{colors.surface}`, 라운딩 `{rounded.lg}`, 안쪽 여백 `{spacing.sm}`.
+  **테두리 없음, 그림자 없음** — 카드를 구분하는 것은 면의 명도차와 여백이지 선이나 그림자가 아니다.
+  `{colors.canvas}`(오프화이트) 위에 한 단계 어두운 `{colors.surface}`를 얹어 분리한다.
+  그림자로 띄우는 순간 편집디자인 리듬이 깨지고 원본 시스템의 "카드 그림자 없음" 원칙과 충돌한다.
 - 내부 스택(위→아래): `{goods-thumbnail}` (1:1, `{rounded.md}`, `{colors.surface-cool}` 플레이스홀더,
   lazy load) → 배지 줄 → 브랜드명(`{typography.meta}` / `{colors.slate}`) →
   상품명(`{typography.body-tight}` / `{colors.ink}`, **2줄 고정 말줄임**) →

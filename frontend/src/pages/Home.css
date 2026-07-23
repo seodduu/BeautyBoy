@@ -45,9 +45,11 @@
 
 .bb-hero__title {
   font-family: var(--font-body);
-  font-size: clamp(32px, 5vw, var(--fs-display));
+  /* 상한(--fs-display 112px)에 1440px 부근에서 닿도록 계수를 잡는다.
+     5vw로 두면 1440에서 72px에 머물러 토큰을 올려도 커지지 않는다. */
+  font-size: clamp(40px, 8vw, var(--fs-display));
   font-weight: var(--fw-display);
-  line-height: 1.2;
+  line-height: var(--lh-display);
   letter-spacing: var(--ls-display);
   max-width: 16ch;
   color: var(--color-on-primary);

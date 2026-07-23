@@ -30,7 +30,8 @@ const COLOR_TOKENS: Array<{ token: string; varName: string; hex: string }> = [
   { token: '{colors.hairline}', varName: '--color-hairline', hex: '#e7eaf0' },
   { token: '{colors.hairline-soft}', varName: '--color-hairline-soft', hex: '#c9ccd1' },
   { token: '{colors.surface-cool}', varName: '--color-surface-cool', hex: '#d0d4d4' },
-  { token: '{colors.canvas}', varName: '--color-canvas', hex: '#ffffff' },
+  { token: '{colors.canvas}', varName: '--color-canvas', hex: '#f7f7f7' },
+  { token: '{colors.surface}', varName: '--color-surface', hex: '#ebebeb' },
   { token: '{colors.canvas-warm}', varName: '--color-canvas-warm', hex: '#fefefe' },
   { token: '{colors.scrim}', varName: '--color-scrim', hex: '#1a1a1a' },
   { token: '{colors.footer}', varName: '--color-footer', hex: '#030303' },
@@ -42,7 +43,8 @@ const COLOR_TOKENS: Array<{ token: string; varName: string; hex: string }> = [
 ];
 
 const TYPOGRAPHY_TOKENS: Array<{ token: string; size: string; weight: string; sample: string }> = [
-  { token: '{typography.display}', size: '48px', weight: '400', sample: '뷰티보이 쇼케이스' },
+  { token: '{typography.display}', size: '112px', weight: '400', sample: '뷰티보이' },
+  { token: '{typography.display-sm}', size: '72px', weight: '400', sample: '디스플레이 SM' },
   { token: '{typography.heading-md}', size: '36px', weight: '400', sample: '섹션 헤딩' },
   { token: '{typography.heading-sm}', size: '24px', weight: '400', sample: '카드 타이틀' },
   { token: '{typography.body}', size: '16px', weight: '400', sample: '기본 본문 텍스트입니다.' },
