@@ -28,10 +28,7 @@ export function Home() {
         {/* 워드마크 → 서브카피 → 폼을 한 덩어리로 가운데에 쌓는다.
             서브카피를 타이포 아래로 내려야 메뉴 부속이 아니라 이 화면의 설명으로 읽힌다. */}
         <div className="bb-hero__inner">
-          <h1 className="bb-hero__wordmark">
-            <span className="bb-hero__wordmark-line">Beauty</span>
-            <span className="bb-hero__wordmark-line">Boy</span>
-          </h1>
+          <h1 className="bb-hero__wordmark">Beauty Boy</h1>
 
           <p className="bb-hero__lede">
             성분 궁합부터 피부타입별 루틴까지,

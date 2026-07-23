@@ -14,6 +14,9 @@ colors:
   mute: "#6b7280"
   stone: "#939393"
   ash: "#999999"
+  # ash보다 한 단계 밝다. 검정 배경 위 보조 카피 전용 —
+  # 검정 위에서 ash(#999)를 쓰면 디스플레이 타이포와 위계 차이가 과하게 벌어진다.
+  ash-soft: "#b0b0b0"
   hairline: "#e7eaf0"
   hairline-soft: "#c9ccd1"
   surface-cool: "#d0d4d4"
@@ -41,7 +44,7 @@ typography:
   display-hero:
     # 랜딩 워드마크 전용. 화면 하나를 통째로 쓰는 자리에만 허용하고 본문 흐름에는 쓰지 않는다.
     fontFamily: abcNormal
-    fontSize: 336px
+    fontSize: 272px
     fontWeight: 400
     lineHeight: 0.92
     letterSpacing: -1.2px
@@ -79,6 +82,12 @@ typography:
     fontSize: 18px
     fontWeight: 400
     lineHeight: 1.4
+  body-lg:
+    # body(16px)와 subtitle(20px) 사이. 히어로 보조 카피처럼 본문보다 한 단계 큰 자리.
+    fontFamily: abcNormal
+    fontSize: 18px
+    fontWeight: 400
+    lineHeight: 1.7
   body:
     fontFamily: abcNormal
     fontSize: 16px

@@ -27,42 +27,41 @@
   align-items: center;
   justify-content: center;
   text-align: center;
+  /* 콘텐츠 그룹 중심을 화면의 약 45%에 둔다 — 정중앙이면 폼 아래 여백이
+     그라운드로 읽히지 않고 하단이 휑해 보인다. 아래쪽에 여백을 더 주면
+     가운데 정렬의 중심이 그만큼 위로 올라간다. */
+  padding-bottom: 15vh;
+  /* 워드마크가 뷰포트가 아니라 이 칼럼 폭을 기준으로 커지게 한다 */
+  container-type: inline-size;
 }
 
-/* Beauty / Boy 두 줄, 가운데 정렬 */
+/* "Beauty Boy" 한 줄, 가운데 정렬 */
 .bb-hero__wordmark {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
   font-family: var(--font-body);
-  /* 두 줄이라 세로가 진짜 제약이다(2줄 × 0.92 = 글자크기의 1.84배).
-     - 26vw: 가장 긴 줄("Beauty")이 칼럼을 넘지 않는 폭 기준
-     - 30vh: 두 줄 + 서브카피 + 폼이 100dvh 안에 들어가는 높이 기준
-     둘 중 작은 값을 써야 낮은 화면에서 폼이 화면 밖으로 밀리지 않는다. */
-  font-size: clamp(48px, min(26vw, 30vh), var(--fs-display-hero));
+  /* 한 줄이라 폭이 제약이다. 칼럼이 1360px에서 멈추므로 뷰포트(vw)가 아니라
+     칼럼 폭(cqw)을 기준으로 재야 넓은 화면에서 글자가 칼럼을 넘지 않는다.
+     34vh는 아주 낮은 화면에서 폼이 밖으로 밀리지 않게 하는 안전장치. */
+  font-size: clamp(40px, min(22cqw, 34vh), var(--fs-display-hero));
   font-weight: var(--fw-display);
-  line-height: 0.92;
+  line-height: 0.98;
   letter-spacing: var(--ls-display);
   color: var(--color-on-primary);
   white-space: nowrap;
 }
 
-.bb-hero__wordmark-line {
-  display: block;
-}
-
 .bb-hero__lede {
   margin-top: var(--space-lg);
   font-family: var(--font-body);
-  font-size: var(--fs-body);
-  line-height: 1.7;
-  color: var(--color-slate);
+  /* slate(#676f7b)는 검정 위에서 너무 어두워 디스플레이와 위계 차이가 과했다 */
+  font-size: var(--fs-body-lg);
+  line-height: var(--lh-body-lg);
+  color: var(--color-ash-soft);
   word-break: keep-all;
 }
 
 .bb-hero__lede-strong {
   font-weight: var(--fw-body-strong);
-  color: var(--color-hairline-soft);
+  color: var(--color-on-primary);
 }
 
 .bb-hero__cta {
@@ -166,10 +165,6 @@
 }
 
 @media (max-width: 720px) {
-  .bb-hero {
-    padding: var(--space-section) 20px;
-  }
-
   .bb-features {
     grid-template-columns: 1fr;
     padding: var(--space-section) 20px;

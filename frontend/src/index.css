@@ -25,6 +25,7 @@
   --color-mute: #6b7280;
   --color-stone: #939393;
   --color-ash: #999999;
+  --color-ash-soft: #b0b0b0;
 
   /* ---- Colors: Surface ---- */
   --color-canvas: #f7f7f7;
@@ -56,7 +57,7 @@
      자소가 잘리고 붙으므로 "한글 적용" 절 기준으로 조정한다:
      디스플레이·헤딩 line-height 1.15~1.25, 자간은 -0.02em 상한, 본문 자간 0. */
   /* 랜딩 워드마크 전용 상한 (DESIGN.md typography.display-hero) */
-  --fs-display-hero: 336px;
+  --fs-display-hero: 272px;
 
   /* 랜딩 콘텐츠 칼럼 폭. 본문 페이지(1180px)보다 넓다 —
      워드마크가 화면을 지배해야 하는 화면이라 칼럼을 따로 둔다. */
@@ -91,6 +92,10 @@
   --fw-subtitle: 400;
   --lh-subtitle: 1.3;
   --ls-subtitle: 0;
+
+  /* 히어로 보조 카피 (DESIGN.md typography.body-lg) */
+  --fs-body-lg: 18px;
+  --lh-body-lg: 1.7;
 
   --fs-body: 16px;
   --fw-body: 400;
