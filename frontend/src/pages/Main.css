@@ -5,13 +5,22 @@
   /* 앵커 네비 자체의 높이. 브라우저 실측값(getBoundingClientRect) = 54px:
      패딩 12px×2 + 링크 1줄 24px + 링크 밑줄 여백 4px + 링크 border-bottom 1px + nav border-bottom 1px. */
   --bb-nav-h: 54px;
+  background: var(--color-canvas);
+}
+
+/* ── 상단 검정 밴드 (풀블리드) ──────────────────────────────
+   검정 헤더에서 이어지는 반전 히어로. 온보딩(검정)·로그인(검정 절반)에 이어
+   여기서 밝기가 흰 콘텐츠로 마지막 계단을 내려온다. */
+.bb-main__intro {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  padding: var(--space-xxl) 0 var(--space-section);
+}
+
+.bb-main__intro-inner {
   max-width: var(--landing-column);
   margin: 0 auto;
   padding: 0 var(--space-lg);
-}
-
-.bb-main__intro {
-  padding-top: var(--space-section);
 }
 
 .bb-main__eyebrow {
@@ -19,7 +28,7 @@
   font-weight: var(--fw-eyebrow);
   line-height: var(--lh-eyebrow);
   letter-spacing: var(--ls-eyebrow);
-  color: var(--color-stone);
+  color: var(--color-ash-soft);
 }
 
 .bb-main__title {
@@ -28,7 +37,7 @@
   font-weight: var(--fw-heading-md);
   line-height: var(--lh-heading-md);
   letter-spacing: var(--ls-heading-md);
-  color: var(--color-ink);
+  color: var(--color-on-primary);
 }
 
 .bb-main__lede {
@@ -36,7 +45,14 @@
   max-width: 44em;
   font-size: var(--fs-body-lg);
   line-height: var(--lh-body-lg);
-  color: var(--color-graphite);
+  color: var(--color-ash-soft);
+}
+
+/* ── 흰 콘텐츠 영역 ──────────────────────────────────────── */
+.bb-main__body {
+  max-width: var(--landing-column);
+  margin: 0 auto;
+  padding: 0 var(--space-lg);
 }
 
 /* 앵커 네비 — 5섹션 긴 스크롤의 현재 위치 표시이자 지름길.
@@ -47,7 +63,6 @@
   position: sticky;
   top: var(--bb-header-h);
   z-index: 10;
-  margin-top: var(--space-xl);
   padding: var(--space-sm) 0;
   background: var(--color-canvas);
   border-bottom: 1px solid var(--color-hairline);
@@ -106,12 +121,13 @@ html {
 }
 
 @media (max-width: 900px) {
-  .bb-main {
-    padding: 0 var(--space-md);
+  .bb-main__intro {
+    padding: var(--space-xl) 0 var(--space-xxl);
   }
 
-  .bb-main__intro {
-    padding-top: var(--space-xl);
+  .bb-main__intro-inner,
+  .bb-main__body {
+    padding: 0 var(--space-md);
   }
 
   .bb-main__nav-list {

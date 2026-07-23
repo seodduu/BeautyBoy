@@ -39,40 +39,45 @@ export function Main() {
 
   return (
     <div className="bb-main">
-      {/* 인트로는 가볍게 — 풀 히어로를 두면 첫 스크롤에서 STEP 01이 안 보인다. */}
+      {/* 상단 검정 밴드: 검정 헤더에서 이어지는 반전 히어로. 여기서 밝기가 흰 콘텐츠로 계단식 하강한다.
+          풀 히어로가 아니라 밴드라 첫 스크롤 안에 STEP 01이 보인다. */}
       <header className="bb-main__intro">
-        <p className="bb-main__eyebrow">DAILY ROUTINE</p>
-        <h1 className="bb-main__title">순서대로 따라오면 됩니다</h1>
-        <p className="bb-main__lede">
-          씻고, 정돈하고, 채우고, 덮고, 막는 다섯 단계. 아래로 내리는 순서가 그대로 루틴 순서입니다.
-        </p>
+        <div className="bb-main__intro-inner">
+          <p className="bb-main__eyebrow">DAILY ROUTINE</p>
+          <h1 className="bb-main__title">순서대로 따라오면 됩니다</h1>
+          <p className="bb-main__lede">
+            씻고, 정돈하고, 채우고, 덮고, 막는 다섯 단계. 아래로 내리는 순서가 그대로 루틴 순서입니다.
+          </p>
+        </div>
       </header>
 
-      {/* 앵커 네비는 인트로 밖, .bb-main의 직계 자식이어야 한다.
-          인트로(header) 안에 두면 sticky의 컨테이닝 블록이 인트로가 되어,
-          인트로가 화면 위로 스크롤되는 순간 네비도 함께 사라진다(5섹션 내내 붙어 있어야 하는데). */}
-      <nav className="bb-main__nav" aria-label="루틴 단계 바로가기">
-        <ol className="bb-main__nav-list">
-          {ROUTINE_STEPS.map((step) => (
-            <li key={step.id}>
-              <a
-                className={`bb-main__nav-link${
-                  activeId === step.id ? ' bb-main__nav-link--active' : ''
-                }`}
-                href={`#${step.id}`}
-                aria-current={activeId === step.id ? 'true' : undefined}
-              >
-                <span className="bb-main__nav-order">{String(step.order).padStart(2, '0')}</span>
-                <span className="bb-main__nav-label">{step.label}</span>
-              </a>
-            </li>
-          ))}
-        </ol>
-      </nav>
+      {/* 흰 콘텐츠 영역. 앵커 네비는 인트로 밖, 이 영역의 직계 자식이어야 한다 —
+          인트로(검정 밴드) 안에 두면 sticky 컨테이닝 블록이 밴드가 되어, 밴드가 스크롤로
+          사라지는 순간 네비도 함께 사라진다(5섹션 내내 붙어 있어야 하는데). */}
+      <div className="bb-main__body">
+        <nav className="bb-main__nav" aria-label="루틴 단계 바로가기">
+          <ol className="bb-main__nav-list">
+            {ROUTINE_STEPS.map((step) => (
+              <li key={step.id}>
+                <a
+                  className={`bb-main__nav-link${
+                    activeId === step.id ? ' bb-main__nav-link--active' : ''
+                  }`}
+                  href={`#${step.id}`}
+                  aria-current={activeId === step.id ? 'true' : undefined}
+                >
+                  <span className="bb-main__nav-order">{String(step.order).padStart(2, '0')}</span>
+                  <span className="bb-main__nav-label">{step.label}</span>
+                </a>
+              </li>
+            ))}
+          </ol>
+        </nav>
 
-      {ROUTINE_STEPS.map((step, index) => (
-        <RoutineSection key={step.id} step={step} index={index} />
-      ))}
+        {ROUTINE_STEPS.map((step, index) => (
+          <RoutineSection key={step.id} step={step} index={index} />
+        ))}
+      </div>
     </div>
   );
 }

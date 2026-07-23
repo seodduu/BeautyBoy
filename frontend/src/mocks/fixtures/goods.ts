@@ -16,8 +16,11 @@ export interface GoodsFixture extends GoodsListItem {
 
 /** 오프라인·CI에서도 깨지지 않도록 외부 이미지 없이 로컬 SVG 데이터 URI로 썸네일을 만든다. */
 function svgThumbnail(label: string, hue: number): string {
-  const bg = `hsl(${hue}, 35%, 88%)`;
-  const fg = `hsl(${hue}, 40%, 38%)`;
+  // 실제 제품 사진이 들어오기 전까지는 무채색으로 통일한다 — 파스텔 색이 모노톤 무드를 깬다.
+  // hue는 호출부 시그니처 유지를 위해 남기되 명도만 미세하게 흔들어 카드가 완전히 똑같아 보이지 않게 한다.
+  const tone = 86 + (hue % 3) * 2; // 86·88·90% 사이
+  const bg = `hsl(0, 0%, ${tone}%)`;
+  const fg = `hsl(0, 0%, 45%)`;
   const svg =
     `<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240">` +
     `<rect width="240" height="240" fill="${bg}"/>` +

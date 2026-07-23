@@ -4,6 +4,7 @@ import { isAxiosError } from 'axios';
 import './Auth.css';
 import { fetchMe, login } from '../api/auth';
 import { useAuthStore } from '../stores/authStore';
+import { AuthLayout } from '../components/auth/AuthLayout';
 import { Button } from '../components/ui/Button';
 import { Field } from '../components/ui/Field';
 
@@ -44,11 +45,12 @@ export function Login() {
   }
 
   return (
-    <section className="bb-auth bb-auth--narrow">
-      <p className="bb-auth__eyebrow">LOGIN</p>
-      <h1 className="bb-auth__title">로그인</h1>
+    <AuthLayout>
+      <section className="bb-auth bb-auth--narrow">
+        <p className="bb-auth__eyebrow">LOGIN</p>
+        <h1 className="bb-auth__title">로그인</h1>
 
-      <form className="bb-auth__form" onSubmit={handleSubmit}>
+        <form className="bb-auth__form" onSubmit={handleSubmit}>
         <Field
           id="login-email"
           label="이메일"
@@ -72,14 +74,15 @@ export function Login() {
 
         {error && <p className="bb-auth__error">{error}</p>}
 
-        <Button type="submit" loading={submitting}>
-          로그인
-        </Button>
-      </form>
+          <Button type="submit" loading={submitting}>
+            로그인
+          </Button>
+        </form>
 
-      <p className="bb-auth__switch">
-        아직 계정이 없으신가요? <Link to="/signup">회원가입</Link>
-      </p>
-    </section>
+        <p className="bb-auth__switch">
+          아직 계정이 없으신가요? <Link to="/signup">회원가입</Link>
+        </p>
+      </section>
+    </AuthLayout>
   );
 }

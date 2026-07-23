@@ -18,8 +18,10 @@
   text-transform: uppercase;
 }
 
+/* 모노톤 통일: 뱃지 라벨은 무채색으로. 의미 있는 색(빨강 할인율)은 가격 줄에만 남긴다 —
+   뱃지까지 색을 쓰면 한 카드에 신호색이 둘 이상 겹쳐 위계가 흐려진다. */
 .bb-badge--sale {
-  color: var(--color-signal-sale);
+  color: var(--color-ink);
 }
 
 .bb-badge--neutral {
@@ -27,5 +29,5 @@
 }
 
 .bb-badge--today-dream {
-  color: var(--color-signal-success);
+  color: var(--color-ink);
 }
