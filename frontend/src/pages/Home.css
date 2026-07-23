@@ -1,91 +1,132 @@
-/* {hero-photo}: {colors.scrim} 풀블리드 배경, 왼쪽 정렬 lockup(eyebrow → display → 서브카피 → CTA).
-   실사진 자산이 없어 scrim 위에 은은한 그라디언트로 대체했다.
-   실사진 교체 지점: background-image를 실제 사진(+ 위에 scrim 오버레이)으로 바꾼다. */
+/* {landing-hero}: 순검정 풀블리드 + 물결 리본(canvas) 위에 워드마크를 얹는다.
+   레이어 순서(아래→위): 배경색 → canvas → 카피/워드마크/CTA. */
 .bb-hero {
-  background-color: var(--color-scrim);
-  background-image: radial-gradient(
-      circle at 78% 18%,
-      rgba(255, 255, 255, 0.08),
-      transparent 55%
-    ),
-    linear-gradient(
-      155deg,
-      color-mix(in srgb, var(--color-scrim), white 6%) 0%,
-      var(--color-scrim) 55%,
-      color-mix(in srgb, var(--color-scrim), black 45%) 100%
-    );
-  padding: var(--space-section-lg) 24px;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background: var(--color-primary);
+  /* 헤더 높이를 뺀 나머지를 꽉 채운다 — 첫 화면이 물결로만 채워지게. */
+  /* 헤더가 absolute로 겹쳐 오므로 첫 화면을 통째로 쓴다. */
+  min-height: 100dvh;
+  display: flex;
+  /* 좌우 패딩은 여기가 아니라 __inner가 가진다 — 헤더 바(max-width + 안쪽 패딩)와
+     같은 계산이어야 로고와 워드마크 왼쪽 끝이 한 선에 선다. */
+  padding: calc(64px + var(--space-lg)) 0 var(--space-xl);
 }
 
-.bb-hero__lockup {
-  max-width: 1180px;
+/* 워드마크 → 서브카피 → 폼을 한 덩어리로 화면 가운데에 쌓는다 */
+.bb-hero__inner {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: var(--landing-column);
   margin: 0 auto;
-}
-
-.bb-hero__eyebrow {
-  display: inline-flex;
+  padding: 0 var(--space-lg);
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 8px;
-  font-family: var(--font-body);
-  font-size: var(--fs-eyebrow);
-  font-weight: var(--fw-eyebrow);
-  letter-spacing: var(--ls-eyebrow);
-  text-transform: uppercase;
-  color: var(--color-on-primary);
-  opacity: 0.7;
-  margin-bottom: 20px;
+  justify-content: center;
+  text-align: center;
+  /* 콘텐츠 그룹 중심을 화면의 약 45%에 둔다 — 정중앙이면 폼 아래 여백이
+     그라운드로 읽히지 않고 하단이 휑해 보인다. 아래쪽에 여백을 더 주면
+     가운데 정렬의 중심이 그만큼 위로 올라간다. */
+  padding-bottom: 15vh;
+  /* 워드마크가 뷰포트가 아니라 이 칼럼 폭을 기준으로 커지게 한다 */
+  container-type: inline-size;
 }
 
-.bb-hero__eyebrow::before {
-  content: '';
-  width: 18px;
-  height: 1px;
-  background: currentColor;
-}
-
-.bb-hero__title {
+/* "Beauty Boy" 한 줄, 가운데 정렬 */
+.bb-hero__wordmark {
   font-family: var(--font-body);
-  font-size: clamp(32px, 5vw, var(--fs-display));
+  /* 한 줄이라 폭이 제약이다. 칼럼이 1360px에서 멈추므로 뷰포트(vw)가 아니라
+     칼럼 폭(cqw)을 기준으로 재야 넓은 화면에서 글자가 칼럼을 넘지 않는다.
+     34vh는 아주 낮은 화면에서 폼이 밖으로 밀리지 않게 하는 안전장치. */
+  font-size: clamp(40px, min(22cqw, 34vh), var(--fs-display-hero));
   font-weight: var(--fw-display);
-  line-height: 1.2;
+  line-height: 0.98;
   letter-spacing: var(--ls-display);
-  max-width: 16ch;
   color: var(--color-on-primary);
+  white-space: nowrap;
 }
 
-.bb-hero__desc {
-  margin-top: 20px;
+.bb-hero__lede {
+  margin-top: var(--space-lg);
   font-family: var(--font-body);
-  font-size: var(--fs-subtitle);
-  line-height: 1.6;
-  max-width: 46ch;
+  /* slate(#676f7b)는 검정 위에서 너무 어두워 디스플레이와 위계 차이가 과했다 */
+  font-size: var(--fs-body-lg);
+  line-height: var(--lh-body-lg);
+  color: var(--color-ash-soft);
+  word-break: keep-all;
+}
+
+.bb-hero__lede-strong {
+  font-weight: var(--fw-body-strong);
   color: var(--color-on-primary);
-  opacity: 0.85;
 }
 
 .bb-hero__cta {
+  /* 가운데 정렬 레이아웃에서 폼이 넓으면 긴장감이 풀린다 — 420px로 묶는다 */
   margin-top: var(--space-xl);
-  display: inline-flex;
+  width: min(420px, 100%);
 }
 
-/* {button-primary-on-dark} */
-.bb-hero__cta-link {
+/* 입력칸과 전송 버튼은 붙이지 않고 나란히 둔다(레퍼런스 구조) */
+.bb-hero__cta-row {
+  display: flex;
+  align-items: stretch;
+  gap: var(--space-sm);
+  width: 100%;
+}
+
+.bb-hero__cta-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 52px;
+  padding: 0 var(--space-lg);
+  border: 1px solid var(--color-hairline-soft);
+  border-radius: var(--rounded-lg);
+  background: var(--color-on-primary);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+}
+
+.bb-hero__cta-input::placeholder {
+  color: var(--color-stone);
+}
+
+.bb-hero__cta-input:focus {
+  outline: none;
+  border-color: var(--color-ink);
+}
+
+.bb-hero__cta-input:focus-visible {
+  outline: 2px solid var(--color-on-primary);
+  outline-offset: 2px;
+}
+
+/* 시그널 색은 배경으로 못 쓰므로(DESIGN.md) 무채색 사다리로 입력칸과 구분한다 */
+.bb-hero__cta-submit {
+  flex: 0 0 auto;
+  width: 52px;
+  height: 52px;
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  padding: 12px var(--space-lg);
-  height: 40px;
-  border-radius: var(--rounded-full);
-  background: var(--color-on-primary);
-  color: var(--color-primary);
-  font-family: var(--font-body);
-  font-size: var(--fs-button);
-  font-weight: var(--fw-button);
-  transition: opacity 0.15s ease;
+  justify-content: center;
+  border: 1px solid var(--color-graphite);
+  border-radius: var(--rounded-lg);
+  background: var(--color-ink-soft);
+  color: var(--color-on-primary);
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
 }
 
-.bb-hero__cta-link:hover {
-  opacity: 0.85;
+.bb-hero__cta-submit:hover {
+  background: var(--color-graphite);
+  border-color: var(--color-slate);
 }
 
 .bb-features {
@@ -124,13 +165,28 @@
 }
 
 @media (max-width: 720px) {
-  .bb-hero {
-    padding: var(--space-section) 20px;
-  }
-
   .bb-features {
     grid-template-columns: 1fr;
     padding: var(--space-section) 20px;
     gap: var(--space-xl);
+  }
+}
+
+/* ---- 랜딩 반응형 ---- */
+@media (max-width: 768px) {
+  .bb-hero {
+    padding: calc(64px + var(--space-md)) 0 var(--space-lg);
+  }
+
+  .bb-hero__inner {
+    padding: 0 var(--space-md);
+  }
+
+  .bb-hero__lede {
+    margin-top: var(--space-md);
+  }
+
+  .bb-hero__cta {
+    margin-top: var(--space-lg);
   }
 }

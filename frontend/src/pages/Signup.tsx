@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { isAxiosError } from 'axios';
 import './Auth.css';
 import { SkinProfileStep } from '../components/signup/SkinProfileStep';
@@ -23,8 +23,15 @@ export function Signup() {
   const navigate = useNavigate();
   const setAuth = useAuthStore((state) => state.setAuth);
 
+  /* 랜딩 히어로에서 넘어온 이메일로 첫 칸을 채운다(?email=). 없으면 빈 값. */
+  const [searchParams] = useSearchParams();
+
   const [step, setStep] = useState<1 | 2>(1);
-  const [account, setAccount] = useState<AccountFields>({ email: '', password: '', nickname: '' });
+  const [account, setAccount] = useState<AccountFields>({
+    email: searchParams.get('email') ?? '',
+    password: '',
+    nickname: '',
+  });
   const [skinType, setSkinType] = useState<SkinType | undefined>(undefined);
   const [concerns, setConcerns] = useState<Concern[]>([]);
   const [ageBand, setAgeBand] = useState<AgeBand | undefined>(undefined);

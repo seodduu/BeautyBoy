@@ -1,7 +1,10 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import './Header.css';
 import { useAuthStore } from '../../stores/authStore';
 import { logout } from '../../api/auth';
+
+/* 라우트가 없는 자리표시 항목들. Login은 실제 화면이 있으므로 아래에서 링크로 따로 낸다. */
+const LANDING_NAV = ['About', 'Work', 'Services', 'Packages'] as const;
 
 /**
  * 올리브영식 헤더: 로고 / 검색바 자리(실제 검색은 후속 웨이브) / 장바구니·로그인.
@@ -13,6 +16,9 @@ export function Header() {
   const isBootstrapping = useAuthStore((state) => state.isBootstrapping);
   const clear = useAuthStore((state) => state.clear);
   const navigate = useNavigate();
+  /* 랜딩(/)은 검정 풀블리드 히어로라 흰 헤더 바가 얹히면 화면이 두 조각으로 잘린다.
+     그 화면에서만 헤더를 투명하게 겹쳐 올린다. */
+  const isLanding = useLocation().pathname === '/';
 
   const handleLogout = async () => {
     try {
@@ -22,6 +28,32 @@ export function Header() {
       navigate('/');
     }
   };
+
+  /* 랜딩은 워드마크만 남긴다. 검색·장바구니·로그인은 첫 화면의 서사를 흐리고,
+     진입 동선은 화면 가운데의 Get started 하나로 모은다. */
+  if (isLanding) {
+    return (
+      <header className="bb-header bb-header--overlay">
+        <div className="bb-header__bar bb-header__bar--landing">
+          <Link to="/" className="bb-header__logo" aria-label="뷰티보이 홈으로">
+            BEAUTY BOY<span className="bb-header__logo-dot">.</span>
+          </Link>
+
+          {/* 해당 화면들은 후속 웨이브 범위 — 기존 헤더의 "준비 중" 항목과 같이 자리만 잡는다 */}
+          <nav className="bb-landing-nav" aria-label="주요 메뉴">
+            {LANDING_NAV.map((label) => (
+              <span className="bb-landing-nav__item" key={label}>
+                {label}
+              </span>
+            ))}
+            <Link to="/login" className="bb-landing-nav__item bb-landing-nav__item--link">
+              Login
+            </Link>
+          </nav>
+        </div>
+      </header>
+    );
+  }
 
   return (
     <header className="bb-header">
