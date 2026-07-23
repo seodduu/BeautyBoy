@@ -709,43 +709,54 @@ export interface ApiEnvelope<T> { code: string; message: string; data: T }
 - [ ] **W1 DoD 확인**: 카테고리 트리·상품 목록/상세·성분 API가 시드 데이터로 응답 + 프론트 상품카드가 MSW mock으로 렌더 (curl 출력 + 스크린샷 둘 다 확인)
 - [ ] **계약 정합성 대조** — T1의 실제 `GET /goods` 응답 JSON과 T2의 `types/goods.ts`·mock 핸들러 응답을 **나란히 놓고 필드명·타입을 대조**한다. 두 터미널이 이 계약을 각자 해석했을 수 있고, 어긋난 채 Wave 3에서 실 API를 붙이면 그때 프론트를 다시 쓰게 된다. 어긋난 곳이 있으면 **T1의 실제 응답이 진실**이고 프론트를 맞춘다(CLAUDE.md: 스키마·픽스처가 진실).
 - [ ] `docs/plans/2026-07-23-roadmap.md`의 "Wave 0에서 이월된 항목 → Wave 1 T2" 절을 해소 완료로 갱신하고, Wave 2로 넘길 이월 항목을 새로 적는다
-- [ ] worktree 정리: `git worktree remove ../BeautyBoy-w1-catalog`, `git worktree remove ../BeautyBoy-w1-front`
+- [ ] worktree 정리 — **루트에서** 실행한다. 각 세션은 `EnterWorktree`에 `path`로 진입했으므로 `ExitWorktree`가 worktree를 지우지 않는다(그 경로로 진입한 것은 세션이 만든 것으로 취급되지 않는다). 머지가 끝난 뒤 사람이 정리한다:
+
+```bash
+git worktree remove ../BeautyBoy-w1-catalog
+git worktree remove ../BeautyBoy-w1-front
+git worktree list          # 루트만 남아야 한다
+```
 
 ---
 
 ## 터미널 실행 프롬프트
 
-### 0) 계획서를 먼저 커밋한다 (untracked면 새 worktree에 딸려가지 않는다)
+**운용 방식:** 사람은 **터미널 2개를 프로젝트 루트에서 열고 프롬프트를 붙여넣기만 한다.**
+worktree 생성·진입·기점 검증은 각 세션의 오케스트레이터가 프롬프트 지시에 따라 직접 수행한다.
+git 명령을 손으로 치지 않으므로 터미널마다 브랜치를 즉흥으로 만들 여지가 없다.
+
+### 0) 사전 조건 (루트에서 한 번만 확인)
+
+- 계획서가 **커밋돼 있어야 한다.** untracked 파일은 새 worktree에 딸려가지 않아 세션이 계획서를 못 읽는다.
+  `DESIGN.md`도 마찬가지다 (T2가 이 문서 없이는 아무것도 못 한다).
+- 두 터미널 모두 **같은 커밋을 기점으로** 브랜치를 딴다. 아래 프롬프트가 `git worktree add`를
+  로컬 HEAD 기준으로 실행하므로, 두 터미널을 열기 전에 루트의 `main`을 더 이상 진행시키지 않는다.
 
 ```bash
-cd "/Users/doo._.hyun/Study/Project/Beauty Boy"
-git add docs/plans/2026-07-23-wave1-catalog-frontbase.md
-git commit -m "docs(plan): Wave 1 카탈로그·프론트 기반 계획"
+git -C "/Users/doo._.hyun/Study/Project/Beauty Boy" log --oneline -1   # 이 커밋이 두 브랜치의 기점이 된다
+git -C "/Users/doo._.hyun/Study/Project/Beauty Boy" status --short     # 비어 있어야 한다
 ```
 
-### 1) worktree 생성은 아래 각 터미널 블록에 포함돼 있다
+### 1) 터미널 A (T1 — 카탈로그)
 
-§2·§3의 bash 블록이 `git worktree add` + 진입 + **기점 확인**까지 자체 완결로 담고 있다.
-터미널마다 그 블록을 통째로 실행한 뒤 프롬프트를 붙여넣는다 — 프롬프트만 복사해 즉흥으로
-브랜치를 만들면 기점이 어긋난다.
-
-두 브랜치 모두 §0의 계획서 커밋을 가리켜야 하며, 어긋나면 해당 커밋에서 브랜치를 다시 따거나
-cherry-pick 한다. 전체 현황은 `git worktree list`로 확인한다.
-
-### 2) 터미널 A (T1 — 카탈로그)
-
-**먼저 이 명령을 실행해 worktree를 만들고 진입한다.** 브랜치를 즉흥으로 만들면 기점이 어긋난다.
-
-```bash
-cd "/Users/doo._.hyun/Study/Project/Beauty Boy"
-git worktree add ../BeautyBoy-w1-catalog -b feat/catalog
-cd ../BeautyBoy-w1-catalog
-git log --oneline -1     # "docs(plan): Wave 1 ..." 커밋이어야 한다. 아니면 중단하고 보고
-```
-
-그 디렉터리에서 Claude Code를 열고 아래를 붙여넣는다:
+**프로젝트 루트에서** Claude Code를 열고 아래를 그대로 붙여넣는다. worktree는 세션이 만든다.
 
 ```
+[1단계 — 작업 공간 만들기] 다른 무엇보다 먼저 이것부터 해라.
+
+  git worktree add ../BeautyBoy-w1-catalog -b feat/catalog
+
+를 실행한 뒤 EnterWorktree 도구에 path로 그 경로를 넘겨 세션을 그 안으로 옮겨라.
+(EnterWorktree를 name으로 새로 만들지 마라 — 기본 설정이 origin/main에서 브랜치를 따는데
+origin이 뒤처져 있으면 계획서도 DESIGN.md도 없는 워크트리가 생긴다.)
+
+진입한 뒤 아래를 확인하고, 하나라도 어긋나면 **중단하고 나에게 보고해라**:
+  - pwd가 BeautyBoy-w1-catalog인지
+  - git log --oneline -1 이 루트에서 본 것과 같은 커밋인지 (브랜치 기점 확인)
+  - docs/plans/2026-07-23-wave1-catalog-frontbase.md 가 존재하는지
+  - git status가 깨끗한지
+
+[2단계 — 실행]
 CLAUDE.md와 docs/plans/2026-07-23-wave1-catalog-frontbase.md를 읽고, 그중 "터미널 T1 — feat/catalog"
 섹션의 Task 1-1 ~ 1-8을 순서대로 실행해줘. T2(feat/front-base) 섹션은 다른 터미널 담당이니 건드리지 마.
 
@@ -764,21 +775,27 @@ Task 1-5 서브에이전트 브리프에는 GoodsQueryService.exists(Long) 인�
 전 태스크 완료 후 ./gradlew test 결과와 Task 1-8의 curl 시나리오 출력을 전부 보고해.
 ```
 
-### 3) 터미널 B (T2 — 프론트 기반)
+### 2) 터미널 B (T2 — 프론트 기반)
 
-**먼저 이 명령을 실행해 worktree를 만들고 진입한다.**
-
-```bash
-cd "/Users/doo._.hyun/Study/Project/Beauty Boy"
-git worktree add ../BeautyBoy-w1-front -b feat/front-base
-cd ../BeautyBoy-w1-front
-git log --oneline -1     # "docs(plan): Wave 1 ..." 커밋이어야 한다. 아니면 중단하고 보고
-ls DESIGN.md             # 이 파일이 없으면 커밋이 안 된 것 — 중단하고 보고
-```
-
-그 디렉터리에서 Claude Code를 열고 아래를 붙여넣는다:
+**프로젝트 루트에서** Claude Code를 열고 아래를 그대로 붙여넣는다. worktree는 세션이 만든다.
 
 ```
+[1단계 — 작업 공간 만들기] 다른 무엇보다 먼저 이것부터 해라.
+
+  git worktree add ../BeautyBoy-w1-front -b feat/front-base
+
+를 실행한 뒤 EnterWorktree 도구에 path로 그 경로를 넘겨 세션을 그 안으로 옮겨라.
+(EnterWorktree를 name으로 새로 만들지 마라 — 기본 설정이 origin/main에서 브랜치를 따는데
+origin이 뒤처져 있으면 계획서도 DESIGN.md도 없는 워크트리가 생긴다.)
+
+진입한 뒤 아래를 확인하고, 하나라도 어긋나면 **중단하고 나에게 보고해라**:
+  - pwd가 BeautyBoy-w1-front인지
+  - git log --oneline -1 이 루트에서 본 것과 같은 커밋인지 (브랜치 기점 확인)
+  - DESIGN.md 와 docs/plans/2026-07-23-wave1-catalog-frontbase.md 가 존재하는지
+    (DESIGN.md가 없으면 이 터미널은 아무것도 시작할 수 없다)
+  - git status가 깨끗한지
+
+[2단계 — 실행]
 CLAUDE.md, 루트 DESIGN.md, docs/plans/2026-07-23-wave1-catalog-frontbase.md를 읽고, 그중
 "터미널 T2 — feat/front-base" 섹션의 Task 2-1 ~ 2-7을 순서대로 실행해줘.
 T1(feat/catalog) 섹션은 다른 터미널 담당이니 건드리지 마.
