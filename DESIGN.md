@@ -41,7 +41,7 @@ typography:
   display-hero:
     # 랜딩 워드마크 전용. 화면 하나를 통째로 쓰는 자리에만 허용하고 본문 흐름에는 쓰지 않는다.
     fontFamily: abcNormal
-    fontSize: 240px
+    fontSize: 336px
     fontWeight: 400
     lineHeight: 0.92
     letterSpacing: -1.2px

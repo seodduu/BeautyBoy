@@ -25,26 +25,25 @@ export function Home() {
       <section className="bb-hero">
         <WaveCanvas />
 
-        {/* 콘텐츠는 화면 가장자리가 아니라 가운데 정렬된 고정폭 칼럼 안에 놓는다.
-            워드마크 왼쪽 끝이 헤더 로고와 같은 선에 맞는다. */}
+        {/* 워드마크 → 서브카피 → 폼을 한 덩어리로 가운데에 쌓는다.
+            서브카피를 타이포 아래로 내려야 메뉴 부속이 아니라 이 화면의 설명으로 읽힌다. */}
         <div className="bb-hero__inner">
-          <p className="bb-hero__lede">
-            성분 궁합부터 피부타입별 루틴까지,
-            <br />
-            근거 있는 선택만 남깁니다.
-          </p>
-
           <h1 className="bb-hero__wordmark">
             <span className="bb-hero__wordmark-line">Beauty</span>
             <span className="bb-hero__wordmark-line">Boy</span>
           </h1>
 
+          <p className="bb-hero__lede">
+            성분 궁합부터 피부타입별 루틴까지,
+            <br />
+            <strong className="bb-hero__lede-strong">근거 있는 선택</strong>만 남깁니다.
+          </p>
+
           <form className="bb-hero__cta" onSubmit={handleStart}>
-            {/* DESIGN.md 폼 규칙: placeholder는 라벨을 대체하지 않는다 — 보이는 라벨을 둔다. */}
-            <label className="bb-hero__cta-label" htmlFor="hero-email">
-              EMAIL
-            </label>
             <div className="bb-hero__cta-row">
+              {/* 보이는 라벨 대신 aria-label을 쓴다 — 화면에선 placeholder가 이미 같은 말을 하고
+                  구석의 작은 라벨이 오히려 어수선해진다. 접근성 이름은 유지된다.
+                  (DESIGN.md 폼 규칙의 랜딩 예외 — 문서에 반영 필요) */}
               <input
                 id="hero-email"
                 className="bb-hero__cta-input"
@@ -52,7 +51,8 @@ export function Home() {
                 inputMode="email"
                 autoComplete="email"
                 required
-                placeholder="이메일을 입력하면 피부 루틴부터 시작합니다."
+                aria-label="이메일 주소"
+                placeholder="이메일을 입력하면 피부 루틴부터 시작합니다"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />

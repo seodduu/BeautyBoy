@@ -19,7 +19,10 @@ function drawFrame(ctx: CanvasRenderingContext2D, w: number, h: number, time: nu
   ctx.globalCompositeOperation = 'lighter';
 
   const t = time * 0.00042; // 움직임 속도
-  const baseY = h * 0.52;
+  /* 능선의 정점이 워드마크 상단(≈0.20h) 언저리에 오도록 기준선을 잡는다 —
+     타이포가 산 위로 떠오르는 인상을 만든다. 아래쪽(폼 자리 ≈0.81h)까지는
+     리본이 닿지 않으므로 흰 입력창이 밝은 곡선 위에 얹히지 않는다. */
+  const baseY = h * 0.48;
 
   // 아치의 봉우리 위치·높이가 천천히 흔들린다 — 덩어리가 살아 움직이는 느낌의 대부분이 여기서 나온다
   const peakX = 0.44 + Math.sin(t * 0.35) * 0.07;
@@ -58,7 +61,7 @@ function drawFrame(ctx: CanvasRenderingContext2D, w: number, h: number, time: nu
     // 가닥이 개별로 보이도록 바닥 알파를 남긴다.
     // 가장자리를 0으로 죽이면(이전 버전) 덩어리는 매끈해지지만 결이 사라져 얼룩이 된다.
     const falloff = Math.pow(centered, 1.6);
-    const alpha = 0.02 + falloff * 0.075;
+    const alpha = 0.03 + falloff * 0.12;
     ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
     ctx.lineWidth = 1;
     ctx.stroke();
