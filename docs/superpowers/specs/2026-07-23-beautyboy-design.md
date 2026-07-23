@@ -82,7 +82,8 @@
 
 ### catalog
 - `category` — 계층 인코딩 코드(`C001`/`C001001`/`C001001001`) + depth. 하위 전체 조회 = `LIKE 'C001%'`
-- `goods`(goodsNo `A#########`, brand FK, leaf category FK, 상품명, 정상가, 판매가, 대표이미지, 상태)
+- `goods`(goodsNo = BIGINT PK, brand FK, leaf category FK, 상품명, 정상가, 판매가, 대표이미지, 상태, 조회수·판매수 카운터)
+  - 올리브영식 `A#########` 표시 코드는 두지 않는다. 식별자가 둘이면 URL·조인·캐시가 매번 어느 쪽을 쓸지 흔들린다. 조회수·판매수는 목록 정렬(`popular`/`sales`)의 원천이며, 랭킹 스냅샷과는 별개로 카탈로그가 소유한다.
 - `goods_option`(옵션명, 가격가산, 재고)
 - `brand`, `promotion` + `promotion_goods`(세일/쿠폰/증정/1+1 → 배지 파생)
 
@@ -141,10 +142,41 @@
 
 ## 7. API 설계 (`/api/v1`)
 
+### 공통 응답 계약
+
+모든 응답은 `ApiResponse<T>` 봉투 `{code, message, data}`, 에러는 `{code, message, detail}`.
+**페이징이 있는 모든 조회는 `data`에 `PageResponse<T>`를 싣는다** — 도메인별 페이징 타입을 새로 만들지 않는다.
+적용 대상: `/goods`, `/reviews`, `/search`, `/rankings`.
+
+```java
+PageResponse<T>(List<T> content, int page /*0-based*/, int size,
+                long totalElements, int totalPages, boolean hasNext)
+// 생성: PageResponse.of(content, page, size, totalElements) — totalPages·hasNext는 파생
+```
+
+offset 방식을 택한 이유: 목록 화면을 "정렬 5종 + 페이지네이션"으로 정의했으므로 페이지 번호 UI와
+"총 N개" 표시가 필요하다. cursor 방식으로는 둘 다 만들 수 없다. COUNT 비용은 MVP 규모에서 문제되지 않는다.
+
+**상품 카드 아이템**은 전 화면(목록·검색·랭킹·추천·루틴)이 공유하는 단일 형태다. 후속 단계가 채울
+필드까지 처음부터 포함해, 값이 채워질 때 프론트를 고치지 않게 한다.
+
+```java
+GoodsListItem(
+    Long goodsNo, String brandName, String name, String thumbnailUrl,
+    int listPrice, int salePrice, int discountRate /*파생*/,
+    List<String> badges,           // SALE|COUPON|GIFT|ONE_PLUS_ONE (promotion 조인 파생)
+    double rating, int reviewCount, // review 도입 전까지 0.0 / 0
+    boolean wished,                 // wishlist 도입 전까지 false
+    boolean todayDreamAvailable)    // delivery 도입 전까지 false
+```
+
 ### 공개
 ```
 GET /categories/tree
-GET /goods?categoryCode=&sort=(popular|new|sales|priceAsc|discount)&page=
+GET /goods?categoryCode=&brandId=&minPrice=&maxPrice=
+          &sort=(popular|new|sales|priceAsc|discount)&page=&size=
+                                         # → PageResponse<GoodsListItem>
+                                         # 정렬 안정성: 모든 정렬에 id DESC를 2차 키로 붙인다
 GET /goods/{goodsNo}                     # 빠른 기본 정보
 GET /goods/{goodsNo}/description         # 지연 로딩
 GET /goods/{goodsNo}/recommended
@@ -159,6 +191,10 @@ GET /routines?skinType=&time=
 POST /compat/check                       # 상품ID 배열 → 궁합 진단 결과
 GET /delivery/stores/nearby?lat=&lng=&goodsNo=
 ```
+
+**공개는 위 목록이 전부이며 조회(GET)뿐이다.** 유일한 예외가 `POST /compat/check` — 상품ID 배열을 받아
+판정만 하므로 비로그인도 쓸 수 있다. `POST /reviews`, `POST /qna` 등 쓰기는 아래 인증 목록에 속한다.
+이 목록에 없는 공개 경로가 필요해지면 임의로 열지 말고 이 문서를 먼저 고친다.
 
 ### 인증
 ```
@@ -198,7 +234,15 @@ GET /qna?goodsNo=  POST /qna          # 답변은 admin
 
 ## 9. 에러 처리
 
-- 전역 `@RestControllerAdvice` → `{code, message, detail}` 통일. 도메인 에러코드 체계(STOCK_SHORTAGE, PAYMENT_AMOUNT_MISMATCH, REVIEW_NOT_PURCHASED …)
+- 전역 `@RestControllerAdvice` → `{code, message, detail}` 통일
+- **에러코드 네임스페이스**: 도메인별 접두사로만 상수를 늘린다. 승인된 접두사는
+  `MEMBER_` `GOODS_` `ORDER_` `PAY_` `REVIEW_` `DLVY_` `ROUTINE_` `COMPAT_` 8종.
+  카테고리·성분처럼 전용 접두사가 없는 영역은 소속 도메인 접두사에 붙인다
+  (예: `GOODS_CATEGORY_NOT_FOUND`). 접두사를 새로 만들려면 이 목록을 먼저 고친다 —
+  임의로 늘리면 이 문서가 진실이 아니게 된다
+- 공통 에러코드(`INVALID_INPUT` `UNAUTHORIZED` `FORBIDDEN` `NOT_FOUND` …)와 전역 핸들러는
+  기반 구축 이후 **추가만 가능하고 수정 불가**. 인증·인가 예외는 핸들러가 가로채지 않고
+  rethrow해야 한다(가로채면 인가 거부가 403이 아닌 500이 된다)
 - 결제 실패 복구: 승인 실패→결제대기 유지(재시도 가능) / 승인 후 검증 실패→토스 취소 후 주문 실패 (과금만 되는 상태 금지)
 - 프론트: Query 공통 에러 바운더리 + 토스트, 401→리프레시→실패 시 로그인
 
