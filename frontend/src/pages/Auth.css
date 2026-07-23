@@ -1,0 +1,24 @@
+.bb-auth-placeholder {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 96px 24px;
+  text-align: left;
+}
+
+.bb-auth-placeholder__eyebrow {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent-strong);
+  margin-bottom: 16px;
+}
+
+.bb-auth-placeholder__title {
+  font-size: 28px;
+}
+
+.bb-auth-placeholder__desc {
+  margin-top: 12px;
+  max-width: 46ch;
+}
