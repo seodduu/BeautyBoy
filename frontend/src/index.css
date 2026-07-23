@@ -55,6 +55,9 @@
      원본 사양(라틴 전용)의 line-height 1.0 / -0.9~-1.2px 자간은 한글에서
      자소가 잘리고 붙으므로 "한글 적용" 절 기준으로 조정한다:
      디스플레이·헤딩 line-height 1.15~1.25, 자간은 -0.02em 상한, 본문 자간 0. */
+  /* 랜딩 워드마크 전용 상한 (DESIGN.md typography.display-hero) */
+  --fs-display-hero: 240px;
+
   --fs-display: 112px;
   --fw-display: 400;
   /* 112px 한글은 1.2도 뜬다 — "한글 적용" 절이 허용하는 하한(1.15)을 쓴다. */

@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { WaveCanvas } from '../components/landing/WaveCanvas';
 import './Home.css';
 
 /**
@@ -8,22 +9,29 @@ import './Home.css';
 export function Home() {
   return (
     <>
-      {/* {hero-photo} 패턴: {colors.scrim} 풀블리드 배경 + 왼쪽 정렬 eyebrow→display→서브카피→CTA lockup.
-          실사진 자산이 아직 없어 스크림 위에 CSS 그라디언트로 대체했다.
-          실사진 교체 지점: .bb-hero 의 background-image를 실제 사진(+ 스크림 오버레이)으로 교체. */}
+      {/* 랜딩 히어로: 검정 캔버스 + 물결 리본(canvas) 위에 워드마크를 얹는다.
+          {landing-hero} 사양은 DESIGN.md 참조. */}
       <section className="bb-hero">
-        <div className="bb-hero__lockup">
-          <p className="bb-hero__eyebrow">MEN&apos;S SKINCARE, MEASURED</p>
-          <h1 className="bb-hero__title">피부도 데이터로 관리할 시간</h1>
-          <p className="bb-hero__desc">
-            성분 궁합부터 피부타입별 루틴까지, 근거 있는 선택만 남깁니다. 뷰티보이는
-            남성 피부 데이터를 기준으로 제품을 추천하는 커머스입니다.
-          </p>
-          <div className="bb-hero__cta">
-            <Link to="/signup" className="bb-hero__cta-link">
-              무료로 시작하기
-            </Link>
-          </div>
+        <WaveCanvas />
+
+        <p className="bb-hero__lede">
+          성분 궁합부터 피부타입별 루틴까지,
+          <br />
+          근거 있는 선택만 남깁니다.
+        </p>
+
+        <h1 className="bb-hero__wordmark">
+          <span className="bb-hero__wordmark-line">Beauty</span>
+          <span className="bb-hero__wordmark-line">Boy</span>
+        </h1>
+
+        <div className="bb-hero__cta">
+          <Link to="/login" className="bb-hero__cta-link">
+            Get started
+            <span className="bb-hero__cta-chevron" aria-hidden="true">
+              ›
+            </span>
+          </Link>
         </div>
       </section>
 

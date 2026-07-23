@@ -1,73 +1,60 @@
-/* {hero-photo}: {colors.scrim} 풀블리드 배경, 왼쪽 정렬 lockup(eyebrow → display → 서브카피 → CTA).
-   실사진 자산이 없어 scrim 위에 은은한 그라디언트로 대체했다.
-   실사진 교체 지점: background-image를 실제 사진(+ 위에 scrim 오버레이)으로 바꾼다. */
+/* {landing-hero}: 순검정 풀블리드 + 물결 리본(canvas) 위에 워드마크를 얹는다.
+   레이어 순서(아래→위): 배경색 → canvas → 카피/워드마크/CTA. */
 .bb-hero {
-  background-color: var(--color-scrim);
-  background-image: radial-gradient(
-      circle at 78% 18%,
-      rgba(255, 255, 255, 0.08),
-      transparent 55%
-    ),
-    linear-gradient(
-      155deg,
-      color-mix(in srgb, var(--color-scrim), white 6%) 0%,
-      var(--color-scrim) 55%,
-      color-mix(in srgb, var(--color-scrim), black 45%) 100%
-    );
-  padding: var(--space-section-lg) 24px;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background: var(--color-primary);
+  /* 헤더 높이를 뺀 나머지를 꽉 채운다 — 첫 화면이 물결로만 채워지게. */
+  /* 헤더가 absolute로 겹쳐 오므로 첫 화면을 통째로 쓴다.
+     위쪽 패딩은 헤더(64px)를 피하도록 잡는다. */
+  min-height: 100dvh;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  padding: calc(64px + var(--space-lg)) 24px var(--space-section);
 }
 
-.bb-hero__lockup {
-  max-width: 1180px;
-  margin: 0 auto;
+.bb-hero > *:not(.bb-wave) {
+  position: relative;
+  z-index: 1;
 }
 
-.bb-hero__eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
+/* 오른쪽 위 짧은 카피 */
+.bb-hero__lede {
+  grid-row: 1;
+  justify-self: end;
+  text-align: right;
   font-family: var(--font-body);
-  font-size: var(--fs-eyebrow);
-  font-weight: var(--fw-eyebrow);
-  letter-spacing: var(--ls-eyebrow);
-  text-transform: uppercase;
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
   color: var(--color-on-primary);
-  opacity: 0.7;
-  margin-bottom: 20px;
+  word-break: keep-all;
 }
 
-.bb-hero__eyebrow::before {
-  content: '';
-  width: 18px;
-  height: 1px;
-  background: currentColor;
-}
-
-.bb-hero__title {
-  font-family: var(--font-body);
-  /* 상한(--fs-display 112px)에 1440px 부근에서 닿도록 계수를 잡는다.
-     5vw로 두면 1440에서 72px에 머물러 토큰을 올려도 커지지 않는다. */
-  font-size: clamp(40px, 8vw, var(--fs-display));
-  font-weight: var(--fw-display);
-  line-height: var(--lh-display);
-  letter-spacing: var(--ls-display);
-  max-width: 16ch;
-  color: var(--color-on-primary);
-}
-
-.bb-hero__desc {
-  margin-top: 20px;
-  font-family: var(--font-body);
-  font-size: var(--fs-subtitle);
-  line-height: 1.6;
-  max-width: 46ch;
-  color: var(--color-on-primary);
-  opacity: 0.85;
-}
-
+/* 중앙 CTA */
 .bb-hero__cta {
-  margin-top: var(--space-xl);
+  grid-row: 2;
+  align-self: center;
+  justify-self: center;
   display: inline-flex;
+}
+
+/* 왼쪽 아래 워드마크 — 두 줄로 쌓는다 */
+.bb-hero__wordmark {
+  grid-row: 3;
+  align-self: end;
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-body);
+  font-size: clamp(64px, 15vw, var(--fs-display-hero));
+  font-weight: var(--fw-display);
+  line-height: 0.92;
+  letter-spacing: var(--ls-display);
+  color: var(--color-on-primary);
+}
+
+.bb-hero__wordmark-line {
+  display: block;
 }
 
 /* {button-primary-on-dark} */
@@ -88,6 +75,12 @@
 
 .bb-hero__cta-link:hover {
   opacity: 0.85;
+}
+
+.bb-hero__cta-chevron {
+  font-size: 1.15em;
+  line-height: 1;
+  transform: translateY(-1px);
 }
 
 .bb-features {

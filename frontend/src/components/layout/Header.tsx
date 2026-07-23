@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import './Header.css';
 import { useAuthStore } from '../../stores/authStore';
 import { logout } from '../../api/auth';
@@ -13,6 +13,9 @@ export function Header() {
   const isBootstrapping = useAuthStore((state) => state.isBootstrapping);
   const clear = useAuthStore((state) => state.clear);
   const navigate = useNavigate();
+  /* 랜딩(/)은 검정 풀블리드 히어로라 흰 헤더 바가 얹히면 화면이 두 조각으로 잘린다.
+     그 화면에서만 헤더를 투명하게 겹쳐 올린다. */
+  const isLanding = useLocation().pathname === '/';
 
   const handleLogout = async () => {
     try {
@@ -24,7 +27,7 @@ export function Header() {
   };
 
   return (
-    <header className="bb-header">
+    <header className={`bb-header${isLanding ? ' bb-header--overlay' : ''}`}>
       <div className="bb-header__bar">
         <Link to="/" className="bb-header__logo" aria-label="뷰티보이 홈으로">
           BEAUTY BOY<span className="bb-header__logo-dot">.</span>

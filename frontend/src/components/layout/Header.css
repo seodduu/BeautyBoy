@@ -6,6 +6,29 @@
   border-bottom: 1px solid var(--color-hairline);
 }
 
+/* 랜딩 전용: 검정 히어로 위에 투명하게 겹쳐 올린다.
+   흰 바가 그대로 얹히면 첫 화면이 두 조각으로 잘려 보인다. */
+.bb-header--overlay {
+  position: absolute;
+  left: 0;
+  right: 0;
+  background: transparent;
+  border-bottom: none;
+}
+
+.bb-header--overlay .bb-header__logo,
+.bb-header--overlay .bb-header__nav-link,
+.bb-header--overlay .bb-header__logout {
+  color: var(--color-on-primary);
+}
+
+/* 검색 자리는 검정 위에서 반투명 유리처럼 */
+.bb-header--overlay .bb-header__search {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.22);
+  color: var(--color-on-primary);
+}
+
 .bb-header__bar {
   max-width: 1180px;
   margin: 0 auto;

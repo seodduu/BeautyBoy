@@ -38,6 +38,13 @@ typography:
   # 디스플레이는 의도적으로 매우 크다. 이 시스템의 인상은 "거대한 제목 ↔ 작은 라벨"의
   # 스케일 대비에서 나온다 — 중간 크기를 늘리는 대신 양 끝을 벌린다.
   # 아래 px는 데스크톱 상한이며, 실제 렌더는 뷰포트에 따라 clamp로 줄어든다.
+  display-hero:
+    # 랜딩 워드마크 전용. 화면 하나를 통째로 쓰는 자리에만 허용하고 본문 흐름에는 쓰지 않는다.
+    fontFamily: abcNormal
+    fontSize: 240px
+    fontWeight: 400
+    lineHeight: 0.92
+    letterSpacing: -1.2px
   display:
     fontFamily: abcNormal
     fontSize: 112px
