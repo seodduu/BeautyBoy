@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 public class GoodsService implements GoodsQueryService {
@@ -128,6 +129,39 @@ public class GoodsService implements GoodsQueryService {
     @Transactional(readOnly = true)
     public boolean exists(Long goodsNo) {
         return goodsRepository.existsByIdAndStatusNot(goodsNo, Goods.STATUS_HIDDEN);
+    }
+
+    /**
+     * 주문·장바구니용 상품 스냅샷. 숨김 상품과 상품-옵션 불일치는 빈 값으로 답한다
+     * (예외를 던지지 않는 이유는 인터페이스 문서 참고).
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<OrderGoodsSnapshot> findOrderSnapshot(Long goodsNo, Long optionNo) {
+        Optional<Goods> found = goodsRepository.findById(goodsNo)
+                .filter(goods -> !Goods.STATUS_HIDDEN.equals(goods.getStatus()));
+        if (found.isEmpty()) {
+            return Optional.empty();
+        }
+        Goods goods = found.get();
+
+        if (optionNo == null) {
+            // 옵션이 없는 상품. 재고 관리 단위가 옵션이므로 상품 단위 재고는 무제한으로 본다.
+            return Optional.of(new OrderGoodsSnapshot(
+                    goods.getId(), null, goods.getName(), null, goods.getSalePrice(), Integer.MAX_VALUE));
+        }
+
+        // 옵션은 반드시 그 상품의 것이어야 한다. 남의 옵션을 붙이는 조작을 여기서 끊는다.
+        return goods.getOptions().stream()
+                .filter(option -> option.getId().equals(optionNo))
+                .findFirst()
+                .map(option -> new OrderGoodsSnapshot(
+                        goods.getId(),
+                        option.getId(),
+                        goods.getName(),
+                        option.getName(),
+                        goods.getSalePrice() + option.getAddPrice(),
+                        option.getStock()));
     }
 
     /** 코드 접두사(C001, C001001, C001001001)를 한 번에 IN 조회해 depth 1→3 순서 이름 배열로 만든다. */
