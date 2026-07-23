@@ -111,6 +111,44 @@ class SecurityErrorHandlingTest {
     }
 
     @Test
+    void 공개_조회_경로는_무토큰이어도_401이_아니다() throws Exception {
+        // 설계 7장 "공개" 목록을 선반영했으므로 무토큰 GET이 인증에서 막히면 안 된다.
+        // 아직 컨트롤러가 없어 404가 나오는데, 그것이 곧 "인증은 통과했다"는 증거다.
+        for (String path : new String[]{
+                "/api/v1/categories/tree",
+                "/api/v1/goods",
+                "/api/v1/goods/1",
+                "/api/v1/search",
+                "/api/v1/rankings",
+                "/api/v1/routines"}) {
+            mockMvc.perform(get(path))
+                    .andExpect(status().isNotFound());
+        }
+    }
+
+    @Test
+    void 공개된_것은_조회뿐이고_쓰기는_여전히_인증이_필요하다() throws Exception {
+        // GET /api/v1/reviews는 공개지만 POST는 아니다.
+        mockMvc.perform(post("/api/v1/reviews").contentType("application/json").content("{}"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value("UNAUTHORIZED"));
+
+        mockMvc.perform(post("/api/v1/qna").contentType("application/json").content("{}"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void 공개_목록에_없는_회원_경로는_무토큰이면_401이다() throws Exception {
+        // 공개 경로를 선반영하면서 실수로 회원 경로까지 열리지 않았는지 확인한다.
+        mockMvc.perform(get("/api/v1/members/me"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value("UNAUTHORIZED"));
+
+        mockMvc.perform(get("/api/v1/members/me/addresses"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
     void 인가_거부는_캐치올에_먹히지_않고_403을_반환한다() throws Exception {
         // 가장 중요한 회귀 방지선: @PreAuthorize가 던지는 AccessDeniedException을
         // GlobalExceptionHandler의 Exception 캐치올이 가로채면 인가 거부(403)가 500으로 둔갑한다.
