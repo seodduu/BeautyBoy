@@ -76,6 +76,11 @@
   color: var(--accent-strong);
 }
 
+.bb-header__nav-link--member {
+  color: var(--accent-strong);
+  font-weight: 600;
+}
+
 .bb-header__cart-count {
   display: inline-flex;
   align-items: center;

@@ -22,3 +22,159 @@
   margin-top: 12px;
   max-width: 46ch;
 }
+
+/* ── 로그인·가입 공통 ─────────────────────────────────────── */
+
+.bb-auth {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 72px 24px 96px;
+}
+
+.bb-auth--narrow {
+  max-width: 400px;
+}
+
+.bb-auth__eyebrow {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent-strong);
+  margin-bottom: 16px;
+}
+
+.bb-auth__title {
+  font-size: 28px;
+  margin-bottom: 32px;
+}
+
+.bb-auth__steps {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+.bb-auth__step {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  color: var(--muted-dim);
+}
+
+.bb-auth__step--active {
+  color: var(--accent-strong);
+}
+
+.bb-auth__step-divider {
+  flex: 1 1 auto;
+  height: 1px;
+  background: var(--line);
+}
+
+.bb-auth__form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.bb-auth__field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bb-auth__field label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--paper);
+}
+
+.bb-auth__field input {
+  height: 44px;
+  padding: 0 14px;
+  border-radius: 4px;
+  background: var(--surface-raised);
+  border: 1px solid var(--line);
+  color: var(--paper);
+  font-size: 14px;
+  font-family: inherit;
+  transition: border-color 0.15s ease;
+}
+
+.bb-auth__field input:focus {
+  border-color: var(--accent);
+}
+
+.bb-auth__hint {
+  font-size: 12px;
+  color: var(--muted-dim);
+}
+
+.bb-auth__section-title {
+  font-size: 18px;
+  margin-bottom: 8px;
+}
+
+.bb-auth__section-desc {
+  font-size: 13px;
+  margin-bottom: 28px;
+  max-width: 40ch;
+}
+
+.bb-auth__error {
+  font-size: 13px;
+  color: #e37b6a;
+}
+
+.bb-auth__submit {
+  height: 46px;
+  border-radius: 4px;
+  background: var(--accent);
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s ease, opacity 0.15s ease;
+}
+
+.bb-auth__submit:hover {
+  background: var(--accent-strong);
+}
+
+.bb-auth__submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.bb-auth__submit--ghost {
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--line-strong);
+}
+
+.bb-auth__submit--ghost:hover {
+  background: var(--surface-raised);
+  color: var(--paper);
+}
+
+.bb-auth__actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.bb-auth__switch {
+  margin-top: 24px;
+  font-size: 13px;
+  text-align: center;
+}
+
+.bb-auth__switch a {
+  color: var(--accent-strong);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

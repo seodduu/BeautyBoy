@@ -1,10 +1,14 @@
 import { Link } from 'react-router-dom';
 import './Header.css';
+import { useAuthStore } from '../../stores/authStore';
 
 /**
  * 올리브영식 헤더: 로고 / 검색바 자리(실제 검색은 후속 웨이브) / 장바구니·로그인.
+ * 로그인 상태(authStore.member)면 "로그인" 링크 대신 닉네임을 표시한다.
  */
 export function Header() {
+  const member = useAuthStore((state) => state.member);
+
   return (
     <header className="bb-header">
       <div className="bb-header__bar">
@@ -27,9 +31,15 @@ export function Header() {
             장바구니
             <span className="bb-header__cart-count">0</span>
           </span>
-          <Link to="/login" className="bb-header__nav-link">
-            로그인
-          </Link>
+          {member ? (
+            <span className="bb-header__nav-link bb-header__nav-link--member" aria-label="로그인됨">
+              {member.nickname}님
+            </span>
+          ) : (
+            <Link to="/login" className="bb-header__nav-link">
+              로그인
+            </Link>
+          )}
         </nav>
       </div>
     </header>
