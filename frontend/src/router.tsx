@@ -4,6 +4,7 @@ import { Home } from './pages/Home';
 import { Login } from './pages/Login';
 import { Signup } from './pages/Signup';
 import { Main } from './pages/Main';
+import { GoodsList } from './pages/GoodsList';
 import { RequireAuth } from './components/auth/RequireAuth';
 import { Showcase } from './pages/dev/Showcase';
 
@@ -20,6 +21,14 @@ export const router = createBrowserRouter([
         element: (
           <RequireAuth>
             <Main />
+          </RequireAuth>
+        ),
+      },
+      {
+        path: 'goods',
+        element: (
+          <RequireAuth>
+            <GoodsList />
           </RequireAuth>
         ),
       },
