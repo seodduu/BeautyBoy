@@ -42,10 +42,12 @@ cp backend/src/main/resources/application-local.yml.example backend/src/main/res
 `application-local.yml`은 `.gitignore` 대상이라 커밋되지 않는다. 안의 DB 비밀번호(`local1234`)는
 `docker-compose.yml`의 로컬 전용 MySQL 컨테이너 값과 짝을 이루는 예시이므로 그대로 써도 된다.
 
-JWT 시크릿은 코드/설정 파일에 넣지 않고 환경변수로 주입한다:
+JWT 시크릿은 코드/설정 파일에 넣지 않고 환경변수로 주입한다. `TokenProvider`가 HMAC 키를
+`Base64.decode(secret)`로 만들기 때문에 **반드시 Base64로 인코딩된 값**이어야 한다 — 임의의
+평문 문자열을 넣으면 컨텍스트 로딩 단계에서 기동이 실패한다:
 
 ```bash
-export JWT_SECRET="로컬 개발용 임의의 긴 문자열"
+export JWT_SECRET="$(openssl rand -base64 48)"
 ```
 
 ### 3. 백엔드 실행

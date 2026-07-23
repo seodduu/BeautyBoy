@@ -9,7 +9,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Import;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -17,7 +20,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -30,7 +35,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@Import(SecurityErrorHandlingTest.BoomController.class)
+@Import({SecurityErrorHandlingTest.BoomController.class, SecurityErrorHandlingTest.MethodSecurityTestConfig.class})
 @Transactional
 class SecurityErrorHandlingTest {
 
@@ -81,6 +86,38 @@ class SecurityErrorHandlingTest {
                 .andExpect(jsonPath("$.code").value("UNAUTHORIZED"));
     }
 
+    @Test
+    void 깨진_JSON_바디는_500이_아니라_400_INVALID_INPUT을_반환한다() throws Exception {
+        mockMvc.perform(post("/api/v1/auth/signup")
+                        .contentType("application/json")
+                        .content("{\"email\": \"a@b.com\", "))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_INPUT"));
+    }
+
+    @Test
+    void 지원하지_않는_HTTP_메서드는_500이_아니라_405를_반환한다() throws Exception {
+        mockMvc.perform(patch("/api/v1/members/me").header("Authorization", "Bearer " + validToken))
+                .andExpect(status().isMethodNotAllowed())
+                .andExpect(jsonPath("$.code").value("METHOD_NOT_ALLOWED"));
+    }
+
+    @Test
+    void 경로변수_타입이_맞지_않으면_500이_아니라_400_INVALID_INPUT을_반환한다() throws Exception {
+        mockMvc.perform(delete("/api/v1/members/me/addresses/abc")
+                        .header("Authorization", "Bearer " + validToken))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_INPUT"));
+    }
+
+    @Test
+    void 인가_거부는_캐치올에_먹히지_않고_403을_반환한다() throws Exception {
+        // 가장 중요한 회귀 방지선: @PreAuthorize가 던지는 AccessDeniedException을
+        // GlobalExceptionHandler의 Exception 캐치올이 가로채면 인가 거부(403)가 500으로 둔갑한다.
+        mockMvc.perform(get("/api/v1/test/admin-only").header("Authorization", "Bearer " + validToken))
+                .andExpect(status().isForbidden());
+    }
+
     private String login(String email, String password) throws Exception {
         String body = objectMapper.writeValueAsString(new LoginRequestFixture(email, password));
         MvcResult result = mockMvc.perform(post("/api/v1/auth/login")
@@ -95,12 +132,31 @@ class SecurityErrorHandlingTest {
     private record LoginRequestFixture(String email, String password) {
     }
 
+    /**
+     * 프로덕션 SecurityConfig에는 아직 @EnableMethodSecurity가 없다(admin API가 없으므로).
+     * 이후 웨이브가 그것을 켰을 때 인가 거부가 403으로 나가는지를 지금 고정해두기 위해
+     * 테스트 컨텍스트에서만 메서드 보안을 활성화한다. 프로덕션 설정은 건드리지 않는다.
+     */
+    @TestConfiguration
+    @EnableMethodSecurity
+    static class MethodSecurityTestConfig {
+    }
+
     @RestController
     static class BoomController {
 
         @GetMapping("/api/v1/test/boom")
         public void boom() {
             throw new IllegalStateException("의도적으로 발생시킨 테스트용 예외");
+        }
+
+        /**
+         * 일반 USER 토큰으로는 통과할 수 없는 엔드포인트.
+         * 이후 웨이브의 admin API가 쓸 @PreAuthorize 경로를 미리 재현한다.
+         */
+        @PreAuthorize("hasRole('ADMIN')")
+        @GetMapping("/api/v1/test/admin-only")
+        public void adminOnly() {
         }
     }
 }
