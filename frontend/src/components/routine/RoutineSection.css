@@ -1,0 +1,121 @@
+/* 루틴 단계 섹션. 색·간격·라운딩은 전부 index.css 토큰을 참조한다(hex 직접 기입 금지). */
+
+.bb-routine {
+  padding: var(--space-section-lg) 0;
+  border-top: 1px solid var(--color-hairline);
+}
+
+.bb-routine:first-of-type {
+  border-top: none;
+}
+
+/* 타이포 블록 ↔ 이미지 박스. 이미지 쪽을 조금 넓게 잡아 pangram식 비대칭을 만든다. */
+.bb-routine__head {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: var(--space-xxl);
+  align-items: end;
+  margin-bottom: var(--space-xl);
+}
+
+/* 홀수 단계는 좌우를 뒤집는다 — DOM 순서(타이포 먼저)는 유지하고 배치만 바꾼다.
+   읽는 순서와 탭 순서가 시각 배치 때문에 어긋나지 않게 하기 위함이다. */
+.bb-routine--text-right .bb-routine__text {
+  order: 2;
+}
+
+.bb-routine--text-right .bb-routine__head {
+  grid-template-columns: 1.2fr 1fr;
+}
+
+.bb-routine--text-right .bb-routine__figure {
+  order: 1;
+}
+
+.bb-routine__step {
+  font-size: var(--fs-eyebrow);
+  font-weight: var(--fw-eyebrow);
+  line-height: var(--lh-eyebrow);
+  letter-spacing: var(--ls-eyebrow);
+  color: var(--color-stone);
+  margin-bottom: var(--space-sm);
+}
+
+.bb-routine__title {
+  font-size: var(--fs-display-sm);
+  font-weight: var(--fw-display-sm);
+  line-height: var(--lh-display-sm);
+  letter-spacing: var(--ls-display-sm);
+  color: var(--color-ink);
+}
+
+.bb-routine__copy {
+  margin-top: var(--space-md);
+  max-width: 34em;
+  font-size: var(--fs-body-lg);
+  line-height: var(--lh-body-lg);
+  color: var(--color-graphite);
+}
+
+/* 이미지 박스 — DESIGN.md의 카드 면(surface + rounded.lg). 그림자는 쓰지 않는다. */
+.bb-routine__figure {
+  background: var(--color-surface);
+  border-radius: var(--rounded-lg);
+  overflow: hidden;
+  aspect-ratio: 16 / 9;
+}
+
+.bb-routine__image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.bb-routine__more {
+  margin-top: var(--space-lg);
+  text-align: right;
+}
+
+.bb-routine__more-link {
+  font-size: var(--fs-link-sm);
+  font-weight: var(--fw-link-sm);
+  line-height: var(--lh-link-sm);
+  color: var(--color-ink);
+  text-decoration: none;
+  border-bottom: 1px solid var(--color-ink);
+  padding-bottom: var(--space-xxs);
+}
+
+.bb-routine__more-link:hover {
+  color: var(--color-graphite);
+  border-bottom-color: var(--color-graphite);
+}
+
+/* 태블릿 이하: 타이포 위, 이미지 아래로 세로 스택. 좌우 교차는 의미가 없어지므로 해제한다. */
+@media (max-width: 900px) {
+  .bb-routine {
+    padding: var(--space-section) 0;
+  }
+
+  .bb-routine__head,
+  .bb-routine--text-right .bb-routine__head {
+    grid-template-columns: 1fr;
+    gap: var(--space-lg);
+  }
+
+  .bb-routine--text-right .bb-routine__text,
+  .bb-routine--text-right .bb-routine__figure {
+    order: initial;
+  }
+
+  .bb-routine__title {
+    font-size: var(--fs-heading-md);
+    line-height: var(--lh-heading-md);
+  }
+
+  .bb-routine__copy {
+    font-size: var(--fs-body);
+    line-height: var(--lh-body);
+  }
+}
