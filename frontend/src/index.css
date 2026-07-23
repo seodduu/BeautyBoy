@@ -1,35 +1,146 @@
 /*
   뷰티보이 디자인 토큰
   ------------------------------------------------------------
-  방향: 남성 그루밍 제품 특유의 "실험실/이발소" 절제미.
-  올리브영의 밝은 화이트+올리브그린과 의도적으로 대비되는
-  다크 차콜 베이스 + 황동(brass) 포인트로 브랜드를 분리한다.
-  이 프로젝트는 하나의 정체성을 가진 커머스 셸이므로
-  라이트/다크 시스템 설정과 무관하게 다크 톤을 고정한다.
+  진실 원천: 루트 DESIGN.md (front matter colors/typography/rounded/spacing).
+  Wave 0의 다크 차콜 + 황동(brass) 팔레트는 여기서 전면 폐기하고
+  DESIGN.md의 밝은 편집디자인 시스템(흰 캔버스 + 검정 잉크 + 무채색 사다리
+  + signal-* 5종)으로 교체한다.
+
+  주의: Wave 0 --ink(#15181b, 어두운 배경)와 DESIGN.md ink(#030303, 검정 글자)는
+  이름은 같지만 뜻이 반대다. 이 파일의 --color-ink는 DESIGN.md 기준 "글자색"이다.
 */
 :root {
-  --ink: #15181b;
-  --surface: #1c2024;
-  --surface-raised: #23282c;
-  --paper: #ece7e0;
-  --muted: #9aa0a3;
-  --muted-dim: #6b7174;
-  --accent: #c08552;
-  --accent-strong: #dd9c66;
-  --accent-dim: #8c6039;
-  --line: rgba(236, 231, 224, 0.1);
-  --line-strong: rgba(236, 231, 224, 0.18);
+  color-scheme: light;
 
+  /* ---- Colors: Brand & Accent ---- */
+  --color-primary: #000000;
+  --color-on-primary: #ffffff;
+
+  /* ---- Colors: Text (neutral ladder) ---- */
+  --color-ink: #030303;
+  --color-ink-soft: #1a1a1a;
+  --color-graphite: #404040;
+  --color-slate: #676f7b;
+  --color-slate-soft: #727a85;
+  --color-mute: #6b7280;
+  --color-stone: #939393;
+  --color-ash: #999999;
+
+  /* ---- Colors: Surface ---- */
+  --color-canvas: #ffffff;
+  --color-canvas-warm: #fefefe;
+  --color-hairline: #e7eaf0;
+  --color-hairline-soft: #c9ccd1;
+  --color-surface-cool: #d0d4d4;
+  --color-scrim: #1a1a1a;
+  --color-footer: #030303;
+
+  /* ---- Colors: Semantic (뷰티보이 커머스 확장, signal-* 5종) ---- */
+  --color-signal-sale: #b42318;
+  --color-signal-danger: #b42318;
+  --color-signal-caution: #8a5300;
+  --color-signal-success: #146c43;
+  --color-signal-muted: #939393;
+
+  /* ---- Typography: font stacks ----
+     abcNormal은 독점 서체라 한글 글리프가 없다. 라틴은 Inter, 한글은
+     Pretendard가 받는다 (DESIGN.md "한글 적용"). --font-mono은 폐기 —
+     이 시스템은 단일 산세리프 원칙(One face, every level)이라 모노스페이스가 없다. */
   --font-body:
-    'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont,
+    Inter, 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont,
     'Apple SD Gothic Neo', 'Malgun Gothic', system-ui, sans-serif;
-  --font-mono:
-    ui-monospace, 'SFMono-Regular', 'Menlo', 'Consolas', monospace;
 
-  color-scheme: dark;
-  font: 16px/1.6 var(--font-body);
-  color: var(--paper);
-  background: var(--ink);
+  /* ---- Typography scale ----
+     원본 사양(라틴 전용)의 line-height 1.0 / -0.9~-1.2px 자간은 한글에서
+     자소가 잘리고 붙으므로 "한글 적용" 절 기준으로 조정한다:
+     디스플레이·헤딩 line-height 1.15~1.25, 자간은 -0.02em 상한, 본문 자간 0. */
+  --fs-display: 48px;
+  --fw-display: 400;
+  --lh-display: 1.2;
+  --ls-display: -0.02em;
+
+  --fs-display-sm: 40px;
+  --fw-display-sm: 400;
+  --lh-display-sm: 1.2;
+  --ls-display-sm: -0.02em;
+
+  --fs-heading-md: 36px;
+  --fw-heading-md: 400;
+  --lh-heading-md: 1.2;
+  --ls-heading-md: -0.02em;
+
+  --fs-heading-sm: 24px;
+  --fw-heading-sm: 400;
+  --lh-heading-sm: 1.2;
+  --ls-heading-sm: 0;
+
+  --fs-subtitle: 20px;
+  --fw-subtitle: 400;
+  --lh-subtitle: 1.3;
+  --ls-subtitle: 0;
+
+  --fs-body: 16px;
+  --fw-body: 400;
+  --lh-body: 1.5;
+  --ls-body: 0;
+
+  --fs-body-strong: 16px;
+  --fw-body-strong: 600;
+  --lh-body-strong: 1.5;
+  --ls-body-strong: 0;
+
+  --fs-body-tight: 16px;
+  --fw-body-tight: 400;
+  --lh-body-tight: 1.3;
+  --ls-body-tight: 0;
+
+  --fs-link-sm: 14px;
+  --fw-link-sm: 600;
+  --lh-link-sm: 1.43;
+  --ls-link-sm: 0;
+
+  --fs-meta: 13px;
+  --fw-meta: 400;
+  --lh-meta: 1.3;
+  --ls-meta: 0;
+
+  --fs-eyebrow: 14px;
+  --fw-eyebrow: 500;
+  --lh-eyebrow: 1.43;
+  --ls-eyebrow: 0.35px;
+
+  --fs-micro-caps: 11px;
+  --fw-micro-caps: 450;
+  --lh-micro-caps: 1.3;
+  --ls-micro-caps: 0.2px;
+
+  --fs-button: 14px;
+  --fw-button: 600;
+  --lh-button: 1.43;
+  --ls-button: 0;
+
+  /* ---- Rounded ---- */
+  --rounded-none: 0px;
+  --rounded-xs: 4px;
+  --rounded-sm: 6px;
+  --rounded-md: 8px;
+  --rounded-lg: 16px;
+  --rounded-full: 9999px;
+
+  /* ---- Spacing ---- */
+  --space-xxs: 4px;
+  --space-xs: 8px;
+  --space-sm: 12px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-xxl: 48px;
+  --space-section: 64px;
+  --space-section-lg: 96px;
+
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font: var(--fs-body)/var(--lh-body) var(--font-body);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -38,6 +149,13 @@
 
 * {
   box-sizing: border-box;
+}
+
+/* 한글은 어절 중간에서 끊기면 안 된다(Wave 0 히어로 줄바꿈 결함의 근본 원인).
+   긴 URL·영문 토큰은 word-break가 못 끊으므로 overflow-wrap으로 보완한다. */
+html {
+  word-break: keep-all;
+  overflow-wrap: anywhere;
 }
 
 body {
@@ -55,15 +173,16 @@ h1,
 h2,
 h3 {
   font-family: var(--font-body);
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  color: var(--paper);
+  font-weight: var(--fw-heading-md);
+  line-height: var(--lh-heading-md);
+  letter-spacing: var(--ls-heading-md);
+  color: var(--color-ink);
   margin: 0;
 }
 
 p {
   margin: 0;
-  color: var(--muted);
+  color: var(--color-graphite);
 }
 
 a {
@@ -77,7 +196,7 @@ button {
 
 /* 접근성: 키보드 포커스 표시는 항상 유지 */
 :focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--color-ink);
   outline-offset: 2px;
 }
 

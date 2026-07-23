@@ -1,0 +1,156 @@
+/*
+  /dev/components 전용 쇼케이스 스타일.
+  DESIGN.md 토큰만 참조한다 — raw hex는 이 파일에 없다(팔레트 라벨의 hex 문자열은
+  Showcase.tsx의 JS 배열에만 존재하고, 스와치 배경은 var(--color-*)로 칠한다).
+*/
+
+.bb-showcase {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-section);
+  max-width: 1440px;
+  width: 100%;
+  min-width: 0;
+  margin: 0 auto;
+  padding: var(--space-xxl) var(--space-lg) var(--space-section-lg);
+  background: var(--color-canvas);
+  box-sizing: border-box;
+}
+
+.bb-showcase__intro {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  min-width: 0;
+}
+
+.bb-showcase__eyebrow {
+  font-size: var(--fs-eyebrow);
+  font-weight: var(--fw-eyebrow);
+  line-height: var(--lh-eyebrow);
+  letter-spacing: var(--ls-eyebrow);
+  color: var(--color-slate);
+  text-transform: uppercase;
+}
+
+.bb-showcase__title {
+  font-size: var(--fs-display-sm);
+  font-weight: var(--fw-display-sm);
+  line-height: var(--lh-display-sm);
+  letter-spacing: var(--ls-display-sm);
+  color: var(--color-ink);
+}
+
+.bb-showcase__lead {
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  color: var(--color-graphite);
+  max-width: 720px;
+}
+
+.bb-showcase__section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  min-width: 0;
+}
+
+.bb-showcase__section-title {
+  font-size: var(--fs-heading-sm);
+  font-weight: var(--fw-heading-sm);
+  line-height: var(--lh-heading-sm);
+  color: var(--color-ink);
+  border-bottom: 1px solid var(--color-hairline);
+  padding-bottom: var(--space-sm);
+}
+
+.bb-showcase__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.bb-showcase__row--dark {
+  background: var(--color-scrim);
+  padding: var(--space-lg);
+  border-radius: var(--rounded-lg);
+}
+
+/* ---- 색 팔레트 ---- */
+.bb-showcase__swatch-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: var(--space-lg) var(--space-md);
+  min-width: 0;
+}
+
+.bb-showcase__swatch {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xxs);
+}
+
+.bb-showcase__swatch-fill {
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  border-radius: var(--rounded-md);
+  border: 1px solid var(--color-hairline);
+}
+
+.bb-showcase__swatch-token {
+  font-size: var(--fs-meta);
+  color: var(--color-ink-soft);
+  font-weight: 600;
+}
+
+.bb-showcase__swatch-hex {
+  font-size: var(--fs-meta);
+  color: var(--color-ash);
+}
+
+/* ---- 타이포그래피 ---- */
+.bb-showcase__type-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.bb-showcase__type-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-md);
+  border-bottom: 1px solid var(--color-hairline);
+  padding-bottom: var(--space-sm);
+}
+
+.bb-showcase__type-token {
+  flex: 0 0 260px;
+  font-size: var(--fs-meta);
+  color: var(--color-slate);
+}
+
+.bb-showcase__type-sample {
+  color: var(--color-ink);
+}
+
+/* ---- Field 상태 그리드 ---- */
+.bb-showcase__field-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--space-lg);
+  max-width: 960px;
+}
+
+/* ---- Skeleton ---- */
+.bb-showcase__skeleton-wide {
+  width: 320px;
+}
+
+@media (max-width: 640px) {
+  .bb-showcase {
+    padding: var(--space-lg) var(--space-md) var(--space-section);
+    gap: var(--space-section);
+  }
+}

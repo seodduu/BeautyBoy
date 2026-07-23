@@ -4,6 +4,8 @@ import { isAxiosError } from 'axios';
 import './Auth.css';
 import { fetchMe, login } from '../api/auth';
 import { useAuthStore } from '../stores/authStore';
+import { Button } from '../components/ui/Button';
+import { Field } from '../components/ui/Field';
 
 /**
  * 로그인 페이지.
@@ -46,35 +48,32 @@ export function Login() {
       <h1 className="bb-auth__title">로그인</h1>
 
       <form className="bb-auth__form" onSubmit={handleSubmit}>
-        <div className="bb-auth__field">
-          <label htmlFor="login-email">이메일</label>
-          <input
-            id="login-email"
-            type="email"
-            required
-            autoComplete="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-        </div>
+        <Field
+          id="login-email"
+          label="이메일"
+          type="email"
+          inputMode="email"
+          required
+          autoComplete="email"
+          value={email}
+          onChange={setEmail}
+        />
 
-        <div className="bb-auth__field">
-          <label htmlFor="login-password">비밀번호</label>
-          <input
-            id="login-password"
-            type="password"
-            required
-            autoComplete="current-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </div>
+        <Field
+          id="login-password"
+          label="비밀번호"
+          type="password"
+          required
+          autoComplete="current-password"
+          value={password}
+          onChange={setPassword}
+        />
 
         {error && <p className="bb-auth__error">{error}</p>}
 
-        <button type="submit" className="bb-auth__submit" disabled={submitting}>
+        <Button type="submit" loading={submitting}>
           로그인
-        </button>
+        </Button>
       </form>
 
       <p className="bb-auth__switch">

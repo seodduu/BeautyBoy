@@ -61,3 +61,23 @@ export async function fetchMe(): Promise<MemberInfo> {
   const response = await api.get<ApiEnvelope<MemberInfo>>('/members/me');
   return response.data.data;
 }
+
+export interface RefreshSessionResult {
+  accessToken: string;
+  member: MemberInfo;
+}
+
+/**
+ * POST /auth/refresh — 앱 부트스트랩 시 세션 복구를 1회 시도한다.
+ * 실패(401 등)는 호출부(App)가 조용히 로그아웃 상태로 진행하며,
+ * client.ts의 401 인터셉터는 이 요청 자체를 refresh 요청으로 인식해 추가 refresh를 부르지 않는다.
+ */
+export async function refreshSession(): Promise<RefreshSessionResult> {
+  const response = await api.post<ApiEnvelope<RefreshSessionResult>>('/auth/refresh');
+  return response.data.data;
+}
+
+/** POST /auth/logout — 서버의 리프레시 세션(쿠키)을 무효화한다. */
+export async function logout(): Promise<void> {
+  await api.post('/auth/logout');
+}

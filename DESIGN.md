@@ -387,6 +387,10 @@ The entire system runs on a single proprietary sans, **abcNormal**, with `abcNor
 - **Negative tracking on display, neutral tracking on body.** Headings 24–48px sit at -0.9 to -1.2px to tighten silhouettes; body copy stays at 0 for legibility.
 - **Tight leading on display, generous leading on body.** Display sizes lock to `line-height: 1.0`; body relaxes to `1.5`. The contrast gives sections a clear "headline-then-paragraph" rhythm.
 - **Uppercase reserved for two roles.** `{typography.eyebrow}` for section labels, `{typography.micro-caps}` for footer columns and small tags. Body copy is never set in uppercase.
+- **본문 한 줄 길이는 45–75자**로 잡는다(한글은 25–40자). 리딩 밴드가 컨테이너 폭(~1280px)을 꽉 채우면
+  줄이 너무 길어 눈이 다음 줄을 놓친다 — 긴 본문 블록은 `max-width`로 가둔다.
+- **본문 최소 크기는 `{typography.body}`(16px).** 모바일에서 16px 미만은 iOS가 입력 시 확대해 레이아웃이
+  튀고, 가독성도 떨어진다. 13px·11px 토큰은 메타/캡션 전용이며 본문에 쓰지 않는다.
 
 ### Note on Font Substitutes
 If `abcNormal` is unavailable, the closest open-source substitutes are **ABC Diatype** (commercial) or **Inter** at -0.02em tracking on display sizes. When using Inter, lift display sizes by ~1px and pull `letter-spacing` slightly tighter (-1.4px at 48px) to recover the compressed silhouette of the original.
@@ -534,6 +538,22 @@ The system avoids drop shadows entirely. Depth is created by photographic layeri
 **`form-field-focused`** — focused state
 - Bottom rule deepens to `{colors.ink}`. No glow, no colour shift on the field background.
 
+**폼 규칙 (뷰티보이)** — 회원가입·로그인·배송지·결제 폼이 전부 따른다.
+
+- **모든 입력에 보이는 라벨을 둔다.** placeholder는 라벨을 대체하지 않는다 — 값을 입력하면 사라져
+  맥락이 증발한다. 라벨은 필드 위 `{typography.body}` `{colors.ink}`, 힌트는 아래 `{typography.meta}` `{colors.stone}`.
+  라벨은 `for`로 필드와 연결하거나 필드를 감싼다.
+- **에러는 관련 필드 바로 아래**에 `{colors.signal-danger}` 헬퍼 텍스트로 낸다. 필드 자체는
+  `{form-field-error}`로 하단 rule만 `{colors.signal-danger}`가 되고 **배경은 바뀌지 않는다**.
+  에러 컨테이너에 `role="alert"`(제출 시 요약) 또는 `aria-live="polite"`(인라인)를 건다.
+- **검증은 blur 시점에.** 타이핑 중 매 글자마다 빨갛게 하지 않는다. 제출 실패 후에는 재입력 시 즉시 재검증한다.
+- **필수 필드는 명시**한다(라벨에 `*` + `aria-required`). 색만으로 필수를 표시하지 않는다.
+- **비밀번호는 표시/숨김 토글**을 준다(`{button-text-link}` 계열, `aria-pressed`로 상태).
+- **입력 타입·키보드를 맞춘다.** 이메일·전화·숫자는 `type`과 `inputmode`를 지정해 모바일에서 알맞은
+  키보드가 뜨게 하고, `autocomplete`를 채운다(이름·주소·카드).
+- **제출 피드백**: 버튼을 로딩 상태로 잠그고(중복 제출 방지) → 성공/실패를 낸다. 성공은
+  `{colors.signal-success}` 확인 문구, 실패는 상단 요약 + 실패 필드로 포커스 이동.
+
 **`alert-banner`** — privacy/cookie disclosure copy
 - Background `{colors.canvas}`, text `{colors.ink}`, `{typography.body-tight}`, padding `{spacing.md}`, rounded `{rounded.lg}`, 1px `{colors.hairline-soft}` border.
 
@@ -593,6 +613,9 @@ The system avoids drop shadows entirely. Depth is created by photographic layeri
 - Treat photography as content: full-bleed, cinematic, aligned to the page edge in heroes; `{rounded.lg}` only when the photo is contained inside a section.
 - Lock display headings to negative letter-spacing (`-0.9px` to `-1.2px`) — the tight tracking is core to the brand voice.
 - Use `{rounded.full}` pills for buttons and `{rounded.none}` for table/grid cells. Never mix.
+- 제목은 `h1→h2→h3` 순차로 쓴다. **크기를 맞추려고 레벨을 건너뛰지 않는다** — 큰 글씨가 필요하면
+  타이포 토큰으로 키우고 시맨틱 레벨은 문서 구조를 따른다(스크린리더·SEO가 이 순서를 읽는다).
+- 색으로만 전달하는 정보가 하나도 없게 한다. 시그널 색은 항상 아이콘·텍스트·취소선 등 두 번째 단서와 함께.
 
 ### Don't
 - Don't introduce accent colours beyond the five `signal-*` tokens. The voice is monochrome plus photography; the signals are a commerce concession, not an invitation to a palette. Never fill a surface with a signal colour — text, icon, and 1px rules only.
@@ -622,6 +645,10 @@ The system avoids drop shadows entirely. Depth is created by photographic layeri
 - Every `{button-primary}` is 40px tall — at the lower edge of the 44×44 WCAG target. On mobile the buttons grow to 48px height (still `{rounded.full}`, still `{typography.button}`).
 - `{nav-link}` items get `{spacing.sm}` vertical padding inside the mobile menu, expanding the tap target without changing typography.
 - Pricing-tier `{button-primary}` extends full-column-width on mobile.
+- **인접 터치 타깃 사이는 최소 `{spacing.xs}`(8px) 간격**을 둔다 — `goods-card`의 찜 버튼처럼 작은
+  아이콘 버튼이 다른 링크와 붙으면 오탭이 난다.
+- 상품 그리드에서 카드 전체가 탭 타깃이고, 찜 버튼은 그 위에 겹치지 않고 형제로 두어(카드 규칙 참조)
+  두 타깃이 서로를 삼키지 않게 한다.
 
 ### Collapsing Strategy
 - **Nav.** Centred desktop menu collapses into a single hamburger that opens an overlay sheet; the right-side `{button-primary}` "Try Runwai" stays visible above the hamburger as the persistent action.
@@ -633,6 +660,57 @@ The system avoids drop shadows entirely. Depth is created by photographic layeri
 - Hero photographs swap to a tighter crop on mobile (vertical-leaning) so the focal subject stays centred at xxs widths.
 - `{media-thumbnail}` containers preserve their 16:9 ratio at every breakpoint; the `{colors.surface-cool}` placeholder fill paints during lazy-load.
 - Studios poster tiles preserve their original aspect ratios at every breakpoint — the masonry simply re-flows into fewer columns.
+
+## UX 계약 (뷰티보이)
+
+이 절은 시각 토큰이 아니라 **화면이 지켜야 할 행동 규칙**이다. 커머스 UX 베스트 프랙티스 중
+이 시스템의 시각 언어·컴포넌트와 직접 맞닿는 것만 골라 뷰티보이 토큰에 연결해 적었다.
+(순수 성능·번들·빌드 규칙은 시각 계약의 범위가 아니므로 여기 넣지 않는다 — 코드 가이드에서 다룬다.)
+
+각 규칙은 위 컴포넌트·토큰과 이미 정의된 규칙(색 단독 금지, 그림자 금지, `signal-*` 5종 등)을 재확인·확장한다.
+
+### 접근성 (색으로만 알리지 않는다)
+
+- **대비 4.5:1 이상**(본문 텍스트). 무채색 사다리에서 `{colors.ash}`·`{colors.stone}`을
+  `{colors.canvas}` 위 본문으로 쓰지 않는다 — 캡션·메타 전용이다. 본문은 `{colors.graphite}` 이상 진하게.
+- **icon-only 버튼에는 `aria-label`.** `goods-card`의 찜 버튼, 헤더의 검색·장바구니 아이콘이 해당.
+- **의미 있는 이미지에는 서술형 `alt`.** 상품 썸네일 `alt`는 상품명, 장식 이미지는 `alt=""`.
+- **폼 에러는 `role="alert"`/`aria-live`**, 상태 변화(장바구니 담김, 재고 없음)는 스크린리더에 알린다.
+- **키보드만으로 전체 기능 도달**, tab 순서 = 시각 순서. 모달·드로어(장바구니, 필터)는 포커스 트랩 + `Esc` 닫기.
+- **skip-link**("본문 바로가기")를 헤더 앞에 둔다.
+- **`prefers-reduced-motion` 준수.** 이 시스템은 원래 모션이 절제돼 있지만, 어떤 트랜지션도 이 설정에서
+  즉시 완료로 축약한다.
+
+### 상태: 로딩·빈 상태·진행
+
+- **로딩(>300ms)은 스켈레톤/스피너로 표시.** 상품 목록·검색 결과는 `goods-card` 형태의 스켈레톤을
+  `{colors.surface-cool}` 톤으로 깔아 레이아웃 점프를 막는다(`goods-thumbnail` 플레이스홀더와 동일 원리).
+- **빈 상태는 안내 + 행동을 함께.** 빈 장바구니·찜·검색 무결과·주문 없음은 회색 일러스트+짧은 문구
+  (`{typography.body}` `{colors.graphite}`) + `{button-ghost}` 다음 행동("상품 둘러보기")을 낸다.
+  빈 화면을 흰 여백으로 방치하지 않는다.
+- **다단계 진행은 스텝 표시.** 회원가입(피부 프로필 스텝)·결제 플로우는 현재 단계/전체를 상단에 표시한다.
+
+### 피드백: 토스트·확인·에러 복구
+
+- **비치명 알림은 토스트로 3–5초 자동 소멸.** 찜 추가, 쿠폰 적용 같은 확인은 토스트. 배경은
+  `{colors.canvas}` + 1px `{colors.hairline-soft}` + 좌측 `{colors.signal-success}` 아이콘(배경 채움 금지).
+- **성공은 짧게 확인**(주문 완료는 전용 페이지, 소소한 액션은 토스트).
+- **에러는 복구 경로를 함께 준다.** "결제 실패" 단독이 아니라 원인 + 다시 시도/카드 변경 버튼.
+  돈·재고 관련 에러 문구는 서버 재검증 결과를 그대로 전한다(추측 금지 — CLAUDE.md "돈과 재고는 서버").
+
+### 네비게이션·검색
+
+- **현재 위치를 active로 표시.** 헤더 카테고리, 사이드 필터의 선택 상태를 시각적으로 명확히.
+- **깊이 3단계 이상이면 브레드크럼**(홈 > 스킨케어 > 토너). `{typography.meta}` `{colors.slate}`.
+- **sticky 헤더가 콘텐츠를 가리지 않게** 오프셋을 준다(앵커 스크롤 시 헤더 높이만큼 여백).
+- **URL이 상태를 반영**한다 — 카테고리·필터·정렬·검색어가 URL에 담겨 공유·뒤로가기가 예측대로 동작.
+- **검색은 자동완성 + 무결과 상태**를 갖춘다. 무결과는 빈 상태 규칙을 따르고, 대체 제안(인기 검색어)을 낸다.
+
+### 콘텐츠 포맷
+
+- **상품명은 2줄 고정 말줄임**(`goods-card` 규칙 재확인) — 카드 높이가 흔들리지 않게.
+- **가격·숫자는 천 단위 구분**(`19,900원`), 날짜는 일관된 포맷(`2026.07.23`).
+- **placeholder를 실제 콘텐츠로 오인하지 않게** 한다 — 스켈레톤은 텍스트가 아니라 회색 블록으로.
 
 ## Iteration Guide
 
