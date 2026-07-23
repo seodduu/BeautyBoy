@@ -33,6 +33,21 @@ public class SearchService {
         return PageResponse.of(items, condition.page(), condition.size(), totalElements);
     }
 
+    /**
+     * 자동완성 후보.
+     *
+     * <p>검색어가 짧으면 예외 대신 빈 목록을 준다 — 이 엔드포인트는 타이핑 중 매 글자 호출되므로,
+     * 정상적인 입력 과정을 에러로 취급하면 프론트가 진짜 장애를 구분하지 못한다.
+     */
+    @Transactional(readOnly = true)
+    public List<String> autocomplete(String keyword, int minLength, int limit) {
+        String trimmed = keyword.trim();
+        if (trimmed.length() < minLength) {
+            return List.of();
+        }
+        return goodsSearchRepository.autocomplete(trimmed, limit);
+    }
+
     private SearchResultItem toItem(GoodsSearchRepository.SearchRow row) {
         return new SearchResultItem(
                 row.goodsId(),

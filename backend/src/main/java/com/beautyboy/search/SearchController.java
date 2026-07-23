@@ -11,12 +11,16 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 @RestController
 public class SearchController {
 
     private static final int MAX_PAGE_SIZE = 100;
     /** ngram_token_size 기본값이 2다. 1자 검색어는 FULLTEXT에서 아무것도 매칭시키지 못한다. */
     private static final int MIN_KEYWORD_LENGTH = 2;
+    /** 프론트가 300ms 디바운스로 호출한다(설계 7장). 서버는 상위 10건만 준다. */
+    private static final int AUTOCOMPLETE_LIMIT = 10;
 
     private final SearchService searchService;
 
@@ -40,5 +44,11 @@ public class SearchController {
                 keyword, SearchSort.fromParam(sort), page, Math.min(size, MAX_PAGE_SIZE));
 
         return ResponseEntity.ok(ApiResponse.ok(searchService.search(condition)));
+    }
+
+    @GetMapping("/api/v1/search/autocomplete")
+    public ResponseEntity<ApiResponse<List<String>>> autocomplete(@RequestParam String q) {
+        return ResponseEntity.ok(ApiResponse.ok(
+                searchService.autocomplete(q, MIN_KEYWORD_LENGTH, AUTOCOMPLETE_LIMIT)));
     }
 }
