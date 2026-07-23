@@ -1,7 +1,20 @@
+/* {hero-photo}: {colors.scrim} 풀블리드 배경, 왼쪽 정렬 lockup(eyebrow → display → 서브카피 → CTA).
+   실사진 자산이 없어 scrim 위에 은은한 그라디언트로 대체했다.
+   실사진 교체 지점: background-image를 실제 사진(+ 위에 scrim 오버레이)으로 바꾼다. */
 .bb-hero {
+  background-color: var(--color-scrim);
+  background-image: radial-gradient(
+      circle at 78% 18%,
+      rgba(255, 255, 255, 0.08),
+      transparent 55%
+    ),
+    linear-gradient(155deg, #232323 0%, var(--color-scrim) 55%, #0f0f0f 100%);
+  padding: var(--space-section-lg) 24px;
+}
+
+.bb-hero__lockup {
   max-width: 1180px;
   margin: 0 auto;
-  padding: 88px 24px 64px;
 }
 
 .bb-hero__eyebrow {
@@ -13,7 +26,8 @@
   font-weight: var(--fw-eyebrow);
   letter-spacing: var(--ls-eyebrow);
   text-transform: uppercase;
-  color: var(--color-slate);
+  color: var(--color-on-primary);
+  opacity: 0.7;
   margin-bottom: 20px;
 }
 
@@ -21,127 +35,97 @@
   content: '';
   width: 18px;
   height: 1px;
-  background: var(--color-slate);
+  background: currentColor;
 }
 
 .bb-hero__title {
-  font-size: clamp(32px, 5vw, 52px);
+  font-family: var(--font-body);
+  font-size: clamp(32px, 5vw, var(--fs-display));
+  font-weight: var(--fw-display);
   line-height: 1.2;
-  letter-spacing: -0.02em;
+  letter-spacing: var(--ls-display);
   max-width: 16ch;
-  color: var(--color-ink);
+  color: var(--color-on-primary);
 }
 
 .bb-hero__desc {
   margin-top: 20px;
-  font-size: 16px;
-  line-height: 1.7;
+  font-family: var(--font-body);
+  font-size: var(--fs-subtitle);
+  line-height: 1.6;
   max-width: 46ch;
-  color: var(--color-graphite);
+  color: var(--color-on-primary);
+  opacity: 0.85;
 }
 
 .bb-hero__cta {
-  margin-top: 32px;
+  margin-top: var(--space-xl);
   display: inline-flex;
 }
 
+/* {button-primary-on-dark} */
 .bb-hero__cta-link {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  padding: 13px 22px;
+  padding: 12px var(--space-lg);
+  height: 40px;
   border-radius: var(--rounded-full);
-  background: var(--color-primary);
-  color: var(--color-on-primary);
-  font-size: 14px;
-  font-weight: 700;
-  transition: background 0.15s ease;
+  background: var(--color-on-primary);
+  color: var(--color-primary);
+  font-family: var(--font-body);
+  font-size: var(--fs-button);
+  font-weight: var(--fw-button);
+  transition: opacity 0.15s ease;
 }
 
 .bb-hero__cta-link:hover {
-  background: var(--color-ink-soft);
-}
-
-/* 시그니처: 스킨/로션 용량 그래듀에이션을 본뜬 눈금자 구분선 */
-.bb-scale {
-  border-top: 1px solid var(--color-hairline);
-  border-bottom: 1px solid var(--color-hairline);
-  background: var(--color-canvas);
-}
-
-.bb-scale__row {
-  max-width: 1180px;
-  margin: 0 auto;
-  padding: 22px 24px;
-  display: flex;
-  align-items: flex-end;
-  gap: 0;
-  height: 46px;
-}
-
-.bb-scale__tick {
-  flex: 1 1 auto;
-  height: 8px;
-  border-left: 1px solid var(--color-hairline-soft);
-  position: relative;
-}
-
-.bb-scale__tick--major {
-  height: 16px;
-  border-left-color: var(--color-stone);
-}
-
-.bb-scale__label {
-  position: absolute;
-  top: -20px;
-  left: 4px;
-  font-family: var(--font-body);
-  font-size: 10px;
-  letter-spacing: 0.02em;
-  color: var(--color-stone);
-  white-space: nowrap;
+  opacity: 0.85;
 }
 
 .bb-features {
   max-width: 1180px;
   margin: 0 auto;
-  padding: 56px 24px 88px;
+  padding: var(--space-section) 24px;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 28px;
+  gap: var(--space-xl);
 }
 
-.bb-feature__index {
+.bb-feature__eyebrow {
   font-family: var(--font-body);
-  font-size: 12px;
+  font-size: var(--fs-eyebrow);
+  font-weight: var(--fw-eyebrow);
+  letter-spacing: var(--ls-eyebrow);
+  text-transform: uppercase;
   color: var(--color-slate);
-  margin-bottom: 10px;
+  margin-bottom: var(--space-sm);
 }
 
 .bb-feature__title {
-  font-size: 16px;
-  font-weight: 700;
-  margin-bottom: 8px;
+  font-family: var(--font-body);
+  font-size: var(--fs-heading-sm);
+  font-weight: var(--fw-heading-sm);
+  line-height: var(--lh-heading-sm);
+  margin-bottom: var(--space-xs);
   color: var(--color-ink);
 }
 
 .bb-feature__desc {
-  font-size: 14px;
-  line-height: 1.7;
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
   color: var(--color-graphite);
 }
 
 @media (max-width: 720px) {
   .bb-hero {
-    padding: 56px 20px 40px;
-  }
-
-  .bb-scale__row {
-    padding: 22px 20px;
+    padding: var(--space-section) 20px;
   }
 
   .bb-features {
     grid-template-columns: 1fr;
-    padding: 40px 20px 56px;
+    padding: var(--space-section) 20px;
+    gap: var(--space-xl);
   }
 }
