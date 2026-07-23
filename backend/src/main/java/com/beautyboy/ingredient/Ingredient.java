@@ -6,6 +6,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(name = "ingredient")
@@ -21,10 +23,14 @@ public class Ingredient {
     @Column(nullable = false, length = 40)
     private String category;
 
+    // V11 스키마가 두 컬럼을 TINYINT로 정의한다(스키마가 진실). 실 MySQL의
+    // ddl-auto=validate가 int(INTEGER)와 TINYINT를 불일치로 보므로 JDBC 타입을 맞춘다.
     @Column(name = "irritation_level", nullable = false)
+    @JdbcTypeCode(SqlTypes.TINYINT)
     private int irritationLevel;
 
     @Column(nullable = false)
+    @JdbcTypeCode(SqlTypes.TINYINT)
     private int comedogenic;
 
     @Column(nullable = false, length = 200)

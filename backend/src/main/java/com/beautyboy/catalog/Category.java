@@ -4,6 +4,8 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 /**
  * 카테고리는 계층을 FK 연관관계가 아니라 코드 접두사로 인코딩한다
@@ -25,7 +27,10 @@ public class Category {
     @Column(nullable = false, length = 60)
     private String name;
 
+    // V10 스키마가 depth를 TINYINT로 정의한다(스키마가 진실). int 필드를 그대로 두되
+    // JDBC 타입을 TINYINT로 맞춰 실 MySQL의 ddl-auto=validate를 통과시킨다.
     @Column(nullable = false)
+    @JdbcTypeCode(SqlTypes.TINYINT)
     private int depth;
 
     @Column(name = "sort_order", nullable = false)
