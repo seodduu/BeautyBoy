@@ -747,8 +747,9 @@ git -C "/Users/doo._.hyun/Study/Project/Beauty Boy" status --short     # 비어 
   git worktree add ../BeautyBoy-w1-catalog -b feat/catalog
 
 를 실행한 뒤 EnterWorktree 도구에 path로 그 경로를 넘겨 세션을 그 안으로 옮겨라.
-(EnterWorktree를 name으로 새로 만들지 마라 — 기본 설정이 origin/main에서 브랜치를 따는데
-origin이 뒤처져 있으면 계획서도 DESIGN.md도 없는 워크트리가 생긴다.)
+(EnterWorktree를 name으로 새로 만들지 마라 — 그러면 브랜치명과 경로를 계획서대로 못 정하고,
+기본 설정이 로컬 HEAD가 아닌 origin/main에서 브랜치를 딴다. 지금은 둘이 같지만, 루트에
+푸시 안 된 커밋이 생기는 순간 계획서도 DESIGN.md도 없는 워크트리가 만들어진다.)
 
 진입한 뒤 아래를 확인하고, 하나라도 어긋나면 **중단하고 나에게 보고해라**:
   - pwd가 BeautyBoy-w1-catalog인지
@@ -785,8 +786,9 @@ Task 1-5 서브에이전트 브리프에는 GoodsQueryService.exists(Long) 인�
   git worktree add ../BeautyBoy-w1-front -b feat/front-base
 
 를 실행한 뒤 EnterWorktree 도구에 path로 그 경로를 넘겨 세션을 그 안으로 옮겨라.
-(EnterWorktree를 name으로 새로 만들지 마라 — 기본 설정이 origin/main에서 브랜치를 따는데
-origin이 뒤처져 있으면 계획서도 DESIGN.md도 없는 워크트리가 생긴다.)
+(EnterWorktree를 name으로 새로 만들지 마라 — 그러면 브랜치명과 경로를 계획서대로 못 정하고,
+기본 설정이 로컬 HEAD가 아닌 origin/main에서 브랜치를 딴다. 지금은 둘이 같지만, 루트에
+푸시 안 된 커밋이 생기는 순간 계획서도 DESIGN.md도 없는 워크트리가 만들어진다.)
 
 진입한 뒤 아래를 확인하고, 하나라도 어긋나면 **중단하고 나에게 보고해라**:
   - pwd가 BeautyBoy-w1-front인지
