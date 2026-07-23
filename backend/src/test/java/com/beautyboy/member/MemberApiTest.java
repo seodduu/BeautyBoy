@@ -103,6 +103,57 @@ class MemberApiTest {
     }
 
     @Test
+    void skinType가_20자를_넘으면_400을_반환한다() throws Exception {
+        String longSkinType = "A".repeat(21);
+        String body = objectMapper.writeValueAsString(new ProfileRequestFixture(longSkinType, List.of("TROUBLE"), "20s"));
+
+        mockMvc.perform(put("/api/v1/members/me/profile")
+                        .header("Authorization", "Bearer " + tokenA)
+                        .contentType("application/json")
+                        .content(body))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_INPUT"));
+    }
+
+    @Test
+    void ageBand가_10자를_넘으면_400을_반환한다() throws Exception {
+        String longAgeBand = "A".repeat(11);
+        String body = objectMapper.writeValueAsString(new ProfileRequestFixture("OILY", List.of("TROUBLE"), longAgeBand));
+
+        mockMvc.perform(put("/api/v1/members/me/profile")
+                        .header("Authorization", "Bearer " + tokenA)
+                        .contentType("application/json")
+                        .content(body))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_INPUT"));
+    }
+
+    @Test
+    void 프로필을_두번_수정하면_두번째_값으로_갱신된다() throws Exception {
+        String firstBody = objectMapper.writeValueAsString(new ProfileRequestFixture("OILY", List.of("TROUBLE"), "20s"));
+        mockMvc.perform(put("/api/v1/members/me/profile")
+                        .header("Authorization", "Bearer " + tokenA)
+                        .contentType("application/json")
+                        .content(firstBody))
+                .andExpect(status().isOk());
+
+        String secondBody = objectMapper.writeValueAsString(new ProfileRequestFixture("DRY", List.of("PORE"), "30s"));
+        mockMvc.perform(put("/api/v1/members/me/profile")
+                        .header("Authorization", "Bearer " + tokenA)
+                        .contentType("application/json")
+                        .content(secondBody))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.skinType").value("DRY"));
+
+        mockMvc.perform(get("/api/v1/members/me").header("Authorization", "Bearer " + tokenA))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.skinType").value("DRY"))
+                .andExpect(jsonPath("$.data.ageBand").value("30s"))
+                .andExpect(jsonPath("$.data.concerns[0]").value("PORE"))
+                .andExpect(jsonPath("$.data.concerns.length()").value(1));
+    }
+
+    @Test
     void 첫_배송지는_isDefault값과_무관하게_기본배송지가_된다() throws Exception {
         String body = objectMapper.writeValueAsString(addressFixture("서울", false));
 
@@ -158,6 +209,63 @@ class MemberApiTest {
                         .header("Authorization", "Bearer " + tokenB))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.code").value("FORBIDDEN"));
+    }
+
+    @Test
+    void 타인의_배송지를_수정하려하면_FORBIDDEN을_반환한다() throws Exception {
+        Long addressId = createAddress(tokenA, "에이집", true);
+        String body = objectMapper.writeValueAsString(addressFixture("해킹시도", false));
+
+        mockMvc.perform(put("/api/v1/members/me/addresses/" + addressId)
+                        .header("Authorization", "Bearer " + tokenB)
+                        .contentType("application/json")
+                        .content(body))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("FORBIDDEN"));
+    }
+
+    @Test
+    void 배송지가_2개일때_기본배송지를_비기본으로_수정해도_기본배송지는_정확히_1개_유지된다() throws Exception {
+        Long firstId = createAddress(tokenA, "첫집", true);
+        createAddress(tokenA, "둘째집", false);
+
+        // firstId는 현재 기본배송지. 이를 isDefault=false로 수정 요청한다.
+        String body = objectMapper.writeValueAsString(addressFixture("첫집갱신", false));
+        mockMvc.perform(put("/api/v1/members/me/addresses/" + firstId)
+                        .header("Authorization", "Bearer " + tokenA)
+                        .contentType("application/json")
+                        .content(body))
+                .andExpect(status().isOk());
+
+        MvcResult listResult = mockMvc.perform(get("/api/v1/members/me/addresses").header("Authorization", "Bearer " + tokenA))
+                .andExpect(status().isOk())
+                .andReturn();
+        JsonNode list = objectMapper.readTree(listResult.getResponse().getContentAsString()).get("data");
+        long defaultCount = 0;
+        for (JsonNode node : list) {
+            if (node.get("isDefault").asBoolean()) {
+                defaultCount++;
+            }
+        }
+        assertThat(defaultCount).isEqualTo(1);
+    }
+
+    @Test
+    void 배송지가_2개일때_기본배송지를_삭제하면_남은_배송지가_기본이_된다() throws Exception {
+        Long firstId = createAddress(tokenA, "첫집", true);
+        Long secondId = createAddress(tokenA, "둘째집", false);
+
+        mockMvc.perform(delete("/api/v1/members/me/addresses/" + firstId)
+                        .header("Authorization", "Bearer " + tokenA))
+                .andExpect(status().isNoContent());
+
+        MvcResult listResult = mockMvc.perform(get("/api/v1/members/me/addresses").header("Authorization", "Bearer " + tokenA))
+                .andExpect(status().isOk())
+                .andReturn();
+        JsonNode list = objectMapper.readTree(listResult.getResponse().getContentAsString()).get("data");
+        assertThat(list.size()).isEqualTo(1);
+        assertThat(list.get(0).get("id").asLong()).isEqualTo(secondId);
+        assertThat(list.get(0).get("isDefault").asBoolean()).isTrue();
     }
 
     @Test

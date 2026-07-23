@@ -7,6 +7,7 @@ import com.beautyboy.member.dto.AddressResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -49,8 +50,9 @@ public class AddressService {
     public AddressResponse updateAddress(Long memberId, Long addressId, AddressRequest request) {
         Address address = getOwnedAddress(memberId, addressId);
 
+        List<Address> memberAddresses = addressRepository.findByMemberId(memberId);
+        boolean isOnlyAddress = memberAddresses.size() == 1;
         // 회원의 유일한 배송지라면 기본배송지 지정을 해제하는 요청이 와도 불변식을 지키기 위해 기본을 유지한다.
-        boolean isOnlyAddress = addressRepository.findByMemberId(memberId).size() == 1;
         boolean shouldBeDefault = request.isDefault() || isOnlyAddress;
 
         if (shouldBeDefault && !address.isDefault()) {
@@ -59,13 +61,31 @@ public class AddressService {
 
         address.update(request.receiver(), request.phone(), request.zipcode(), request.address1(),
                 request.address2(), request.latitude(), request.longitude(), shouldBeDefault);
+
+        // 현재 기본배송지를 비기본으로 바꾸는 요청이면서 다른 배송지가 남아 있다면,
+        // "기본배송지 1개 보장" 불변식을 지키기 위해 남은 배송지 중 id가 가장 작은 것을 새 기본으로 승격한다.
+        if (!shouldBeDefault) {
+            memberAddresses.stream()
+                    .filter(a -> !a.getId().equals(address.getId()))
+                    .min(Comparator.comparing(Address::getId))
+                    .ifPresent(promoted -> promoted.markDefault(true));
+        }
+
         return AddressResponse.from(address);
     }
 
     @Transactional
     public void deleteAddress(Long memberId, Long addressId) {
         Address address = getOwnedAddress(memberId, addressId);
+        boolean wasDefault = address.isDefault();
         addressRepository.delete(address);
+
+        if (wasDefault) {
+            // 기본배송지가 삭제되었고 남은 배송지가 있다면, id가 가장 작은 것을 새 기본으로 승격한다.
+            addressRepository.findByMemberId(memberId).stream()
+                    .min(Comparator.comparing(Address::getId))
+                    .ifPresent(promoted -> promoted.markDefault(true));
+        }
     }
 
     private Address getOwnedAddress(Long memberId, Long addressId) {

@@ -1,12 +1,15 @@
 package com.beautyboy.member.dto;
 
 import jakarta.validation.constraints.AssertTrue;
+import jakarta.validation.constraints.Size;
 
 import java.util.List;
 
 public record ProfileRequest(
+        @Size(max = 20, message = "피부타입은 20자 이내여야 합니다")
         String skinType,
         List<String> concerns,
+        @Size(max = 10, message = "연령대는 10자 이내여야 합니다")
         String ageBand
 ) {
 
