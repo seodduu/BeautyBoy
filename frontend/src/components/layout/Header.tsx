@@ -3,6 +3,8 @@ import './Header.css';
 import { useAuthStore } from '../../stores/authStore';
 import { logout } from '../../api/auth';
 
+const LANDING_NAV = ['About', 'Work', 'Services', 'Packages', 'Contact'] as const;
+
 /**
  * 올리브영식 헤더: 로고 / 검색바 자리(실제 검색은 후속 웨이브) / 장바구니·로그인.
  * 로그인 상태(authStore.member)면 "로그인" 링크 대신 닉네임 + 로그아웃 버튼을 표시한다.
@@ -26,8 +28,31 @@ export function Header() {
     }
   };
 
+  /* 랜딩은 워드마크만 남긴다. 검색·장바구니·로그인은 첫 화면의 서사를 흐리고,
+     진입 동선은 화면 가운데의 Get started 하나로 모은다. */
+  if (isLanding) {
+    return (
+      <header className="bb-header bb-header--overlay">
+        <div className="bb-header__bar bb-header__bar--landing">
+          <Link to="/" className="bb-header__logo" aria-label="뷰티보이 홈으로">
+            BEAUTY BOY<span className="bb-header__logo-dot">.</span>
+          </Link>
+
+          {/* 해당 화면들은 후속 웨이브 범위 — 기존 헤더의 "준비 중" 항목과 같이 자리만 잡는다 */}
+          <nav className="bb-landing-nav" aria-label="주요 메뉴(준비 중)">
+            {LANDING_NAV.map((label) => (
+              <span className="bb-landing-nav__item" key={label}>
+                {label}
+              </span>
+            ))}
+          </nav>
+        </div>
+      </header>
+    );
+  }
+
   return (
-    <header className={`bb-header${isLanding ? ' bb-header--overlay' : ''}`}>
+    <header className="bb-header">
       <div className="bb-header__bar">
         <Link to="/" className="bb-header__logo" aria-label="뷰티보이 홈으로">
           BEAUTY BOY<span className="bb-header__logo-dot">.</span>

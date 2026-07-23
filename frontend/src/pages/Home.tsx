@@ -14,24 +14,28 @@ export function Home() {
       <section className="bb-hero">
         <WaveCanvas />
 
-        <p className="bb-hero__lede">
-          성분 궁합부터 피부타입별 루틴까지,
-          <br />
-          근거 있는 선택만 남깁니다.
-        </p>
+        {/* 콘텐츠는 화면 가장자리가 아니라 가운데 정렬된 고정폭 칼럼 안에 놓는다.
+            워드마크 왼쪽 끝이 헤더 로고와 같은 선에 맞는다. */}
+        <div className="bb-hero__inner">
+          <p className="bb-hero__lede">
+            성분 궁합부터 피부타입별 루틴까지,
+            <br />
+            근거 있는 선택만 남깁니다.
+          </p>
 
-        <h1 className="bb-hero__wordmark">
-          <span className="bb-hero__wordmark-line">Beauty</span>
-          <span className="bb-hero__wordmark-line">Boy</span>
-        </h1>
+          <h1 className="bb-hero__wordmark">
+            <span className="bb-hero__wordmark-line">Beauty</span>
+            <span className="bb-hero__wordmark-line">Boy</span>
+          </h1>
 
-        <div className="bb-hero__cta">
-          <Link to="/login" className="bb-hero__cta-link">
-            Get started
-            <span className="bb-hero__cta-chevron" aria-hidden="true">
-              ›
-            </span>
-          </Link>
+          <div className="bb-hero__cta">
+            <Link to="/login" className="bb-hero__cta-link">
+              Get started
+              <span className="bb-hero__cta-chevron" aria-hidden="true">
+                ›
+              </span>
+            </Link>
+          </div>
         </div>
       </section>
 

@@ -6,17 +6,28 @@
   overflow: hidden;
   background: var(--color-primary);
   /* 헤더 높이를 뺀 나머지를 꽉 채운다 — 첫 화면이 물결로만 채워지게. */
-  /* 헤더가 absolute로 겹쳐 오므로 첫 화면을 통째로 쓴다.
-     위쪽 패딩은 헤더(64px)를 피하도록 잡는다. */
+  /* 헤더가 absolute로 겹쳐 오므로 첫 화면을 통째로 쓴다. */
   min-height: 100dvh;
-  display: grid;
-  grid-template-rows: auto 1fr auto;
-  padding: calc(64px + var(--space-lg)) 24px var(--space-section);
+  display: flex;
+  /* 좌우 패딩은 여기가 아니라 __inner가 가진다 — 헤더 바(max-width + 안쪽 패딩)와
+     같은 계산이어야 로고와 워드마크 왼쪽 끝이 한 선에 선다. */
+  padding: calc(64px + var(--space-lg)) 0 var(--space-xl);
 }
 
-.bb-hero > *:not(.bb-wave) {
+/* 가운데 정렬 고정폭 칼럼 — 헤더 바(max-width 1180px)와 같은 폭이라
+   워드마크 왼쪽 끝이 로고와 정확히 같은 선에 선다. */
+.bb-hero__inner {
   position: relative;
   z-index: 1;
+  width: 100%;
+  max-width: var(--landing-column);
+  margin: 0 auto;
+  padding: 0 var(--space-lg);
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  row-gap: var(--space-lg);
+  /* 워드마크가 뷰포트가 아니라 이 칼럼 폭을 기준으로 커지게 한다 */
+  container-type: inline-size;
 }
 
 /* 오른쪽 위 짧은 카피 */
@@ -46,11 +57,17 @@
   display: flex;
   flex-direction: column;
   font-family: var(--font-body);
-  font-size: clamp(64px, 15vw, var(--fs-display-hero));
+  /* 폭과 높이 양쪽에 걸린다.
+     - 26cqw: 칼럼 폭 기준(레퍼런스 실측 비율). 뷰포트(vw)로 재면 넓은 화면에서 칼럼을 넘친다.
+     - 27vh:  히어로가 100dvh라 화면이 낮으면 2줄이 세로로 넘쳐 디센더가 잘린다.
+     둘 중 작은 값을 써야 어느 화면비에서도 안 넘친다. */
+  font-size: clamp(56px, min(26cqw, 27vh), var(--fs-display-hero));
   font-weight: var(--fw-display);
   line-height: 0.92;
   letter-spacing: var(--ls-display);
   color: var(--color-on-primary);
+  /* line-height가 1보다 작아 마지막 줄 디센더(y)가 상자 밖으로 나간다 — 그만큼 자리를 준다 */
+  padding-bottom: 0.12em;
 }
 
 .bb-hero__wordmark-line {
@@ -127,5 +144,26 @@
     grid-template-columns: 1fr;
     padding: var(--space-section) 20px;
     gap: var(--space-xl);
+  }
+}
+
+/* ---- 랜딩 반응형 ---- */
+@media (max-width: 768px) {
+  .bb-hero {
+    padding: calc(64px + var(--space-md)) 0 var(--space-lg);
+  }
+
+  .bb-hero__inner {
+    padding: 0 var(--space-md);
+  }
+
+  /* 좁은 화면에서 오른쪽 정렬 카피는 헤더 로고와 시선이 어긋난다 — 왼쪽으로 모은다 */
+  .bb-hero__lede {
+    justify-self: start;
+    text-align: left;
+  }
+
+  .bb-hero__cta {
+    justify-self: start;
   }
 }

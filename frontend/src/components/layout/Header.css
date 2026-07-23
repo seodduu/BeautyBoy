@@ -22,6 +22,27 @@
   color: var(--color-on-primary);
 }
 
+.bb-landing-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-lg);
+}
+
+.bb-landing-nav__item {
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  color: var(--color-on-primary);
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  /* 좁은 화면에서는 내비를 접는다 — 로고와 겹쳐 읽을 수 없게 된다 */
+  .bb-landing-nav {
+    display: none;
+  }
+}
+
 /* 검색 자리는 검정 위에서 반투명 유리처럼 */
 .bb-header--overlay .bb-header__search {
   background: rgba(255, 255, 255, 0.1);
@@ -37,6 +58,21 @@
   display: flex;
   align-items: center;
   gap: 32px;
+}
+
+/* 랜딩 바는 히어로 칼럼과 같은 폭이어야 로고와 워드마크 왼쪽 끝이 한 선에 선다.
+   (기본 .bb-header__bar 뒤에 와야 max-width가 덮이지 않는다) */
+.bb-header__bar--landing {
+  max-width: var(--landing-column);
+  justify-content: space-between;
+  gap: var(--space-lg);
+}
+
+@media (max-width: 768px) {
+  /* 히어로 __inner의 좁은 화면 패딩(space-md)과 같은 값이어야 왼쪽 끝이 계속 맞는다 */
+  .bb-header__bar--landing {
+    padding: 0 var(--space-md);
+  }
 }
 
 .bb-header__logo {
