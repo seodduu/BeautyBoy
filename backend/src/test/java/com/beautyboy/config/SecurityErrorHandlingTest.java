@@ -115,7 +115,6 @@ class SecurityErrorHandlingTest {
         // 설계 7장 "공개" 목록을 선반영했으므로 무토큰 GET이 인증에서 막히면 안 된다.
         // 아직 컨트롤러가 없어 404가 나오는데, 그것이 곧 "인증은 통과했다"는 증거다.
         for (String path : new String[]{
-                "/api/v1/categories/tree",
                 "/api/v1/goods",
                 "/api/v1/goods/1",
                 "/api/v1/search",
@@ -124,6 +123,15 @@ class SecurityErrorHandlingTest {
             mockMvc.perform(get(path))
                     .andExpect(status().isNotFound());
         }
+    }
+
+    @Test
+    void 카테고리_트리는_구현됐으므로_무토큰이어도_401이_아니라_200이다() throws Exception {
+        // Task 1-3에서 컨트롤러가 생기면서 위 플레이스홀더 목록에서 분리됐다.
+        // 시드가 없는 테스트 환경에서는 빈 배열을 낸다 — 여기서 검증할 것은 인증 통과(200) 여부뿐이다.
+        mockMvc.perform(get("/api/v1/categories/tree"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value("OK"));
     }
 
     @Test
