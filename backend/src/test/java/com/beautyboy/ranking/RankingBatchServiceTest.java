@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Primary;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,11 +45,17 @@ class RankingBatchServiceTest {
 
     /**
      * 판매찜_대상_상품_id가 가리키는 상품은 오늘 3개 팔리고 5명이 찜했다.
-     * 실 구현이 주입되면 폴백/이 가짜가 밀려나므로, 테스트는 항상 이 값을 본다.
+     *
+     * <p>{@code @Primary}가 필요한 이유(T2 통합 후): order 도메인이 머지되면서
+     * {@code OrderSalesStatProvider}(@Component)가 실 {@code SalesStatProvider}로 무조건 등록된다.
+     * 그러면 이 가짜와 둘이 되어 주입 시 NoUniqueBean이 난다. @Primary로 가짜를 우선시켜
+     * 배치가 결정적인 값(판매 3·찜 5)을 보게 한다 — 여기서 검증하려는 것은 실 집계 쿼리가 아니라
+     * "받은 수치로 점수를 옳게 계산하는가"이기 때문이다.
      */
     @TestConfiguration
     static class 가짜_통계_공급자 {
         @Bean
+        @Primary
         SalesStatProvider fakeSalesStatProvider() {
             return date -> {
                 Long goodsId = 판매찜_대상_상품_id.get();
@@ -57,6 +64,7 @@ class RankingBatchServiceTest {
         }
 
         @Bean
+        @Primary
         WishStatProvider fakeWishStatProvider() {
             return date -> {
                 Long goodsId = 판매찜_대상_상품_id.get();
