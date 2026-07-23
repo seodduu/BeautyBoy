@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { http, HttpResponse } from 'msw';
+import { server } from '../../mocks/server';
 import { RoutineSection } from './RoutineSection';
 import { ROUTINE_STEPS } from '../../features/routine/steps';
 
@@ -58,6 +60,17 @@ describe('RoutineSection', () => {
 
     const more = screen.getByRole('link', { name: '클렌징 전체 보기' });
     expect(more).toHaveAttribute('href', '/goods?category=C002');
+  });
+
+  it('상품 조회가 실패하면 에러 문구를 보여주고 빈 상태 문구는 보여주지 않는다', async () => {
+    server.use(http.get('/api/v1/goods', () => new HttpResponse(null, { status: 500 })));
+
+    renderSection();
+
+    expect(
+      await screen.findByText('상품을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.'),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('표시할 상품이 없어요')).not.toBeInTheDocument();
   });
 
   it('짝수 index는 타이포가 왼쪽, 홀수 index는 오른쪽에 온다', () => {

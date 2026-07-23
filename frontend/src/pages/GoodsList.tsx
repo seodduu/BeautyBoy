@@ -18,7 +18,7 @@ export function GoodsList() {
   const [searchParams] = useSearchParams();
   const category = searchParams.get('category');
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError } = useQuery({
     queryKey: ['goods-list', category],
     queryFn: () =>
       fetchGoodsList({
@@ -37,12 +37,16 @@ export function GoodsList() {
     <div className="bb-goods-list">
       <header className="bb-goods-list__head">
         <h1 className="bb-goods-list__title">{title}</h1>
-        {!isLoading && data && (
+        {!isLoading && !isError && data && data.totalElements > 0 && (
           <p className="bb-goods-list__count">{data.totalElements}개의 상품</p>
         )}
       </header>
 
-      <GoodsGrid items={data?.content ?? []} loading={isLoading} skeletonCount={10} />
+      {isError ? (
+        <p className="bb-goods-list__error">상품을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.</p>
+      ) : (
+        <GoodsGrid items={data?.content ?? []} loading={isLoading} skeletonCount={10} />
+      )}
     </div>
   );
 }

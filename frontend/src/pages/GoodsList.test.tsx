@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { http, HttpResponse } from 'msw';
+import { server } from '../mocks/server';
 import { GoodsList } from './GoodsList';
 
 function renderList(search: string) {
@@ -44,5 +46,24 @@ describe('GoodsList — 카테고리 목록', () => {
     renderList('?category=C999');
 
     expect(await screen.findByText('표시할 상품이 없어요')).toBeInTheDocument();
+  });
+
+  it('결과가 0건이면 상품 개수 문구는 찍지 않는다', async () => {
+    renderList('?category=C999');
+
+    await screen.findByText('표시할 상품이 없어요');
+    expect(screen.queryByText(/개의 상품/)).not.toBeInTheDocument();
+  });
+
+  it('조회가 실패하면 에러 문구를 보여주고 개수·빈 상태는 보여주지 않는다', async () => {
+    server.use(http.get('/api/v1/goods', () => new HttpResponse(null, { status: 500 })));
+
+    renderList('?category=C002');
+
+    expect(
+      await screen.findByText('상품을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.'),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/개의 상품/)).not.toBeInTheDocument();
+    expect(screen.queryByText('표시할 상품이 없어요')).not.toBeInTheDocument();
   });
 });

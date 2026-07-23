@@ -20,7 +20,7 @@ interface RoutineSectionProps {
  * Main은 상수 배열만 map하면 된다.
  */
 export function RoutineSection({ step, index }: RoutineSectionProps) {
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError } = useQuery({
     queryKey: ['routine-goods', step.categoryCode],
     queryFn: () =>
       fetchGoodsList({ page: 0, size: ROUTINE_SECTION_SIZE, categoryCode: step.categoryCode }),
@@ -46,11 +46,15 @@ export function RoutineSection({ step, index }: RoutineSectionProps) {
         </div>
       </div>
 
-      <GoodsGrid
-        items={data?.content ?? []}
-        loading={isLoading}
-        skeletonCount={ROUTINE_SECTION_SIZE}
-      />
+      {isError ? (
+        <p className="bb-routine__error">상품을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.</p>
+      ) : (
+        <GoodsGrid
+          items={data?.content ?? []}
+          loading={isLoading}
+          skeletonCount={ROUTINE_SECTION_SIZE}
+        />
+      )}
 
       <p className="bb-routine__more">
         <Link

@@ -23,6 +23,14 @@
   color: var(--color-stone);
 }
 
+/* 조회 실패 문구. 색만으로 오류를 알리지 않도록 문구 자체로 상태를 명시한다. */
+.bb-goods-list__error {
+  padding: var(--space-lg) 0;
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  color: var(--color-signal-danger);
+}
+
 @media (max-width: 900px) {
   .bb-goods-list {
     padding: var(--space-xl) var(--space-md);
