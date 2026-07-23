@@ -1,3 +1,27 @@
 .bb-layout__main {
   flex: 1 1 auto;
 }
+
+.bb-skip-link {
+  position: absolute;
+  left: var(--space-sm);
+  top: calc(-1 * var(--space-xxl));
+  z-index: 100;
+  padding: var(--space-xs) var(--space-md);
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  border: 1px solid var(--color-ink);
+  border-radius: var(--rounded-sm);
+  font: var(--fw-button) var(--fs-button) / 1.43 var(--font-body);
+  transition: top 0.15s ease;
+}
+
+.bb-skip-link:focus {
+  top: var(--space-sm);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bb-skip-link {
+    transition: none;
+  }
+}
