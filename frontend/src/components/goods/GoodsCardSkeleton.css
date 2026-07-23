@@ -1,0 +1,35 @@
+.bb-goods-card-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.bb-goods-card-skeleton__line {
+  border-radius: var(--rounded-xs);
+  background: var(--color-surface-cool);
+}
+
+.bb-goods-card-skeleton__line--brand {
+  width: 40%;
+  height: calc(var(--fs-meta) * var(--lh-meta));
+}
+
+.bb-goods-card-skeleton__line--name {
+  width: 100%;
+  height: var(--fs-body-tight);
+}
+
+.bb-goods-card-skeleton__line--name-2 {
+  width: 70%;
+  height: var(--fs-body-tight);
+}
+
+.bb-goods-card-skeleton__line--price {
+  width: 50%;
+  height: var(--fs-body-strong);
+}
+
+.bb-goods-card-skeleton__line--rating {
+  width: 30%;
+  height: calc(var(--fs-meta) * var(--lh-meta));
+}

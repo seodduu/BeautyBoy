@@ -1,0 +1,25 @@
+/* DESIGN.md 상품 그리드: 1440px 5열 / 1024px 4열 / 768px 3열 / 640px 2열. 구분선 없음. */
+.bb-goods-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  column-gap: var(--space-lg);
+  row-gap: var(--space-xl);
+}
+
+@media (min-width: 768px) {
+  .bb-goods-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .bb-goods-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (min-width: 1440px) {
+  .bb-goods-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}

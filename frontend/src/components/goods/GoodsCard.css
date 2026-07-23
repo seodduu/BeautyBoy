@@ -1,0 +1,122 @@
+/*
+  DESIGN.md 대응:
+  bb-goods-card             → {goods-card} (테두리/그림자/라운딩 없음, 배경 canvas)
+  bb-goods-card__thumbnail* → {goods-thumbnail} (1:1, rounded.md, surface-cool 플레이스홀더)
+  bb-goods-card__badges     → 배지 줄 (썸네일 아래, 겹치지 않음)
+  bb-goods-card__brand      → typography.meta / colors.slate
+  bb-goods-card__name       → typography.body-tight / colors.ink, 2줄 고정 말줄임
+*/
+.bb-goods-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-canvas);
+  border-radius: var(--rounded-none);
+  border: none;
+  box-shadow: none;
+}
+
+.bb-goods-card__link {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  text-decoration: none;
+  color: inherit;
+}
+
+.bb-goods-card__thumbnail-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: var(--rounded-md);
+  overflow: hidden;
+  background: var(--color-surface-cool);
+}
+
+.bb-goods-card__thumbnail {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.bb-goods-card__thumbnail--sold-out {
+  opacity: 0.45;
+}
+
+/* 이미지 로드 실패 시 깨진 아이콘 대신 surface-cool 플레이스홀더만 남긴다. */
+.bb-goods-card__thumbnail--fallback {
+  visibility: hidden;
+}
+
+.bb-goods-card__sold-out-label {
+  position: absolute;
+  left: var(--space-xs);
+  bottom: var(--space-xs);
+  padding: 4px var(--space-xs);
+  background: var(--color-canvas);
+  color: var(--color-signal-muted);
+  font-family: var(--font-body);
+  font-size: var(--fs-micro-caps);
+  font-weight: var(--fw-micro-caps);
+  letter-spacing: var(--ls-micro-caps);
+  text-transform: uppercase;
+}
+
+.bb-goods-card__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xxs);
+}
+
+.bb-goods-card__brand {
+  font-family: var(--font-body);
+  font-size: var(--fs-meta);
+  font-weight: var(--fw-meta);
+  line-height: var(--lh-meta);
+  color: var(--color-slate);
+}
+
+.bb-goods-card__name {
+  font-family: var(--font-body);
+  font-size: var(--fs-body-tight);
+  font-weight: var(--fw-body-tight);
+  line-height: var(--lh-body-tight);
+  color: var(--color-ink);
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  /* 2줄 고정 높이 — 값이 짧아도 카드 높이가 흔들리지 않도록 min-height로 고정한다. */
+  min-height: calc(var(--fs-body-tight) * var(--lh-body-tight) * 2);
+}
+
+.bb-goods-card__rating-row {
+  /* 평점 영역은 값이 없어도(리뷰 없음) 자리를 유지해 카드 높이를 고정한다. */
+  min-height: calc(var(--fs-meta) * var(--lh-meta));
+}
+
+.bb-goods-card__wish {
+  position: absolute;
+  top: var(--space-xs);
+  right: var(--space-xs);
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: var(--rounded-full);
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 1;
+}
+
+.bb-goods-card__wish[aria-pressed='true'] {
+  color: var(--color-signal-sale);
+}

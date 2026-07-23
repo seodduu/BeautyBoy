@@ -1,0 +1,97 @@
+import { describe, expect, it, vi } from 'vitest';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
+import { GoodsCard } from './GoodsCard';
+import type { GoodsListItem } from '../../types/goods';
+
+const baseItem: GoodsListItem = {
+  goodsNo: 1,
+  brandName: '브랜드',
+  name: '상품명',
+  thumbnailUrl: '/thumb.jpg',
+  listPrice: 10000,
+  salePrice: 8000,
+  discountRate: 20,
+  badges: [],
+  rating: 4.3,
+  reviewCount: 12,
+  wished: false,
+  todayDreamAvailable: false,
+};
+
+function renderCard(item: GoodsListItem, onWishToggle = vi.fn()) {
+  return render(
+    <MemoryRouter>
+      <GoodsCard item={item} onWishToggle={onWishToggle} />
+    </MemoryRouter>,
+  );
+}
+
+describe('GoodsCard', () => {
+  it('배지 4종이 모두 있는 아이템은 배지 4개(SALE/COUPON/GIFT/1+1)를 렌더한다', () => {
+    renderCard({
+      ...baseItem,
+      badges: ['SALE', 'COUPON', 'GIFT', 'ONE_PLUS_ONE'],
+      todayDreamAvailable: true,
+    });
+
+    expect(screen.getByText('SALE')).toBeInTheDocument();
+    expect(screen.getByText('COUPON')).toBeInTheDocument();
+    expect(screen.getByText('GIFT')).toBeInTheDocument();
+    expect(screen.getByText('1+1')).toBeInTheDocument();
+    expect(screen.getByText('오늘드림')).toBeInTheDocument();
+  });
+
+  it('discountRate=0이면 정가 취소선(정가 노드)이 없다', () => {
+    renderCard({ ...baseItem, discountRate: 0 });
+
+    expect(screen.queryByText('10,000원')).not.toBeInTheDocument();
+    expect(screen.getByText('8,000원')).toBeInTheDocument();
+  });
+
+  it('wished=true면 하트가 aria-pressed=true이고, 클릭하면 onWishToggle(goodsNo)가 호출된다', () => {
+    const onWishToggle = vi.fn();
+    renderCard({ ...baseItem, wished: true }, onWishToggle);
+
+    const wishButton = screen.getByRole('button', { name: /찜/ });
+    expect(wishButton).toHaveAttribute('aria-pressed', 'true');
+
+    fireEvent.click(wishButton);
+    expect(onWishToggle).toHaveBeenCalledWith(baseItem.goodsNo);
+  });
+
+  it('찜 버튼 클릭이 링크 네비게이션(카드 링크)을 트리거하지 않는다', () => {
+    const onWishToggle = vi.fn();
+    renderCard({ ...baseItem, wished: false }, onWishToggle);
+
+    const wishButton = screen.getByRole('button', { name: /찜/ });
+    const clickEvent = new MouseEvent('click', { bubbles: true, cancelable: true });
+    const stopPropagationSpy = vi.spyOn(clickEvent, 'stopPropagation');
+
+    fireEvent(wishButton, clickEvent);
+
+    expect(stopPropagationSpy).toHaveBeenCalled();
+  });
+
+  it('rating=0, reviewCount=0이면 "리뷰 없음"이 뜨고 카드가 정상 렌더된다', () => {
+    renderCard({ ...baseItem, rating: 0, reviewCount: 0 });
+
+    expect(screen.getByText('리뷰 없음')).toBeInTheDocument();
+    expect(screen.getByText('상품명')).toBeInTheDocument();
+  });
+
+  it('상품명이 매우 길어도 카드가 렌더되고 2줄 고정 말줄임 클래스가 적용된다', () => {
+    const longName =
+      '아주 아주 아주 아주 아주 아주 아주 아주 아주 아주 아주 긴 상품명입니다 계속 길어집니다';
+    renderCard({ ...baseItem, name: longName });
+
+    const nameEl = screen.getByText(longName);
+    expect(nameEl).toHaveClass('bb-goods-card__name');
+  });
+
+  it('카드 전체가 /goods/{goodsNo} 링크다', () => {
+    renderCard(baseItem);
+    const link = screen.getByRole('link');
+    expect(link).toHaveAttribute('href', '/goods/1');
+  });
+});
