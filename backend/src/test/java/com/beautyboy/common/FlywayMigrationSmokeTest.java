@@ -93,9 +93,9 @@ class FlywayMigrationSmokeTest {
         List<String> 적용된_버전 = jdbcTemplate.queryForList(
                 "SELECT version FROM flyway_schema_history WHERE version IS NOT NULL", String.class);
 
-        // 지금까지의 대역: V1(member) · V10~V12(catalog/ingredient/seed).
+        // 지금까지의 대역: V1(member) · V10~V12(catalog/ingredient/seed) · V20~V22(search/ranking).
         // 웨이브가 늘면 이 목록도 함께 늘린다 — 마이그레이션을 추가하고 여기를 안 고치면 바로 걸린다.
-        assertThat(적용된_버전).contains("1", "10", "11", "12");
+        assertThat(적용된_버전).contains("1", "10", "11", "12", "20", "21", "22");
     }
 
     @Test

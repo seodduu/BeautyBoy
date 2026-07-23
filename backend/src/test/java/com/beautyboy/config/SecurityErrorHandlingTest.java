@@ -116,12 +116,28 @@ class SecurityErrorHandlingTest {
         // 아직 컨트롤러가 없어 404가 나오는데, 그것이 곧 "인증은 통과했다"는 증거다.
         for (String path : new String[]{
                 "/api/v1/goods/1",
-                "/api/v1/search",
-                "/api/v1/rankings",
                 "/api/v1/routines"}) {
             mockMvc.perform(get(path))
                     .andExpect(status().isNotFound());
         }
+    }
+
+    @Test
+    void 랭킹은_구현됐으므로_무토큰이어도_401이_아니라_200이다() throws Exception {
+        // Task 8에서 컨트롤러가 생기면서 위 플레이스홀더 목록에서 분리됐다.
+        // 배치가 안 돈 테스트 환경에서는 빈 목록을 낸다 — 여기서 검증할 것은 인증 통과(200) 여부뿐이다.
+        mockMvc.perform(get("/api/v1/rankings"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value("OK"));
+    }
+
+    @Test
+    void 검색은_구현됐으므로_무토큰이어도_401이_아니라_200이다() throws Exception {
+        // Task 2에서 컨트롤러가 생기면서 위 플레이스홀더 목록에서 분리됐다.
+        // 시드가 없는 테스트 환경에서는 빈 결과를 낸다 — 여기서 검증할 것은 인증 통과(200) 여부뿐이다.
+        mockMvc.perform(get("/api/v1/search").param("q", "토너"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value("OK"));
     }
 
     @Test
