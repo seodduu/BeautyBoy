@@ -46,28 +46,29 @@ export function Main() {
         <p className="bb-main__lede">
           씻고, 정돈하고, 채우고, 덮고, 막는 다섯 단계. 아래로 내리는 순서가 그대로 루틴 순서입니다.
         </p>
-
-        <nav className="bb-main__nav" aria-label="루틴 단계 바로가기">
-          <ol className="bb-main__nav-list">
-            {ROUTINE_STEPS.map((step) => (
-              <li key={step.id}>
-                <a
-                  className={`bb-main__nav-link${
-                    activeId === step.id ? ' bb-main__nav-link--active' : ''
-                  }`}
-                  href={`#${step.id}`}
-                  aria-current={activeId === step.id ? 'true' : undefined}
-                >
-                  <span className="bb-main__nav-order">
-                    {String(step.order).padStart(2, '0')}
-                  </span>
-                  <span className="bb-main__nav-label">{step.label}</span>
-                </a>
-              </li>
-            ))}
-          </ol>
-        </nav>
       </header>
+
+      {/* 앵커 네비는 인트로 밖, .bb-main의 직계 자식이어야 한다.
+          인트로(header) 안에 두면 sticky의 컨테이닝 블록이 인트로가 되어,
+          인트로가 화면 위로 스크롤되는 순간 네비도 함께 사라진다(5섹션 내내 붙어 있어야 하는데). */}
+      <nav className="bb-main__nav" aria-label="루틴 단계 바로가기">
+        <ol className="bb-main__nav-list">
+          {ROUTINE_STEPS.map((step) => (
+            <li key={step.id}>
+              <a
+                className={`bb-main__nav-link${
+                  activeId === step.id ? ' bb-main__nav-link--active' : ''
+                }`}
+                href={`#${step.id}`}
+                aria-current={activeId === step.id ? 'true' : undefined}
+              >
+                <span className="bb-main__nav-order">{String(step.order).padStart(2, '0')}</span>
+                <span className="bb-main__nav-label">{step.label}</span>
+              </a>
+            </li>
+          ))}
+        </ol>
+      </nav>
 
       {ROUTINE_STEPS.map((step, index) => (
         <RoutineSection key={step.id} step={step} index={index} />

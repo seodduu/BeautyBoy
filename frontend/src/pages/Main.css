@@ -2,8 +2,9 @@
   /* Header.css의 .bb-header__bar 실측 높이. 디자인 토큰이 아니라 레이아웃 정합용 지역 상수다.
      헤더 높이가 바뀌면 여기도 같이 바꿔야 한다. */
   --bb-header-h: 64px;
-  /* 앵커 네비 자체의 높이(패딩 12px×2 + 링크 1줄 24px + 밑줄 여백 4px + 경계선 1px). */
-  --bb-nav-h: 53px;
+  /* 앵커 네비 자체의 높이. 브라우저 실측값(getBoundingClientRect) = 54px:
+     패딩 12px×2 + 링크 1줄 24px + 링크 밑줄 여백 4px + 링크 border-bottom 1px + nav border-bottom 1px. */
+  --bb-nav-h: 54px;
   max-width: var(--landing-column);
   margin: 0 auto;
   padding: 0 var(--space-lg);
