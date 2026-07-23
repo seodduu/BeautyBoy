@@ -249,7 +249,6 @@ export function Showcase() {
       <section className="bb-showcase__section">
         <h2 className="bb-showcase__section-title">빈 상태</h2>
         <GoodsGrid items={[]} />
-        <p className="bb-showcase__empty-message">검색 결과가 없습니다.</p>
       </section>
     </div>
   );

@@ -67,6 +67,9 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-xxs);
+  /* 배지가 없는 카드도 같은 높이를 차지해야 한 줄에 늘어선 카드들의 가격·평점이 가로로 정렬된다.
+     값은 배지 1개 높이 = micro-caps 행높이 + 상하 패딩(4px×2 = space-xs). */
+  min-height: calc(var(--fs-micro-caps) * var(--lh-micro-caps) + var(--space-xs));
 }
 
 .bb-goods-card__brand {

@@ -148,13 +148,6 @@
   width: 320px;
 }
 
-.bb-showcase__empty-message {
-  font-size: var(--fs-body);
-  color: var(--color-stone);
-  text-align: center;
-  padding: var(--space-xl) 0;
-}
-
 @media (max-width: 640px) {
   .bb-showcase {
     padding: var(--space-lg) var(--space-md) var(--space-section);

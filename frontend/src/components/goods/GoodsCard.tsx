@@ -45,14 +45,14 @@ export function GoodsCard({ item, onWishToggle, soldOut = false }: GoodsCardProp
           {soldOut && <span className="bb-goods-card__sold-out-label">품절</span>}
         </div>
 
-        {item.badges.length > 0 || item.todayDreamAvailable ? (
-          <div className="bb-goods-card__badges">
-            {item.badges.map((badge) => (
-              <Badge key={badge} type={badge} />
-            ))}
-            {item.todayDreamAvailable && <TodayDreamBadge />}
-          </div>
-        ) : null}
+        {/* 배지가 없어도 줄 자체는 항상 렌더한다 — 빠지면 그 카드만 아래 내용이 위로 당겨져
+            한 줄에 늘어선 카드들의 가격·평점이 어긋난다(높이는 CSS min-height가 잡는다). */}
+        <div className="bb-goods-card__badges">
+          {item.badges.map((badge) => (
+            <Badge key={badge} type={badge} />
+          ))}
+          {item.todayDreamAvailable && <TodayDreamBadge />}
+        </div>
 
         <span className="bb-goods-card__brand">{item.brandName}</span>
         <span className="bb-goods-card__name">{item.name}</span>
