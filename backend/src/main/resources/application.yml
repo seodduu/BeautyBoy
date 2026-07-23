@@ -10,6 +10,12 @@ spring:
       ddl-auto: validate
   flyway:
     enabled: true
+  # default 프로필(명시 프로필 없이 뜨는 운영 경로)에서만 mysql-search를 켠다.
+  # `profiles.include`를 쓰면 test 프로필에도 무조건 새어 들어가 H2가 MATCH 문법을
+  # 못 읽어 전부 깨진다 — 반드시 group으로 default에만 묶는다.
+  profiles:
+    group:
+      default: mysql-search
 
 jwt:
   secret: ${JWT_SECRET:}
