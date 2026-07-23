@@ -95,6 +95,7 @@
 - `review`(member, goods, **order_item FK=구매인증**, 평점, 본문, 피부타입 스냅샷)
 - `review_photo`, `review_helpful`(member×review 유니크)
 - `goods_review_stat`(평점 평균·개수 비정규화, 작성/삭제 시 갱신)
+- `qna`(member, goods, 질문, 답변[관리자], 비밀글 여부, 상태: 대기/답변완료) — 상세 Q&A 탭용 최소 구현
 
 ### cart / order / payment
 - `cart_item` (비회원은 localStorage → 로그인 병합)
@@ -169,6 +170,7 @@ POST /payments/confirm             # 토스 승인 검증 → 결제완료
 GET /orders, /orders/{orderNo}
 POST|DELETE /wishlist/{goodsNo}
 POST /reviews, POST /reviews/{id}/helpful
+GET /qna?goodsNo=  POST /qna          # 답변은 admin
 ```
 
 ### 결제 2단계 (핵심 설계)
