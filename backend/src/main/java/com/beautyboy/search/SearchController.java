@@ -7,6 +7,7 @@ import com.beautyboy.common.PageResponse;
 import com.beautyboy.search.dto.SearchCondition;
 import com.beautyboy.search.dto.SearchResultItem;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -33,7 +34,9 @@ public class SearchController {
             @RequestParam String q,
             @RequestParam(defaultValue = "accuracy") String sort,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
+            @RequestParam(defaultValue = "20") int size,
+            // 공개 엔드포인트다. 비로그인이면 null이 들어오고, 그대로 로그에 남는다.
+            @AuthenticationPrincipal Long memberId) {
 
         String keyword = q.trim();
         if (keyword.length() < MIN_KEYWORD_LENGTH) {
@@ -43,12 +46,17 @@ public class SearchController {
         SearchCondition condition = new SearchCondition(
                 keyword, SearchSort.fromParam(sort), page, Math.min(size, MAX_PAGE_SIZE));
 
-        return ResponseEntity.ok(ApiResponse.ok(searchService.search(condition)));
+        return ResponseEntity.ok(ApiResponse.ok(searchService.search(condition, memberId)));
     }
 
     @GetMapping("/api/v1/search/autocomplete")
     public ResponseEntity<ApiResponse<List<String>>> autocomplete(@RequestParam String q) {
         return ResponseEntity.ok(ApiResponse.ok(
                 searchService.autocomplete(q, MIN_KEYWORD_LENGTH, AUTOCOMPLETE_LIMIT)));
+    }
+
+    @GetMapping("/api/v1/search/popular-keywords")
+    public ResponseEntity<ApiResponse<List<String>>> popularKeywords() {
+        return ResponseEntity.ok(ApiResponse.ok(searchService.popularKeywords()));
     }
 }

@@ -6,6 +6,7 @@ import com.beautyboy.search.dto.SearchResultItem;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -18,19 +19,34 @@ import java.util.List;
 public class SearchService {
 
     private final GoodsSearchRepository goodsSearchRepository;
+    private final SearchKeywordLogRepository searchKeywordLogRepository;
+    private final PopularKeywordHolder popularKeywordHolder;
 
-    public SearchService(GoodsSearchRepository goodsSearchRepository) {
+    public SearchService(GoodsSearchRepository goodsSearchRepository,
+                         SearchKeywordLogRepository searchKeywordLogRepository,
+                         PopularKeywordHolder popularKeywordHolder) {
         this.goodsSearchRepository = goodsSearchRepository;
+        this.searchKeywordLogRepository = searchKeywordLogRepository;
+        this.popularKeywordHolder = popularKeywordHolder;
     }
 
-    @Transactional(readOnly = true)
-    public PageResponse<SearchResultItem> search(SearchCondition condition) {
+    @Transactional
+    public PageResponse<SearchResultItem> search(SearchCondition condition, Long memberId) {
+        // 로그를 먼저 남긴다 — 결과가 0건인 검색어야말로 "찾는데 없는 것"이라 가장 알고 싶은 데이터다.
+        searchKeywordLogRepository.save(
+                new SearchKeywordLog(condition.keyword(), memberId, LocalDateTime.now()));
+
         List<GoodsSearchRepository.SearchRow> rows = goodsSearchRepository.search(condition);
         long totalElements = goodsSearchRepository.count(condition);
 
         List<SearchResultItem> items = rows.stream().map(this::toItem).toList();
 
         return PageResponse.of(items, condition.page(), condition.size(), totalElements);
+    }
+
+    /** 매시 집계된 인기검색어. 집계 전이면 빈 목록. */
+    public List<String> popularKeywords() {
+        return popularKeywordHolder.current();
     }
 
     /**
