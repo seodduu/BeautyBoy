@@ -2,8 +2,8 @@
   position: sticky;
   top: 0;
   z-index: 20;
-  background: var(--surface);
-  border-bottom: 1px solid var(--line);
+  background: var(--color-canvas);
+  border-bottom: 1px solid var(--color-hairline);
 }
 
 .bb-header__bar {
@@ -26,10 +26,11 @@
   letter-spacing: 0.02em;
   text-transform: uppercase;
   white-space: nowrap;
+  color: var(--color-ink);
 }
 
 .bb-header__logo-dot {
-  color: var(--accent);
+  color: var(--color-primary);
 }
 
 .bb-header__search {
@@ -39,10 +40,10 @@
   gap: 8px;
   height: 38px;
   padding: 0 14px;
-  border-radius: 4px;
-  background: var(--surface-raised);
-  border: 1px solid var(--line);
-  color: var(--muted-dim);
+  border-radius: var(--rounded-xs);
+  background: var(--color-canvas);
+  border: 1px solid var(--color-hairline-soft);
+  color: var(--color-stone);
   max-width: 480px;
 }
 
@@ -53,7 +54,7 @@
 
 .bb-header__search-text {
   font-size: 14px;
-  color: var(--muted-dim);
+  color: var(--color-stone);
 }
 
 .bb-header__nav {
@@ -68,16 +69,16 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  color: var(--paper);
+  color: var(--color-ink-soft);
   transition: color 0.15s ease;
 }
 
 .bb-header__nav-link:hover {
-  color: var(--accent-strong);
+  color: var(--color-ink);
 }
 
 .bb-header__nav-link--member {
-  color: var(--accent-strong);
+  color: var(--color-ink);
   font-weight: 600;
 }
 
@@ -88,10 +89,10 @@
   min-width: 16px;
   height: 16px;
   padding: 0 4px;
-  border-radius: 999px;
-  background: var(--accent);
-  color: var(--ink);
-  font-family: var(--font-mono);
+  border-radius: var(--rounded-full);
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  font-family: var(--font-body);
   font-size: 10px;
   font-weight: 700;
   line-height: 1;
