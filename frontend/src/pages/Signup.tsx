@@ -5,6 +5,7 @@ import './Auth.css';
 import { SkinProfileStep } from '../components/signup/SkinProfileStep';
 import { fetchMe, login, signup, type AgeBand, type Concern, type SkinType } from '../api/auth';
 import { useAuthStore } from '../stores/authStore';
+import { AuthLayout } from '../components/auth/AuthLayout';
 import { Button } from '../components/ui/Button';
 import { Field } from '../components/ui/Field';
 
@@ -79,9 +80,10 @@ export function Signup() {
   }
 
   return (
-    <section className="bb-auth">
-      <p className="bb-auth__eyebrow">SIGN UP</p>
-      <h1 className="bb-auth__title">회원가입</h1>
+    <AuthLayout>
+      <section className="bb-auth">
+        <p className="bb-auth__eyebrow">SIGN UP</p>
+        <h1 className="bb-auth__title">회원가입</h1>
 
       <div className="bb-auth__steps" aria-hidden="true">
         <span className={`bb-auth__step${step === 1 ? ' bb-auth__step--active' : ''}`}>01 계정</span>
@@ -160,6 +162,7 @@ export function Signup() {
       <p className="bb-auth__switch">
         이미 계정이 있으신가요? <Link to="/login">로그인</Link>
       </p>
-    </section>
+      </section>
+    </AuthLayout>
   );
 }

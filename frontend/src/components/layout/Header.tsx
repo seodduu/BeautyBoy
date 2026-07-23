@@ -18,7 +18,11 @@ export function Header() {
   const navigate = useNavigate();
   /* 랜딩(/)은 검정 풀블리드 히어로라 흰 헤더 바가 얹히면 화면이 두 조각으로 잘린다.
      그 화면에서만 헤더를 투명하게 겹쳐 올린다. */
-  const isLanding = useLocation().pathname === '/';
+  const pathname = useLocation().pathname;
+  const isLanding = pathname === '/';
+  /* 로그인·가입은 좌우 스플릿(왼쪽 검정 브랜드 패널)이 자체 워드마크를 가진다 —
+     공용 헤더를 얹으면 스플릿 상단이 잘리므로 이 화면들에서는 헤더를 렌더하지 않는다. */
+  const isAuth = pathname === '/login' || pathname === '/signup';
 
   const handleLogout = async () => {
     try {
@@ -28,6 +32,10 @@ export function Header() {
       navigate('/');
     }
   };
+
+  if (isAuth) {
+    return null;
+  }
 
   /* 랜딩은 워드마크만 남긴다. 검색·장바구니·로그인은 첫 화면의 서사를 흐리고,
      진입 동선은 화면 가운데의 Get started 하나로 모은다. */
@@ -56,7 +64,7 @@ export function Header() {
   }
 
   return (
-    <header className="bb-header">
+    <header className="bb-header bb-header--dark">
       <div className="bb-header__bar">
         <Link to="/" className="bb-header__logo" aria-label="뷰티보이 홈으로">
           BEAUTY BOY<span className="bb-header__logo-dot">.</span>

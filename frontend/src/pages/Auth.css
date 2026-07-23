@@ -1,39 +1,15 @@
-.bb-auth-placeholder {
-  max-width: 1180px;
-  margin: 0 auto;
-  padding: 96px 24px;
-  text-align: left;
-}
-
-.bb-auth-placeholder__eyebrow {
-  font-family: var(--font-body);
-  font-size: var(--fs-eyebrow);
-  font-weight: var(--fw-eyebrow);
-  letter-spacing: var(--ls-eyebrow);
-  text-transform: uppercase;
-  color: var(--color-slate);
-  margin-bottom: 16px;
-}
-
-.bb-auth-placeholder__title {
-  font-size: 28px;
-}
-
-.bb-auth-placeholder__desc {
-  margin-top: 12px;
-  max-width: 46ch;
-}
-
 /* ── 로그인·가입 공통 ─────────────────────────────────────── */
 
+/* 폼 자체는 스플릿 셸(AuthLayout)의 오른쪽 패널이 세로 중앙에 놓아준다.
+   여기서는 폭만 잡는다. */
 .bb-auth {
-  max-width: 480px;
+  width: 100%;
+  max-width: 420px;
   margin: 0 auto;
-  padding: 72px 24px 96px;
 }
 
 .bb-auth--narrow {
-  max-width: 400px;
+  max-width: 380px;
 }
 
 .bb-auth__eyebrow {

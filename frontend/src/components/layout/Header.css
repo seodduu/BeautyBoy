@@ -22,6 +22,50 @@
   color: var(--color-on-primary);
 }
 
+/* 앱(로그인 이후) 헤더는 검정 솔리드 — 온보딩·로그인의 검정을 상단에서 이어받아
+   밝기 계단(검정 헤더 → 흰 콘텐츠)의 첫 단을 만든다. */
+.bb-header--dark {
+  background: var(--color-primary);
+  border-bottom: none;
+}
+
+.bb-header--dark .bb-header__logo,
+.bb-header--dark .bb-header__nav-link,
+.bb-header--dark .bb-header__nav-link--member,
+.bb-header--dark .bb-header__logout {
+  color: var(--color-on-primary);
+}
+
+.bb-header--dark .bb-header__logo-dot {
+  color: var(--color-on-primary);
+}
+
+.bb-header--dark .bb-header__nav-link:hover,
+.bb-header--dark .bb-header__logout:hover {
+  color: var(--color-ash-soft);
+}
+
+/* 검정 위 검색 자리는 반투명 유리로 */
+.bb-header--dark .bb-header__search {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.18);
+  color: var(--color-ash-soft);
+}
+
+.bb-header--dark .bb-header__search-text {
+  color: var(--color-ash-soft);
+}
+
+/* 장바구니 카운트는 검정 헤더 위에서 반전(흰 알약 + 검정 숫자) */
+.bb-header--dark .bb-header__cart-count {
+  background: var(--color-on-primary);
+  color: var(--color-primary);
+}
+
+.bb-header--dark .bb-header__auth-skeleton {
+  background: rgba(255, 255, 255, 0.16);
+}
+
 .bb-landing-nav {
   display: flex;
   align-items: center;

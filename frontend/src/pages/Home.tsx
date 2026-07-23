@@ -68,24 +68,6 @@ export function Home() {
           </form>
         </div>
       </section>
-
-      <section className="bb-features" aria-label="뷰티보이 소개">
-        <div className="bb-feature">
-          <p className="bb-feature__eyebrow">SKIN</p>
-          <h2 className="bb-feature__title">성분 궁합 진단</h2>
-          <p className="bb-feature__desc">함께 쓰면 자극이 되는 성분 조합을 미리 알려드립니다.</p>
-        </div>
-        <div className="bb-feature">
-          <p className="bb-feature__eyebrow">ROUTINE</p>
-          <h2 className="bb-feature__title">피부타입 루틴</h2>
-          <p className="bb-feature__desc">지성·건성·민감성에 맞춘 아침저녁 루틴을 제안합니다.</p>
-        </div>
-        <div className="bb-feature">
-          <p className="bb-feature__eyebrow">DELIVERY</p>
-          <h2 className="bb-feature__title">오늘드림 배송</h2>
-          <p className="bb-feature__desc">필요한 순간, 가장 빠르게 도착하는 배송을 지원합니다.</p>
-        </div>
-      </section>
     </>
   );
 }

@@ -129,49 +129,6 @@
   border-color: var(--color-slate);
 }
 
-.bb-features {
-  max-width: 1180px;
-  margin: 0 auto;
-  padding: var(--space-section) 24px;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--space-xl);
-}
-
-.bb-feature__eyebrow {
-  font-family: var(--font-body);
-  font-size: var(--fs-eyebrow);
-  font-weight: var(--fw-eyebrow);
-  letter-spacing: var(--ls-eyebrow);
-  text-transform: uppercase;
-  color: var(--color-slate);
-  margin-bottom: var(--space-sm);
-}
-
-.bb-feature__title {
-  font-family: var(--font-body);
-  font-size: var(--fs-heading-sm);
-  font-weight: var(--fw-heading-sm);
-  line-height: var(--lh-heading-sm);
-  margin-bottom: var(--space-xs);
-  color: var(--color-ink);
-}
-
-.bb-feature__desc {
-  font-family: var(--font-body);
-  font-size: var(--fs-body);
-  line-height: var(--lh-body);
-  color: var(--color-graphite);
-}
-
-@media (max-width: 720px) {
-  .bb-features {
-    grid-template-columns: 1fr;
-    padding: var(--space-section) 20px;
-    gap: var(--space-xl);
-  }
-}
-
 /* ---- 랜딩 반응형 ---- */
 @media (max-width: 768px) {
   .bb-hero {
