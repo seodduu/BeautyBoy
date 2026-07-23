@@ -30,7 +30,8 @@
 
 .bb-landing-nav__item {
   font-family: var(--font-body);
-  font-size: var(--fs-body);
+  /* 레퍼런스 대비 실측했을 때 body(16px)는 작다 */
+  font-size: var(--fs-subtitle);
   line-height: var(--lh-body);
   color: var(--color-on-primary);
   white-space: nowrap;

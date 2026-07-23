@@ -1,4 +1,5 @@
-import { Link } from 'react-router-dom';
+import { useState, type FormEvent } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { WaveCanvas } from '../components/landing/WaveCanvas';
 import './Home.css';
 
@@ -7,6 +8,16 @@ import './Home.css';
  * 이 태스크에서는 셸의 시각 방향을 세우는 것이 목표.
  */
 export function Home() {
+  const [email, setEmail] = useState('');
+  const navigate = useNavigate();
+
+  /* 랜딩에서 받은 이메일을 가입 화면으로 넘겨 첫 칸을 채워준다 —
+     여기서 회원을 만들지 않는다(가입 검증·중복확인은 가입 화면과 서버의 몫). */
+  const handleStart = (event: FormEvent) => {
+    event.preventDefault();
+    navigate(`/signup?email=${encodeURIComponent(email)}`);
+  };
+
   return (
     <>
       {/* 랜딩 히어로: 검정 캔버스 + 물결 리본(canvas) 위에 워드마크를 얹는다.
@@ -28,14 +39,36 @@ export function Home() {
             <span className="bb-hero__wordmark-line">Boy</span>
           </h1>
 
-          <div className="bb-hero__cta">
-            <Link to="/login" className="bb-hero__cta-link">
-              Get started
-              <span className="bb-hero__cta-chevron" aria-hidden="true">
-                ›
-              </span>
-            </Link>
-          </div>
+          <form className="bb-hero__cta" onSubmit={handleStart}>
+            {/* DESIGN.md 폼 규칙: placeholder는 라벨을 대체하지 않는다 — 보이는 라벨을 둔다. */}
+            <label className="bb-hero__cta-label" htmlFor="hero-email">
+              EMAIL
+            </label>
+            <div className="bb-hero__cta-row">
+              <input
+                id="hero-email"
+                className="bb-hero__cta-input"
+                type="email"
+                inputMode="email"
+                autoComplete="email"
+                required
+                placeholder="이메일을 입력하면 피부 루틴부터 시작합니다."
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+              <button type="submit" className="bb-hero__cta-submit" aria-label="시작하기">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                  <path
+                    d="M17.5 2.5L9.5 10.5M17.5 2.5L12.5 17.5L9.5 10.5M17.5 2.5L2.5 7.5L9.5 10.5"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
+            </div>
+          </form>
         </div>
       </section>
 

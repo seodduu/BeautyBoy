@@ -36,7 +36,8 @@
   justify-self: end;
   text-align: right;
   font-family: var(--font-body);
-  font-size: var(--fs-body);
+  /* 레퍼런스와 나란히 재보니 body(16px)는 이 화면에서 작다 — subtitle로 올린다 */
+  font-size: var(--fs-subtitle);
   line-height: var(--lh-body);
   color: var(--color-on-primary);
   word-break: keep-all;
@@ -47,7 +48,7 @@
   grid-row: 2;
   align-self: center;
   justify-self: center;
-  display: inline-flex;
+  width: min(560px, 100%);
 }
 
 /* 왼쪽 아래 워드마크 — 두 줄로 쌓는다 */
@@ -74,30 +75,77 @@
   display: block;
 }
 
-/* {button-primary-on-dark} */
-.bb-hero__cta-link {
+/* 라벨은 입력칸 위, 왼쪽 정렬 — micro-caps 대문자 라벨 */
+.bb-hero__cta-label {
+  display: block;
+  margin-bottom: var(--space-xs);
+  font-family: var(--font-body);
+  font-size: var(--fs-micro-caps);
+  font-weight: var(--fw-micro-caps);
+  letter-spacing: var(--ls-micro-caps);
+  line-height: var(--lh-micro-caps);
+  text-transform: uppercase;
+  color: var(--color-on-primary);
+  opacity: 0.7;
+}
+
+/* 입력칸과 전송 버튼은 붙이지 않고 나란히 둔다(레퍼런스 구조) */
+.bb-hero__cta-row {
+  display: flex;
+  align-items: stretch;
+  gap: var(--space-sm);
+  width: min(560px, 100%);
+}
+
+.bb-hero__cta-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 52px;
+  padding: 0 var(--space-lg);
+  border: 1px solid var(--color-hairline-soft);
+  border-radius: var(--rounded-lg);
+  background: var(--color-on-primary);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+}
+
+.bb-hero__cta-input::placeholder {
+  color: var(--color-stone);
+}
+
+.bb-hero__cta-input:focus {
+  outline: none;
+  border-color: var(--color-ink);
+}
+
+.bb-hero__cta-input:focus-visible {
+  outline: 2px solid var(--color-on-primary);
+  outline-offset: 2px;
+}
+
+/* 시그널 색은 배경으로 못 쓰므로(DESIGN.md) 무채색 사다리로 입력칸과 구분한다 */
+.bb-hero__cta-submit {
+  flex: 0 0 auto;
+  width: 52px;
+  height: 52px;
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  padding: 12px var(--space-lg);
-  height: 40px;
-  border-radius: var(--rounded-full);
-  background: var(--color-on-primary);
-  color: var(--color-primary);
-  font-family: var(--font-body);
-  font-size: var(--fs-button);
-  font-weight: var(--fw-button);
-  transition: opacity 0.15s ease;
+  justify-content: center;
+  border: 1px solid var(--color-graphite);
+  border-radius: var(--rounded-lg);
+  background: var(--color-ink-soft);
+  color: var(--color-on-primary);
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
 }
 
-.bb-hero__cta-link:hover {
-  opacity: 0.85;
-}
-
-.bb-hero__cta-chevron {
-  font-size: 1.15em;
-  line-height: 1;
-  transform: translateY(-1px);
+.bb-hero__cta-submit:hover {
+  background: var(--color-graphite);
+  border-color: var(--color-slate);
 }
 
 .bb-features {
