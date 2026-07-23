@@ -34,11 +34,18 @@
 
 ---
 
-## Phase 0 — front-base 검토·머지 (오케스트레이터 / main 세션 / 서브에이전트 없음)
+## Phase 0 — front-base 검토·머지 (✅ 병렬 세션이 이미 완료 — 검증만)
 
-> 이 단계는 git 통합이라 사람+오케스트레이터가 main에서 직접 한다. 서브에이전트를 스폰하지 않는다.
+> **상태 갱신(2026-07-23):** 이 계획서를 쓰는 동안 다른 터미널(Wave 1 오케스트레이터)이
+> `feat/front-base`와 `feat/catalog`를 main에 머지했다(커밋 `342b5cf`, `dcac68c`). 따라서
+> 아래 머지 작업은 **이미 끝났다.** main은 라이트 프론트 + 갱신된 `DESIGN.md` + 카탈로그를 모두 담고 있다.
+> 남은 것은 아래 검증뿐이며, Phase 1은 이 통합된 main 기점에서 바로 딴다.
 
-- [ ] **0-1. 사전 조건 확인** (사람 몫 2줄)
+- [x] **0-3. main에 머지** — 완료(`342b5cf merge(front-base)`). `index.css`는 라이트 토큰(`color-scheme: light`, `--color-canvas`, `signal-*`)만 정의하고 다크/황동(`#15181b`, `c08552`)은 주석 설명 외 실제 값에 없음(검증됨).
+
+- [ ] **0-2(잔여). front-base 렌더 결과 육안 검토** — 아직 스크린샷 검증을 안 했다면 Phase 1 Task 5의 스크린샷 게이트에서 홈/로그인/가입 화면을 함께 확인해 갈음한다.
+
+- [ ] **0-1. (참고) 사전 조건 확인** — Phase 1 착수 전 아래로 대체됨. 원래 절차는 기록용으로 남긴다.
 
 ```
 git -C "/Users/doo._.hyun/Study/Project/Beauty Boy" log --oneline -1   # 기점: e3d70b5 (DESIGN.md UX 계약 흡수)
