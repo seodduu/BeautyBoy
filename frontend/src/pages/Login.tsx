@@ -11,6 +11,7 @@ import { Field } from '../components/ui/Field';
  * 로그인 페이지.
  * 로그인 응답에는 닉네임이 없으므로(accessToken만) 성공 직후 `/members/me`를 호출해
  * Header에 표시할 회원 정보를 스토어에 채운다.
+ * 성공 후에는 랜딩(/)이 아니라 루틴 메인(/main)으로 보낸다 — 랜딩은 비로그인 유입 화면이다.
  */
 export function Login() {
   const navigate = useNavigate();
@@ -30,7 +31,7 @@ export function Login() {
       setAuth(accessToken);
       const me = await fetchMe();
       setAuth(accessToken, me);
-      navigate('/');
+      navigate('/main');
     } catch (err) {
       if (isAxiosError(err) && err.response?.data?.message) {
         setError(err.response.data.message as string);

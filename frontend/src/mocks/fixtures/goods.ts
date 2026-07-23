@@ -37,15 +37,32 @@ const BRANDS = [
   '스킨아머',
 ];
 
-/** 카테고리 트리(요약) — 총 40건을 이 배분대로 채운다. C001 접두사 필터 테스트가 이 배분에 의존한다. */
+/**
+ * 실 시드(backend V12__seed_catalog.sql)의 카테고리 코드를 그대로 쓴다.
+ * mock 전용 코드를 따로 두면 루틴 매핑(features/routine/steps.ts)이 mock에서만 빈 화면이 된다.
+ * 루틴 5단계(C002 / C001001 / C001002 / C001003 / C004001)는 각각 4건 이상이 되도록 배분했다.
+ */
 const CATEGORY_PLAN: Array<{ code: string; label: string; count: number }> = [
-  { code: 'C001', label: '스킨케어', count: 5 },
-  { code: 'C0011', label: '토너', count: 5 },
-  { code: 'C0012', label: '로션', count: 5 },
-  { code: 'C002', label: '헤어', count: 5 },
-  { code: 'C0021', label: '샴푸', count: 5 },
-  { code: 'C003', label: '바디', count: 10 },
-  { code: 'C004', label: '메이크업', count: 5 },
+  // 루틴 1단계 — 클렌징(C002)
+  { code: 'C002001', label: '클렌징폼', count: 3 },
+  { code: 'C002002', label: '클렌징오일', count: 3 },
+  { code: 'C002003', label: '필링젤', count: 2 },
+  // 루틴 2단계 — 토너/스킨(C001001)
+  { code: 'C001001001', label: '수분토너', count: 3 },
+  { code: 'C001001002', label: '진정토너', count: 3 },
+  // 루틴 3단계 — 에센스/세럼(C001002)
+  { code: 'C001002001', label: '고보습에센스', count: 3 },
+  { code: 'C001002002', label: '미백세럼', count: 3 },
+  // 루틴 4단계 — 로션/크림(C001003)
+  { code: 'C001003001', label: '데일리로션', count: 3 },
+  { code: 'C001003002', label: '고영양크림', count: 3 },
+  // 루틴 5단계 — 선크림(C004001)
+  { code: 'C004001', label: '선크림', count: 5 },
+  // 루틴 축 밖 — 목록/필터 검증용
+  { code: 'C003001', label: '샴푸', count: 3 },
+  { code: 'C003002', label: '바디워시', count: 2 },
+  { code: 'C005001', label: '면도기', count: 2 },
+  { code: 'C006001', label: '베이스메이크업', count: 2 },
 ];
 
 const BADGE_PLAN: BadgeType[][] = [

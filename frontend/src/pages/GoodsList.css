@@ -1,0 +1,43 @@
+.bb-goods-list {
+  max-width: var(--landing-column);
+  margin: 0 auto;
+  padding: var(--space-section) var(--space-lg);
+}
+
+.bb-goods-list__head {
+  margin-bottom: var(--space-xl);
+}
+
+.bb-goods-list__title {
+  font-size: var(--fs-heading-md);
+  font-weight: var(--fw-heading-md);
+  line-height: var(--lh-heading-md);
+  letter-spacing: var(--ls-heading-md);
+  color: var(--color-ink);
+}
+
+.bb-goods-list__count {
+  margin-top: var(--space-xs);
+  font-size: var(--fs-meta);
+  line-height: var(--lh-meta);
+  color: var(--color-stone);
+}
+
+/* 조회 실패 문구. 색만으로 오류를 알리지 않도록 문구 자체로 상태를 명시한다. */
+.bb-goods-list__error {
+  padding: var(--space-lg) 0;
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  color: var(--color-signal-danger);
+}
+
+@media (max-width: 900px) {
+  .bb-goods-list {
+    padding: var(--space-xl) var(--space-md);
+  }
+
+  .bb-goods-list__title {
+    font-size: var(--fs-heading-sm);
+    line-height: var(--lh-heading-sm);
+  }
+}
