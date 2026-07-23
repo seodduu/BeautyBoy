@@ -41,7 +41,11 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/v1/auth/**", "/api/v1/health").permitAll()
+                        // /error: 컨테이너가 미처리 예외(500)나 핸들러 미매칭(404)에서 내부적으로
+                        // forward하는 경로. 여기를 permitAll하지 않으면 anyRequest().authenticated()에
+                        // 걸려 진짜 상태(500/404) 대신 401이 나가버린다(무토큰 보호 경로 접근은
+                        // 컨트롤러에 도달하기 전 authenticationEntryPoint에서 걸리므로 영향 없음).
+                        .requestMatchers("/api/v1/auth/**", "/api/v1/health", "/error").permitAll()
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(exception -> exception
