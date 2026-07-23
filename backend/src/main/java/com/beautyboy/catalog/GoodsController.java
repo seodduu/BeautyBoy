@@ -1,11 +1,14 @@
 package com.beautyboy.catalog;
 
+import com.beautyboy.catalog.dto.GoodsDescriptionResponse;
+import com.beautyboy.catalog.dto.GoodsDetailResponse;
 import com.beautyboy.catalog.dto.GoodsListItem;
 import com.beautyboy.catalog.dto.GoodsSearchCondition;
 import com.beautyboy.common.ApiResponse;
 import com.beautyboy.common.PageResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -39,5 +42,20 @@ public class GoodsController {
                 new GoodsSearchCondition(categoryCode, brandId, minPrice, maxPrice, goodsSort, page, clampedSize);
 
         return ResponseEntity.ok(ApiResponse.ok(goodsService.list(condition)));
+    }
+
+    @GetMapping("/api/v1/goods/{goodsNo}")
+    public ResponseEntity<ApiResponse<GoodsDetailResponse>> detail(@PathVariable Long goodsNo) {
+        return ResponseEntity.ok(ApiResponse.ok(goodsService.detail(goodsNo)));
+    }
+
+    @GetMapping("/api/v1/goods/{goodsNo}/description")
+    public ResponseEntity<ApiResponse<GoodsDescriptionResponse>> description(@PathVariable Long goodsNo) {
+        return ResponseEntity.ok(ApiResponse.ok(goodsService.description(goodsNo)));
+    }
+
+    @GetMapping("/api/v1/goods/{goodsNo}/recommended")
+    public ResponseEntity<ApiResponse<List<GoodsListItem>>> recommended(@PathVariable Long goodsNo) {
+        return ResponseEntity.ok(ApiResponse.ok(goodsService.recommended(goodsNo)));
     }
 }
