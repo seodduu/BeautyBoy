@@ -3,6 +3,8 @@
 .bb-routine {
   padding: var(--space-section-lg) 0;
   border-top: 1px solid var(--color-hairline);
+  /* 앵커로 점프할 때 Main의 sticky 네비 아래로 섹션이 숨지 않게 여유를 준다. */
+  scroll-margin-top: var(--space-section);
 }
 
 .bb-routine:first-of-type {
