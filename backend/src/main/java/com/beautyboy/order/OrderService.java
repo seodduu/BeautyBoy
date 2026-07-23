@@ -6,12 +6,15 @@ import com.beautyboy.common.BusinessException;
 import com.beautyboy.common.ErrorCode;
 import com.beautyboy.order.dto.OrderCreateRequest;
 import com.beautyboy.order.dto.OrderCreateResponse;
+import com.beautyboy.order.dto.OrderDetailResponse;
+import com.beautyboy.order.dto.OrderSummaryResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 /**
  * 주문 생성.
@@ -88,6 +91,60 @@ public class OrderService {
         cartService.clear(memberId);
 
         return new OrderCreateResponse(saved.getOrderNo(), saved.getPayableAmount());
+    }
+
+    @Transactional(readOnly = true)
+    public List<OrderSummaryResponse> ordersOf(Long memberId) {
+        return orderRepository.findByMemberIdOrderByOrderedAtDesc(memberId).stream()
+                .map(this::toSummary)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public OrderDetailResponse orderDetail(Long memberId, String orderNo) {
+        Order order = orderRepository.findByOrderNo(orderNo)
+                .filter(o -> o.ownedBy(memberId))   // 남의 주문은 존재를 숨긴다.
+                .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
+        return toDetail(order);
+    }
+
+    private OrderSummaryResponse toSummary(Order order) {
+        List<OrderItem> items = order.getItems();
+        String representative = items.isEmpty() ? "" : items.get(0).getGoodsName();
+        return new OrderSummaryResponse(
+                order.getOrderNo(),
+                order.getStatus(),
+                representative,
+                items.size(),
+                order.getPayableAmount(),
+                order.getOrderedAt());
+    }
+
+    private OrderDetailResponse toDetail(Order order) {
+        List<OrderDetailResponse.OrderItemResponse> items = order.getItems().stream()
+                .map(item -> new OrderDetailResponse.OrderItemResponse(
+                        item.getGoodsName(),
+                        item.getOptionName(),
+                        item.getUnitPrice(),
+                        item.getQuantity(),
+                        item.getLineAmount()))
+                .toList();
+
+        return new OrderDetailResponse(
+                order.getOrderNo(),
+                order.getStatus(),
+                order.getTotalAmount(),
+                order.getDiscountAmount(),
+                order.getPayableAmount(),
+                order.getReceiverName(),
+                order.getReceiverPhone(),
+                order.getZipcode(),
+                order.getAddress1(),
+                order.getAddress2(),
+                order.getDeliveryType(),
+                order.getOrderedAt(),
+                order.getPaidAt(),
+                items);
     }
 
     /**
