@@ -2,6 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.tsx'
+import { ToastProvider } from './components/ui/ToastProvider'
 
 /**
  * dev에서만, 그리고 VITE_USE_MOCK=true일 때만 msw worker를 시작한다.
@@ -17,7 +18,9 @@ async function bootstrap() {
 
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
-      <App />
+      <ToastProvider>
+        <App />
+      </ToastProvider>
     </StrictMode>,
   );
 }
