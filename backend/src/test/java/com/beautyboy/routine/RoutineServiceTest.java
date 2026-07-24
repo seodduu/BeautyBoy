@@ -16,6 +16,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
@@ -53,7 +54,7 @@ class RoutineServiceTest {
                 .willReturn(java.util.Optional.of(다섯단계_템플릿("DRY", "BASIC")));
         given(goodsQueryService.findListItems(any(), any())).willReturn(List.of(카드(1L), 카드(2L)));
 
-        var response = routineService.find("DRY", "BASIC");
+        var response = routineService.find("DRY", "BASIC", null);
 
         assertThat(response.steps()).hasSize(5);
         assertThat(response.steps().get(0).stepOrder()).isEqualTo(1);
@@ -68,7 +69,7 @@ class RoutineServiceTest {
                 .willReturn(java.util.Optional.of(다섯단계_템플릿("COMBINATION", "BASIC")));
         given(goodsQueryService.findListItems(any(), any())).willReturn(List.of(카드(1L), 카드(2L)));
 
-        routineService.find(null, null);
+        routineService.find(null, null, null);
 
         verify(routineTemplateRepository).findGraphBySkinTypeAndTimeSlot("COMBINATION", "BASIC");
     }
@@ -79,7 +80,7 @@ class RoutineServiceTest {
                 .willReturn(java.util.Optional.of(다섯단계_템플릿("OILY", "BASIC")));
         given(goodsQueryService.findListItems(any(), any())).willReturn(List.of(카드(1L), 카드(2L)));
 
-        routineService.find("oily", "BASIC");
+        routineService.find("oily", "BASIC", null);
 
         verify(routineTemplateRepository).findGraphBySkinTypeAndTimeSlot("OILY", "BASIC");
     }
@@ -91,10 +92,21 @@ class RoutineServiceTest {
         // goodsNo 1만 카드로 존재(2는 HIDDEN 등으로 findListItems가 누락)
         given(goodsQueryService.findListItems(any(), any())).willReturn(List.of(카드(1L)));
 
-        var response = routineService.find("DRY", "BASIC");
+        var response = routineService.find("DRY", "BASIC", null);
 
         assertThat(response.steps().get(0).recommendations()).hasSize(1);
         assertThat(response.steps().get(0).recommendations().get(0).goodsNo()).isEqualTo(1L);
+    }
+
+    @Test
+    void viewerId가_findListItems에_그대로_전달된다() {
+        given(routineTemplateRepository.findGraphBySkinTypeAndTimeSlot("DRY", "BASIC"))
+                .willReturn(java.util.Optional.of(다섯단계_템플릿("DRY", "BASIC")));
+        given(goodsQueryService.findListItems(any(), eq(42L))).willReturn(List.of(카드(1L), 카드(2L)));
+
+        routineService.find("DRY", "BASIC", 42L);
+
+        verify(goodsQueryService).findListItems(any(), eq(42L));
     }
 
     @Test
@@ -102,7 +114,7 @@ class RoutineServiceTest {
         given(routineTemplateRepository.findGraphBySkinTypeAndTimeSlot("UNKNOWN", "BASIC"))
                 .willReturn(java.util.Optional.empty());
 
-        assertThatThrownBy(() -> routineService.find("UNKNOWN", "BASIC"))
+        assertThatThrownBy(() -> routineService.find("UNKNOWN", "BASIC", null))
                 .isInstanceOf(BusinessException.class)
                 .satisfies(e -> assertThat(((BusinessException) e).getErrorCode())
                         .isEqualTo(ErrorCode.ROUTINE_TEMPLATE_NOT_FOUND));
