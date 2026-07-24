@@ -2,6 +2,18 @@ import { http, HttpResponse } from 'msw';
 import { goodsFixtures } from './fixtures/goods';
 import type { GoodsFixture } from './fixtures/goods';
 import type { ApiEnvelope, PageResponse } from '../types/goods';
+import type { RankingItem } from '../types/ranking';
+import type { GoodsIngredientResponse } from '../types/detail';
+import type { ReviewItem, ReviewStats, QnaItem } from '../types/review';
+import {
+  ingredientFixtures,
+  maxIrritation,
+  maxComedogenic,
+  reviewFixtures,
+  reviewStatsFixture,
+  qnaFixtures,
+  popularKeywordFixtures,
+} from './fixtures/detail';
 
 /** GET /api/v1/categories/tree 응답용 카테고리 트리. GoodsListItem 계약과 무관한 mock 전용 형태. */
 interface CategoryNode {
@@ -141,6 +153,18 @@ export const handlers = [
     return HttpResponse.json(body);
   }),
 
+  // 성분 배지 — /goods/:goodsNo 보다 먼저 등록한다. MSW는 등록 순서대로 매칭하므로
+  // 뒤에 두면 :goodsNo가 "1/ingredients" 형태까지 통째로 삼켜 이 핸들러가 절대 안 걸린다.
+  http.get('/api/v1/goods/:goodsNo/ingredients', ({ params }) => {
+    const goodsNo = Number(params.goodsNo);
+    const body: ApiEnvelope<GoodsIngredientResponse> = {
+      code: 'OK',
+      message: 'success',
+      data: { goodsNo, ingredients: ingredientFixtures, maxIrritation, maxComedogenic },
+    };
+    return HttpResponse.json(body);
+  }),
+
   http.get('/api/v1/goods/:goodsNo', ({ params }) => {
     const goodsNo = Number(params.goodsNo);
     const found = goodsFixtures.find((item) => item.goodsNo === goodsNo);
@@ -160,4 +184,158 @@ export const handlers = [
     const body: ApiEnvelope<CategoryNode[]> = { code: 'OK', message: 'success', data: categoryTree };
     return HttpResponse.json(body);
   }),
+
+  /* GET /search — 이름·브랜드에 q가 대소문자 무관 부분일치하면 매치. 실 검색어(예: "향수")는
+     fixture 어디에도 없으므로 그대로 두면 자연스럽게 0건이 되어 EmptyState를 화면에서 확인할 수 있다. */
+  http.get('/api/v1/search', ({ request }) => {
+    const url = new URL(request.url);
+    const q = (url.searchParams.get('q') ?? '').toLowerCase();
+    const page = Number(url.searchParams.get('page') ?? '0');
+    const size = Number(url.searchParams.get('size') ?? '20');
+    const sort = url.searchParams.get('sort');
+
+    const matched = goodsFixtures.filter(
+      (item) => item.name.toLowerCase().includes(q) || item.brandName.toLowerCase().includes(q),
+    );
+
+    const sorted = sortGoods(matched, sort);
+    const start = page * size;
+    const content = sorted.slice(start, start + size);
+    const totalElements = sorted.length;
+    const totalPages = Math.max(1, Math.ceil(totalElements / size));
+
+    const body: ApiEnvelope<PageResponse<GoodsFixture>> = {
+      code: 'OK',
+      message: 'success',
+      data: {
+        content,
+        page,
+        size,
+        totalElements,
+        totalPages,
+        hasNext: start + size < totalElements,
+      },
+    };
+
+    return HttpResponse.json(body);
+  }),
+
+  /* GET /search/autocomplete — 상품명/브랜드명에서 q를 포함하는 후보를 최대 10개 뽑는다. */
+  http.get('/api/v1/search/autocomplete', ({ request }) => {
+    const url = new URL(request.url);
+    const q = (url.searchParams.get('q') ?? '').toLowerCase();
+
+    const candidates = new Set<string>();
+    if (q) {
+      for (const item of goodsFixtures) {
+        if (item.brandName.toLowerCase().includes(q)) {
+          candidates.add(item.brandName);
+        }
+        if (item.name.toLowerCase().includes(q)) {
+          candidates.add(item.name);
+        }
+        if (candidates.size >= 10) {
+          break;
+        }
+      }
+    }
+
+    const body: ApiEnvelope<string[]> = {
+      code: 'OK',
+      message: 'success',
+      data: Array.from(candidates).slice(0, 10),
+    };
+    return HttpResponse.json(body);
+  }),
+
+  http.get('/api/v1/search/popular-keywords', () => {
+    const body: ApiEnvelope<string[]> = {
+      code: 'OK',
+      message: 'success',
+      data: popularKeywordFixtures,
+    };
+    return HttpResponse.json(body);
+  }),
+
+  /* GET /rankings — 랭킹은 페이지네이션 없는 바로 List<RankingItem>. score는 순위 역순으로
+     내려가는 임의 점수를 부여한다(1위가 가장 높음). */
+  http.get('/api/v1/rankings', ({ request }) => {
+    const url = new URL(request.url);
+    const categoryCode = url.searchParams.get('categoryCode');
+
+    const filtered = categoryCode
+      ? goodsFixtures.filter((item) => item.categoryCode.startsWith(categoryCode))
+      : goodsFixtures;
+
+    const ranked: RankingItem[] = filtered.slice(0, 20).map((item, index) => ({
+      rank: index + 1,
+      goodsNo: item.goodsNo,
+      brandName: item.brandName,
+      name: item.name,
+      thumbnailUrl: item.thumbnailUrl,
+      listPrice: item.listPrice,
+      salePrice: item.salePrice,
+      discountRate: item.discountRate,
+      score: 1000 - index * 10,
+    }));
+
+    const body: ApiEnvelope<RankingItem[]> = { code: 'OK', message: 'success', data: ranked };
+    return HttpResponse.json(body);
+  }),
+
+  http.get('/api/v1/reviews', ({ request }) => {
+    const url = new URL(request.url);
+    const page = Number(url.searchParams.get('page') ?? '0');
+    const size = 20;
+    const start = page * size;
+    const content = reviewFixtures.slice(start, start + size);
+    const totalElements = reviewFixtures.length;
+
+    const body: ApiEnvelope<PageResponse<ReviewItem>> = {
+      code: 'OK',
+      message: 'success',
+      data: {
+        content,
+        page,
+        size,
+        totalElements,
+        totalPages: Math.max(1, Math.ceil(totalElements / size)),
+        hasNext: start + size < totalElements,
+      },
+    };
+    return HttpResponse.json(body);
+  }),
+
+  http.get('/api/v1/reviews/stats', () => {
+    const body: ApiEnvelope<ReviewStats> = { code: 'OK', message: 'success', data: reviewStatsFixture };
+    return HttpResponse.json(body);
+  }),
+
+  http.get('/api/v1/qna', ({ request }) => {
+    const url = new URL(request.url);
+    const page = Number(url.searchParams.get('page') ?? '0');
+    const size = 20;
+    const start = page * size;
+    const content = qnaFixtures.slice(start, start + size);
+    const totalElements = qnaFixtures.length;
+
+    const body: ApiEnvelope<PageResponse<QnaItem>> = {
+      code: 'OK',
+      message: 'success',
+      data: {
+        content,
+        page,
+        size,
+        totalElements,
+        totalPages: Math.max(1, Math.ceil(totalElements / size)),
+        hasNext: start + size < totalElements,
+      },
+    };
+    return HttpResponse.json(body);
+  }),
+
+  // 장바구니 담기 — 성공 토스트 확인용. 실 재고 검증은 서버 몫이라 mock에서는 항상 성공한다.
+  http.post('/api/v1/cart/items', () =>
+    HttpResponse.json({ code: 'OK', message: 'success', data: null }, { status: 201 }),
+  ),
 ];
