@@ -50,7 +50,8 @@ public class RoutineService implements RoutineQueryService {
                 .map(RoutineStepGoods::getGoodsNo)
                 .distinct()
                 .toList();
-        Map<Long, GoodsListItem> cardByGoodsNo = goodsQueryService.findListItems(allGoodsNos).stream()
+        // 루틴 카드는 로그인 여부를 모르는 경로다(RoutineQueryService에 viewerId가 없다) — 비로그인으로 취급한다.
+        Map<Long, GoodsListItem> cardByGoodsNo = goodsQueryService.findListItems(allGoodsNos, null).stream()
                 .collect(Collectors.toMap(GoodsListItem::goodsNo, Function.identity()));
 
         List<RoutineStepResponse> stepResponses = steps.stream()

@@ -1,1 +1,2 @@
 com.beautyboy.ranking.RankingStatFallbackAutoConfiguration
+com.beautyboy.catalog.CatalogStatFallbackAutoConfiguration

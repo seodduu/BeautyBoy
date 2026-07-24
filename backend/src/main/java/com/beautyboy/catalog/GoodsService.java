@@ -25,26 +25,27 @@ public class GoodsService implements GoodsQueryService {
     private final GoodsRepository goodsRepository;
     private final GoodsQueryRepository goodsQueryRepository;
     private final CategoryRepository categoryRepository;
+    private final GoodsRatingProvider goodsRatingProvider;
+    private final WishedGoodsProvider wishedGoodsProvider;
 
     public GoodsService(GoodsRepository goodsRepository,
                          GoodsQueryRepository goodsQueryRepository,
-                         CategoryRepository categoryRepository) {
+                         CategoryRepository categoryRepository,
+                         GoodsRatingProvider goodsRatingProvider,
+                         WishedGoodsProvider wishedGoodsProvider) {
         this.goodsRepository = goodsRepository;
         this.goodsQueryRepository = goodsQueryRepository;
         this.categoryRepository = categoryRepository;
+        this.goodsRatingProvider = goodsRatingProvider;
+        this.wishedGoodsProvider = wishedGoodsProvider;
     }
 
     @Transactional(readOnly = true)
-    public PageResponse<GoodsListItem> list(GoodsSearchCondition condition) {
+    public PageResponse<GoodsListItem> list(GoodsSearchCondition condition, Long viewerId) {
         List<GoodsQueryRepository.GoodsRow> rows = goodsQueryRepository.findList(condition);
         long totalElements = goodsQueryRepository.count(condition);
 
-        List<Long> goodsIds = rows.stream().map(GoodsQueryRepository.GoodsRow::goodsId).toList();
-        Map<Long, List<String>> badgesByGoodsId = goodsQueryRepository.findValidBadges(goodsIds, LocalDateTime.now());
-
-        List<GoodsListItem> items = rows.stream()
-                .map(row -> toItem(row, badgesByGoodsId.getOrDefault(row.goodsId(), List.of())))
-                .toList();
+        List<GoodsListItem> items = toItems(rows, viewerId);
 
         return PageResponse.of(items, condition.page(), condition.size(), totalElements);
     }
@@ -55,7 +56,7 @@ public class GoodsService implements GoodsQueryService {
      * 엔티티 로딩 자체를 막을 수는 없어도 응답 페이로드에는 절대 실리지 않는다).
      */
     @Transactional(readOnly = true)
-    public GoodsDetailResponse detail(Long goodsNo) {
+    public GoodsDetailResponse detail(Long goodsNo, Long viewerId) {
         Goods goods = goodsRepository.findDetailById(goodsNo, Goods.STATUS_HIDDEN)
                 .orElseThrow(() -> new BusinessException(ErrorCode.GOODS_NOT_FOUND));
 
@@ -64,6 +65,10 @@ public class GoodsService implements GoodsQueryService {
                 .findValidBadges(List.of(goodsNo), LocalDateTime.now())
                 .getOrDefault(goodsNo, List.of());
         List<String> categoryPath = categoryPath(goods.getCategoryCode());
+
+        GoodsRatingProvider.RatingStat ratingStat = goodsRatingProvider.ratingsByGoods(List.of(goodsNo))
+                .get(goodsNo);
+        boolean wished = wishedGoodsProvider.wishedGoodsIds(viewerId, List.of(goodsNo)).contains(goodsNo);
 
         return new GoodsDetailResponse(
                 goods.getId(),
@@ -80,9 +85,9 @@ public class GoodsService implements GoodsQueryService {
                 badges,
                 goods.getStatus(),
                 optionRows.stream().map(this::toOptionResponse).toList(),
-                0.0,
-                0,
-                false,
+                ratingStat == null ? 0.0 : ratingStat.rating(),
+                ratingStat == null ? 0 : ratingStat.reviewCount(),
+                wished,
                 false);
     }
 
@@ -96,7 +101,7 @@ public class GoodsService implements GoodsQueryService {
 
     /** 같은 leaf 카테고리 내 view_count DESC 상위 8건, 자기 자신 제외. 목록 매핑을 그대로 재사용한다. */
     @Transactional(readOnly = true)
-    public List<GoodsListItem> recommended(Long goodsNo) {
+    public List<GoodsListItem> recommended(Long goodsNo, Long viewerId) {
         Goods goods = goodsRepository.findDetailById(goodsNo, Goods.STATUS_HIDDEN)
                 .orElseThrow(() -> new BusinessException(ErrorCode.GOODS_NOT_FOUND));
 
@@ -113,12 +118,7 @@ public class GoodsService implements GoodsQueryService {
                         (Integer) row[5]))
                 .toList();
 
-        List<Long> goodsIds = goodsRows.stream().map(GoodsQueryRepository.GoodsRow::goodsId).toList();
-        Map<Long, List<String>> badgesByGoodsId = goodsQueryRepository.findValidBadges(goodsIds, LocalDateTime.now());
-
-        return goodsRows.stream()
-                .map(row -> toItem(row, badgesByGoodsId.getOrDefault(row.goodsId(), List.of())))
-                .toList();
+        return toItems(goodsRows, viewerId);
     }
 
     /**
@@ -177,18 +177,13 @@ public class GoodsService implements GoodsQueryService {
      */
     @Override
     @Transactional(readOnly = true)
-    public List<GoodsListItem> findListItems(java.util.Collection<Long> goodsNos) {
+    public List<GoodsListItem> findListItems(java.util.Collection<Long> goodsNos, Long viewerId) {
         if (goodsNos.isEmpty()) {
             return List.of();
         }
         List<GoodsQueryRepository.GoodsRow> rows = goodsQueryRepository.findByIds(goodsNos);
 
-        List<Long> goodsIds = rows.stream().map(GoodsQueryRepository.GoodsRow::goodsId).toList();
-        Map<Long, List<String>> badgesByGoodsId = goodsQueryRepository.findValidBadges(goodsIds, LocalDateTime.now());
-
-        return rows.stream()
-                .map(row -> toItem(row, badgesByGoodsId.getOrDefault(row.goodsId(), List.of())))
-                .toList();
+        return toItems(rows, viewerId);
     }
 
     /** 코드 접두사(C001, C001001, C001001001)를 한 번에 IN 조회해 depth 1→3 순서 이름 배열로 만든다. */
@@ -212,7 +207,28 @@ public class GoodsService implements GoodsQueryService {
         return new GoodsOptionResponse(optionNo, name, addPrice, stock, stock == 0);
     }
 
-    private GoodsListItem toItem(GoodsQueryRepository.GoodsRow row, List<String> badges) {
+    /**
+     * 행 목록 → 카드 목록. 배지·별점·찜을 각각 <b>한 번씩만</b> 배치 조회한 뒤 메모리에서 합친다
+     * (N+1 금지 — 상품별로 반복 조회하지 않는다).
+     */
+    private List<GoodsListItem> toItems(List<GoodsQueryRepository.GoodsRow> rows, Long viewerId) {
+        List<Long> goodsIds = rows.stream().map(GoodsQueryRepository.GoodsRow::goodsId).toList();
+
+        Map<Long, List<String>> badgesByGoodsId = goodsQueryRepository.findValidBadges(goodsIds, LocalDateTime.now());
+        Map<Long, GoodsRatingProvider.RatingStat> ratingsByGoodsId = goodsRatingProvider.ratingsByGoods(goodsIds);
+        java.util.Set<Long> wishedGoodsIds = wishedGoodsProvider.wishedGoodsIds(viewerId, goodsIds);
+
+        return rows.stream()
+                .map(row -> toItem(
+                        row,
+                        badgesByGoodsId.getOrDefault(row.goodsId(), List.of()),
+                        ratingsByGoodsId.get(row.goodsId()),
+                        wishedGoodsIds.contains(row.goodsId())))
+                .toList();
+    }
+
+    private GoodsListItem toItem(GoodsQueryRepository.GoodsRow row, List<String> badges,
+                                  GoodsRatingProvider.RatingStat ratingStat, boolean wished) {
         return new GoodsListItem(
                 row.goodsId(),
                 row.brandName(),
@@ -222,9 +238,9 @@ public class GoodsService implements GoodsQueryService {
                 row.salePrice(),
                 discountRate(row.listPrice(), row.salePrice()),
                 badges,
-                0.0,
-                0,
-                false,
+                ratingStat == null ? 0.0 : ratingStat.rating(),
+                ratingStat == null ? 0 : ratingStat.reviewCount(),
+                wished,
                 false);
     }
 

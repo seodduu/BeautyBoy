@@ -41,9 +41,9 @@ public interface GoodsQueryService {
      */
     Optional<OrderGoodsSnapshot> findOrderSnapshot(Long goodsNo, Long optionNo);
 
-    /** goods_no 목록 → 카드 아이템. HIDDEN 상품은 제외한다(목록·상세와 같은 노출 기준).
-     *  입력 순서를 보존하지 않는다 — 호출자가 필요하면 자기 순서로 재정렬한다. */
-    List<GoodsListItem> findListItems(Collection<Long> goodsNos);
+    /** goods_no 목록 → 카드 아이템. HIDDEN 제외. 입력 순서를 보존하지 않는다.
+     *  viewerId는 wished 판정에만 쓰이며 비로그인이면 null이다. */
+    List<GoodsListItem> findListItems(Collection<Long> goodsNos, Long viewerId);
 
     /**
      * 주문 시점에 복사해 둘 상품 정보.

@@ -51,7 +51,7 @@ class RoutineServiceTest {
     void 피부타입으로_템플릿을_찾고_단계별_추천을_카드로_채운다() {
         given(routineTemplateRepository.findGraphBySkinTypeAndTimeSlot("DRY", "BASIC"))
                 .willReturn(java.util.Optional.of(다섯단계_템플릿("DRY", "BASIC")));
-        given(goodsQueryService.findListItems(any())).willReturn(List.of(카드(1L), 카드(2L)));
+        given(goodsQueryService.findListItems(any(), any())).willReturn(List.of(카드(1L), 카드(2L)));
 
         var response = routineService.find("DRY", "BASIC");
 
@@ -66,7 +66,7 @@ class RoutineServiceTest {
     void skinType이_없으면_COMBINATION_BASIC으로_폴백한다() {
         given(routineTemplateRepository.findGraphBySkinTypeAndTimeSlot("COMBINATION", "BASIC"))
                 .willReturn(java.util.Optional.of(다섯단계_템플릿("COMBINATION", "BASIC")));
-        given(goodsQueryService.findListItems(any())).willReturn(List.of(카드(1L), 카드(2L)));
+        given(goodsQueryService.findListItems(any(), any())).willReturn(List.of(카드(1L), 카드(2L)));
 
         routineService.find(null, null);
 
@@ -77,7 +77,7 @@ class RoutineServiceTest {
     void skinType은_대문자로_정규화된다() {
         given(routineTemplateRepository.findGraphBySkinTypeAndTimeSlot("OILY", "BASIC"))
                 .willReturn(java.util.Optional.of(다섯단계_템플릿("OILY", "BASIC")));
-        given(goodsQueryService.findListItems(any())).willReturn(List.of(카드(1L), 카드(2L)));
+        given(goodsQueryService.findListItems(any(), any())).willReturn(List.of(카드(1L), 카드(2L)));
 
         routineService.find("oily", "BASIC");
 
@@ -89,7 +89,7 @@ class RoutineServiceTest {
         given(routineTemplateRepository.findGraphBySkinTypeAndTimeSlot("DRY", "BASIC"))
                 .willReturn(java.util.Optional.of(다섯단계_템플릿("DRY", "BASIC")));
         // goodsNo 1만 카드로 존재(2는 HIDDEN 등으로 findListItems가 누락)
-        given(goodsQueryService.findListItems(any())).willReturn(List.of(카드(1L)));
+        given(goodsQueryService.findListItems(any(), any())).willReturn(List.of(카드(1L)));
 
         var response = routineService.find("DRY", "BASIC");
 

@@ -7,6 +7,7 @@ import com.beautyboy.catalog.dto.GoodsSearchCondition;
 import com.beautyboy.common.ApiResponse;
 import com.beautyboy.common.PageResponse;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -33,7 +34,8 @@ public class GoodsController {
             @RequestParam(required = false) Integer maxPrice,
             @RequestParam(defaultValue = "popular") String sort,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
+            @RequestParam(defaultValue = "20") int size,
+            @AuthenticationPrincipal Long memberId) {
 
         GoodsSort goodsSort = GoodsSort.fromParam(sort);
         int clampedSize = Math.min(size, MAX_PAGE_SIZE);
@@ -41,12 +43,13 @@ public class GoodsController {
         GoodsSearchCondition condition =
                 new GoodsSearchCondition(categoryCode, brandId, minPrice, maxPrice, goodsSort, page, clampedSize);
 
-        return ResponseEntity.ok(ApiResponse.ok(goodsService.list(condition)));
+        return ResponseEntity.ok(ApiResponse.ok(goodsService.list(condition, memberId)));
     }
 
     @GetMapping("/api/v1/goods/{goodsNo}")
-    public ResponseEntity<ApiResponse<GoodsDetailResponse>> detail(@PathVariable Long goodsNo) {
-        return ResponseEntity.ok(ApiResponse.ok(goodsService.detail(goodsNo)));
+    public ResponseEntity<ApiResponse<GoodsDetailResponse>> detail(@PathVariable Long goodsNo,
+                                                                    @AuthenticationPrincipal Long memberId) {
+        return ResponseEntity.ok(ApiResponse.ok(goodsService.detail(goodsNo, memberId)));
     }
 
     @GetMapping("/api/v1/goods/{goodsNo}/description")
@@ -55,7 +58,8 @@ public class GoodsController {
     }
 
     @GetMapping("/api/v1/goods/{goodsNo}/recommended")
-    public ResponseEntity<ApiResponse<List<GoodsListItem>>> recommended(@PathVariable Long goodsNo) {
-        return ResponseEntity.ok(ApiResponse.ok(goodsService.recommended(goodsNo)));
+    public ResponseEntity<ApiResponse<List<GoodsListItem>>> recommended(@PathVariable Long goodsNo,
+                                                                         @AuthenticationPrincipal Long memberId) {
+        return ResponseEntity.ok(ApiResponse.ok(goodsService.recommended(goodsNo, memberId)));
     }
 }
