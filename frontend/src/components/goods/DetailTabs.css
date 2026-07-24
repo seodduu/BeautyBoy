@@ -34,4 +34,10 @@
 .bb-detail-tabs__summary {
   color: var(--color-graphite);
   white-space: pre-line;
+  /* 본문 한 줄이 너무 길면 눈이 다음 줄을 놓친다 — DESIGN.md 타이포 규약대로 가둔다. */
+  max-width: 68ch;
+}
+
+.bb-detail-tabs__error {
+  color: var(--color-graphite);
 }

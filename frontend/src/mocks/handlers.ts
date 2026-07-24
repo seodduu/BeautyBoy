@@ -3,7 +3,12 @@ import { goodsFixtures } from './fixtures/goods';
 import type { GoodsFixture } from './fixtures/goods';
 import type { ApiEnvelope, PageResponse } from '../types/goods';
 import type { RankingItem } from '../types/ranking';
-import type { GoodsDetail, GoodsIngredientResponse, GoodsOption } from '../types/detail';
+import type {
+  GoodsDescription,
+  GoodsDetail,
+  GoodsIngredientResponse,
+  GoodsOption,
+} from '../types/detail';
 import type { ReviewItem, ReviewStats, QnaItem } from '../types/review';
 import {
   ingredientFixtures,
@@ -205,6 +210,31 @@ export const handlers = [
       code: 'OK',
       message: 'success',
       data: { goodsNo, ingredients: ingredientFixtures, maxIrritation, maxComedogenic },
+    };
+    return HttpResponse.json(body);
+  }),
+
+  // 설명 본문 — ingredients와 같은 이유로 /goods/:goodsNo 보다 먼저 등록한다.
+  http.get('/api/v1/goods/:goodsNo/description', ({ params }) => {
+    const goodsNo = Number(params.goodsNo);
+    const found = goodsFixtures.find((item) => item.goodsNo === goodsNo);
+
+    if (!found) {
+      return HttpResponse.json(
+        { code: 'GOODS_NOT_FOUND', message: '상품을 찾을 수 없습니다.', data: null },
+        { status: 404 },
+      );
+    }
+
+    const body: ApiEnvelope<GoodsDescription> = {
+      code: 'OK',
+      message: 'success',
+      data: {
+        goodsNo,
+        description:
+          `${found.name}은(는) 매일 쓰는 사용감에 초점을 맞춘 제품입니다.\n` +
+          '세안 후 결을 정돈하고 다음 단계 흡수를 돕도록 구성했으며, 아침저녁 모두 사용할 수 있습니다.',
+      },
     };
     return HttpResponse.json(body);
   }),

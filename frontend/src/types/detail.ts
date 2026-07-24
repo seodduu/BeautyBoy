@@ -37,6 +37,16 @@ export interface GoodsDetail {
   todayDreamAvailable: boolean;
 }
 
+/**
+ * GET /goods/:goodsNo/description 응답 — PDP 지연 로딩 3분할 중 무거운 본문 조각.
+ * 상세 응답(GoodsDetail)에는 description이 없고 이 엔드포인트에서만 내려온다.
+ * (backend/src/main/java/com/beautyboy/catalog/dto/GoodsDescriptionResponse.java)
+ */
+export interface GoodsDescription {
+  goodsNo: number;
+  description: string;
+}
+
 /** 성분 배지 — GET /goods/:goodsNo/ingredients 응답의 개별 원소. */
 export interface IngredientBadge {
   ingredientId: number;

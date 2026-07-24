@@ -85,14 +85,16 @@ export function Detail() {
         <div className="bb-detail__info">
           <p className="bb-detail__brand">{goods.brandName}</p>
           <h1 className="bb-detail__name">{goods.name}</h1>
-          <Price listPrice={goods.listPrice} salePrice={goods.salePrice} discountRate={goods.discountRate} />
+          {/* 한 줄 평 — 상품명 바로 아래, 가격보다 위. "이 제품을 쓰면 무엇이 좋은가"에 먼저 답한다. */}
+          {goods.summary && <p className="bb-detail__summary">{goods.summary}</p>}
+          <Rating rating={goods.rating} reviewCount={goods.reviewCount} />
           <div className="bb-detail__badges">
             {goods.badges.map((type) => (
               <Badge key={type} type={type} />
             ))}
             {goods.todayDreamAvailable && <TodayDreamBadge />}
           </div>
-          <Rating rating={goods.rating} reviewCount={goods.reviewCount} />
+          <Price listPrice={goods.listPrice} salePrice={goods.salePrice} discountRate={goods.discountRate} />
           <Button
             className="bb-detail__cta"
             variant="primary"
@@ -106,7 +108,7 @@ export function Detail() {
 
       <IngredientBadges ingredients={ingredients} />
 
-      <DetailTabs goodsNo={goodsNo} summary={goods.summary} />
+      <DetailTabs goodsNo={goodsNo} />
     </div>
   );
 }
