@@ -20,6 +20,10 @@ public class Ingredient {
     @Column(nullable = false, unique = true, length = 80)
     private String name;
 
+    // V62에서 추가한 판정 엔진 조인 키(nullable). reg_flag.inci_name과 매칭한다.
+    @Column(name = "inci_name", length = 255)
+    private String inciName;
+
     @Column(nullable = false, length = 40)
     private String category;
 
@@ -53,6 +57,15 @@ public class Ingredient {
 
     public String getName() {
         return name;
+    }
+
+    public String getInciName() {
+        return inciName;
+    }
+
+    /** 백필은 V62(Flyway)가 하지만, H2 슬라이스 테스트는 픽스처로 직접 세팅한다. */
+    public void setInciName(String inciName) {
+        this.inciName = inciName;
     }
 
     public String getCategory() {
