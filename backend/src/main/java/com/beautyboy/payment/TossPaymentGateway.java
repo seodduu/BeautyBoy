@@ -4,6 +4,7 @@ import com.beautyboy.config.TossProperties;
 import com.beautyboy.payment.dto.PaymentApproval;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientResponseException;
@@ -21,6 +22,7 @@ import java.util.Map;
  * 그 검증은 PaymentService가 우리 주문의 payableAmount로 한다. 게이트웨이는 통신만 책임진다.
  */
 @Component
+@Profile("!e2e")
 public class TossPaymentGateway implements PaymentGateway {
 
     private final RestClient restClient;
