@@ -23,7 +23,7 @@ import java.util.List;
  * goodsNo와 수량만 받아 가격을 catalog에서 다시 읽고, 합계를 서버가 계산한다(설계 7장 결제 2단계 1항).
  */
 @Service
-public class OrderService {
+public class OrderService implements OrderQueryService {
 
     private static final DateTimeFormatter ORDER_NO_DATE = DateTimeFormatter.ofPattern("yyyyMMdd");
     private static final String ORDER_NO_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -106,6 +106,14 @@ public class OrderService {
                 .filter(o -> o.ownedBy(memberId))   // 남의 주문은 존재를 숨긴다.
                 .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
         return toDetail(order);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean hasPurchased(Long memberId, Long goodsNo) {
+        // 이 회원의 결제완료 주문 중 그 상품을 포함한 것이 하나라도 있으면 true.
+        // exists 쿼리라 건수를 세지 않고 첫 매칭에서 멈춘다.
+        return orderRepository.existsPaidItem(memberId, goodsNo, Order.STATUS_PAID);
     }
 
     private OrderSummaryResponse toSummary(Order order) {

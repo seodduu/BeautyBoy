@@ -22,15 +22,19 @@ import static org.assertj.core.api.Assertions.assertThat;
 class RankingStatFallbackTest {
 
     /**
-     * 실 구현이 아직 없는 도메인(현재는 wishlist=T3)의 폴백 계약.
+     * T3(wishlist)까지 머지된 지금, sales·wish 두 도메인 모두 실 구현이 주입된다 —
+     * 더 이상 폴백으로 뜨는 도메인이 없다. 이 클래스는 그 통합 상태(둘 다 명명된 실 구현)를
+     * 검증한다: {@code SalesStatProvider}는 order의 {@code OrderSalesStatProvider},
+     * {@code WishStatProvider}는 wishlist의 {@code WishlistWishStatProvider}가 주입되어야
+     * 랭킹 점수 `판매×3 + 찜×2 + 조회×1`의 세 항이 모두 실 데이터로 채워진다.
      *
-     * <p>T2가 머지된 지금 SalesStatProvider는 order의 실 구현({@code OrderSalesStatProvider})이 주입된다 —
-     * 그래서 여기서 폴백을 확인하는 대상은 <b>WishStatProvider</b>다. T3(wishlist)가 머지되면
-     * 이 클래스는 검증할 폴백이 사라지므로, 그때 제거하거나 남는 미구현 도메인으로 갱신한다.
+     * <p>폴백(람다/익명 클래스) 자체가 여전히 동작함은 아래 {@code 실_구현이_있을_때}에서
+     * @Primary 가짜로 격리 검증한다. {@code RankingStatFallbackAutoConfiguration}은 유지한다 —
+     * 다음에 어느 도메인이 실 구현 없이 빠지면 그 도메인만 폴백으로 앱을 띄우기 위함이다.
      */
     @SpringBootTest
     @ActiveProfiles("test")
-    static class 미구현_도메인은_폴백으로_뜬다 {
+    static class 두_공급자가_모두_실_구현으로_주입된다 {
 
         @Autowired
         SalesStatProvider salesStatProvider;
@@ -39,16 +43,24 @@ class RankingStatFallbackTest {
 
         @Test
         void 두_공급자가_모두_주입되어_앱이_뜬다() {
-            // 실 구현(sales)이든 폴백(wish)이든, 랭킹 배치가 주입받을 빈이 둘 다 있어야 컨텍스트가 뜬다.
             assertThat(salesStatProvider).isNotNull();
             assertThat(wishStatProvider).isNotNull();
         }
 
         @Test
-        void 찜_폴백은_널이_아니라_빈_맵을_준다() {
-            // 집계 쪽에서 널 체크를 하지 않도록 계약으로 고정한다.
-            // 찜은 아직 실 구현이 없으므로 항상 빈 맵이다(T3 머지 전).
-            assertThat(wishStatProvider.wishCountByGoods(LocalDate.now())).isEmpty();
+        void sales는_폴백_람다가_아니라_order의_실_구현이다() {
+            // 클래스 단순명으로 확인 — 패키지 경계상 order를 test에서 import하지 않는다.
+            // CGLIB 프록시("...$$SpringCGLIB$$0")로 감싸질 수 있어 startsWith로 비교한다.
+            // 폴백이라면 익명 클래스/람다라서 이 이름으로 시작하지 않는다.
+            assertThat(salesStatProvider.getClass().getSimpleName())
+                    .startsWith("OrderSalesStatProvider");
+        }
+
+        @Test
+        void wish는_폴백_람다가_아니라_wishlist의_실_구현이다() {
+            // 찜은 더 이상 폴백이 아니다(T3-3 WishlistWishStatProvider 머지 완료).
+            assertThat(wishStatProvider.getClass().getSimpleName())
+                    .startsWith("WishlistWishStatProvider");
         }
     }
 
