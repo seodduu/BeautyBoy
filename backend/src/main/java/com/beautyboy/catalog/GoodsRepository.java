@@ -2,6 +2,7 @@ package com.beautyboy.catalog;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -38,4 +39,16 @@ public interface GoodsRepository extends JpaRepository<Goods, Long> {
                                         @Param("hidden") String hidden,
                                         @Param("excludeId") Long excludeId,
                                         Pageable pageable);
+
+    /**
+     * 조회수 누적 증가. 엔티티를 읽어 더하지 않고 벌크 UPDATE 하나로 끝낸다 —
+     * 읽고-쓰기 사이에 다른 조회가 끼어들면 증가분이 사라지는데(lost update),
+     * {@code view_count = view_count + :delta}는 DB가 원자적으로 처리한다.
+     *
+     * <p>delta가 1이 아닐 수 있는 이유: Redis 버퍼를 쓰면 1분치가 한 번에 모여서 들어온다
+     * ({@link ViewCountFlushScheduler}). DB 폴백 경로는 delta=1로 호출한다.
+     */
+    @Modifying
+    @Query("update Goods g set g.viewCount = g.viewCount + :delta where g.id = :id")
+    void addViewCount(@Param("id") Long id, @Param("delta") int delta);
 }

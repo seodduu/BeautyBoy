@@ -8,6 +8,10 @@ spring:
   jpa:
     hibernate:
       ddl-auto: validate
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
   flyway:
     enabled: true
   # default 프로필(명시 프로필 없이 뜨는 운영 경로)에서만 mysql-search를 켠다.
@@ -16,6 +20,11 @@ spring:
   profiles:
     group:
       default: mysql-search
+
+beautyboy:
+  view-count:
+    # 기본은 DB 즉시 증가. Redis 컨테이너가 떠 있을 때만 true로 켠다.
+    redis: ${VIEW_COUNT_REDIS:false}
 
 jwt:
   secret: ${JWT_SECRET:}

@@ -27,17 +27,20 @@ public class GoodsService implements GoodsQueryService {
     private final CategoryRepository categoryRepository;
     private final GoodsRatingProvider goodsRatingProvider;
     private final WishedGoodsProvider wishedGoodsProvider;
+    private final ViewCountRecorder viewCountRecorder;
 
     public GoodsService(GoodsRepository goodsRepository,
                          GoodsQueryRepository goodsQueryRepository,
                          CategoryRepository categoryRepository,
                          GoodsRatingProvider goodsRatingProvider,
-                         WishedGoodsProvider wishedGoodsProvider) {
+                         WishedGoodsProvider wishedGoodsProvider,
+                         ViewCountRecorder viewCountRecorder) {
         this.goodsRepository = goodsRepository;
         this.goodsQueryRepository = goodsQueryRepository;
         this.categoryRepository = categoryRepository;
         this.goodsRatingProvider = goodsRatingProvider;
         this.wishedGoodsProvider = wishedGoodsProvider;
+        this.viewCountRecorder = viewCountRecorder;
     }
 
     @Transactional(readOnly = true)
@@ -59,6 +62,11 @@ public class GoodsService implements GoodsQueryService {
     public GoodsDetailResponse detail(Long goodsNo, Long viewerId) {
         Goods goods = goodsRepository.findDetailById(goodsNo, Goods.STATUS_HIDDEN)
                 .orElseThrow(() -> new BusinessException(ErrorCode.GOODS_NOT_FOUND));
+
+        // 존재 확인(404) 뒤에 센다 — 없는/숨긴 상품 조회로 카운터를 오염시키지 않는다.
+        // 구현은 설정이 고른다: 기본은 DB 즉시 증가, 토글이 켜지면 Redis 버퍼.
+        // 실패해도 예외가 올라오지 않는 것이 ViewCountRecorder의 계약이라 상세는 여기서 절대 500이 되지 않는다.
+        viewCountRecorder.record(goodsNo);
 
         List<Object[]> optionRows = goodsRepository.findOptionRowsByGoodsId(goodsNo);
         List<String> badges = goodsQueryRepository
