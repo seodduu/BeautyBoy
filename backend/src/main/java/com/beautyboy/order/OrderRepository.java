@@ -27,4 +27,11 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select o from Order o where o.orderNo = :orderNo")
     Optional<Order> findByOrderNoForUpdate(@Param("orderNo") String orderNo);
+
+    /** 이 회원의 status 상태 주문 중 goodsNo를 담은 것이 존재하는가. 구매인증용. */
+    @Query("select count(i) > 0 from Order o join o.items i "
+            + "where o.memberId = :memberId and i.goodsId = :goodsNo and o.status = :status")
+    boolean existsPaidItem(@Param("memberId") Long memberId,
+                           @Param("goodsNo") Long goodsNo,
+                           @Param("status") String status);
 }
