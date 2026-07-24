@@ -38,4 +38,18 @@ describe('AssessmentCard', () => {
     const { container } = render(<AssessmentCard assessment={base()} onOpenPanel={vi.fn()} />);
     expect(container.textContent).not.toMatch(/자극도|[0-9]점/);
   });
+
+  it('판정 단계별로 신호등 톤 클래스를 준다(초록/주황/빨강)', () => {
+    const cases = [
+      ['NO_CONCERN', 'success'], ['MOSTLY_FINE', 'success'],
+      ['CHECK_SENSITIVE', 'caution'], ['CAUTION', 'danger'], ['REVIEW', 'neutral'],
+    ] as const;
+    for (const [code, tone] of cases) {
+      const { container, unmount } = render(
+        <AssessmentCard assessment={base({ verdictCode: code, flagged: [] })} onOpenPanel={vi.fn()} />,
+      );
+      expect(container.querySelector('.bb-assessment')).toHaveClass(`bb-assessment--${tone}`);
+      unmount();
+    }
+  });
 });

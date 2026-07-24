@@ -27,11 +27,24 @@
   flex: none;
 }
 
+/* 신호등 톤 — 점 색 + 1px 테두리로만(배경 채움 금지). */
+.bb-assessment--success .bb-assessment__dot {
+  background: var(--color-signal-success);
+}
+.bb-assessment--success {
+  border-color: var(--color-signal-success);
+}
 .bb-assessment--caution .bb-assessment__dot {
   background: var(--color-signal-caution);
 }
+.bb-assessment--caution {
+  border-color: var(--color-signal-caution);
+}
 .bb-assessment--danger .bb-assessment__dot {
   background: var(--color-signal-danger);
+}
+.bb-assessment--danger {
+  border-color: var(--color-signal-danger);
 }
 
 .bb-assessment__note {

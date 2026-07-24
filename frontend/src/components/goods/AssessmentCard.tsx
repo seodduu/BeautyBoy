@@ -7,13 +7,17 @@ interface AssessmentCardProps {
   onOpenPanel: () => void;
 }
 
-type Tone = 'neutral' | 'caution' | 'danger';
+type Tone = 'success' | 'caution' | 'danger' | 'neutral';
 
-/** 판정 코드 → 톤. DESIGN.md signal-* 만: 확인/주의=caution, 검토=danger, 그 외 중립. 배경 채움 없음. */
+/**
+ * 판정 코드 → 신호등 톤(DESIGN.md signal-* 만, 배경 채움 없이 점·텍스트·1px 테두리로).
+ *  초록: 걱정없음·대체로무난 / 주황: 민감피부 확인필요 / 빨강: 주의필요 / 회색: 검토중(데이터 상태).
+ */
 function toneFor(code: VerdictCode): Tone {
-  if (code === 'REVIEW') return 'danger';
-  if (code === 'CHECK_SENSITIVE' || code === 'CAUTION') return 'caution';
-  return 'neutral';
+  if (code === 'NO_CONCERN' || code === 'MOSTLY_FINE') return 'success';
+  if (code === 'CHECK_SENSITIVE') return 'caution';
+  if (code === 'CAUTION') return 'danger';
+  return 'neutral'; // REVIEW — 금지 매칭 = 데이터 확인 상태, 심각도 색을 쓰지 않는다
 }
 
 /**
