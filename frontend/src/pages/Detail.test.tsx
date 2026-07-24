@@ -133,6 +133,44 @@ describe('Detail — 상세 페이지', () => {
     expect(screen.getByRole('status')).toHaveTextContent('장바구니에 담았어요');
   });
 
+  it('옵션이 없는 상품도 장바구니 담기가 optionNo: null로 나가고 성공 토스트가 뜬다(크래시 없음)', async () => {
+    const detailWithoutOptions: GoodsDetail = { ...GOODS_DETAIL, options: [] };
+    server.use(
+      http.get('/api/v1/goods/:goodsNo', () => HttpResponse.json(envelope(detailWithoutOptions))),
+      http.get('/api/v1/goods/:goodsNo/ingredients', () => HttpResponse.json(envelope(INGREDIENTS))),
+      http.get('/api/v1/reviews/stats', () => HttpResponse.json(envelope(REVIEW_STATS))),
+      http.get('/api/v1/reviews', () => HttpResponse.json(envelope(pageOf(REVIEWS)))),
+      http.get('/api/v1/qna', () => HttpResponse.json(envelope(pageOf(QNA_ITEMS)))),
+    );
+    let received: unknown = null;
+    server.use(
+      http.post('/api/v1/cart/items', async ({ request }) => {
+        received = await request.json();
+        return new HttpResponse(null, { status: 201 });
+      }),
+    );
+
+    renderDetail();
+
+    const button = await screen.findByRole('button', { name: '장바구니 담기' });
+    fireEvent.click(button);
+
+    await waitFor(() => expect(received).toEqual({ goodsNo: 1, optionNo: null, quantity: 1 }));
+    expect(await screen.findByText('장바구니에 담았어요')).toBeInTheDocument();
+  });
+
+  it('설명 탭에 상품 summary 텍스트가 보인다', async () => {
+    registerDefaultHandlers();
+    server.use(http.post('/api/v1/cart/items', () => new HttpResponse(null, { status: 201 })));
+
+    renderDetail();
+
+    const summaryTab = await screen.findByRole('tab', { name: '설명' });
+    fireEvent.click(summaryTab);
+
+    expect(await screen.findByText(GOODS_DETAIL.summary)).toBeInTheDocument();
+  });
+
   it('장바구니 담기 실패 시 danger 톤 토스트가 뜬다', async () => {
     registerDefaultHandlers();
     server.use(http.post('/api/v1/cart/items', () => new HttpResponse(null, { status: 500 })));

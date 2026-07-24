@@ -185,6 +185,52 @@ test('딥링크(/search?q=)로 들어오면 진입 즉시 검색이 실행되어
   expect(await screen.findByText(SAMPLE_ITEM.name)).toBeInTheDocument();
 });
 
+test('딥링크(/search?q=)로 들어오면 자동완성 오버레이는 열리지 않고, 타이핑해야만 300ms 뒤에 열린다', async () => {
+  let autocompleteCallCount = 0;
+  server.use(
+    http.get('/api/v1/search', ({ request }) => {
+      const url = new URL(request.url);
+      const q = url.searchParams.get('q');
+      return HttpResponse.json({
+        code: 'OK',
+        message: '성공',
+        data:
+          q === '토너'
+            ? { content: [SAMPLE_ITEM], page: 0, size: 20, totalElements: 1, totalPages: 1, hasNext: false }
+            : emptyPage(),
+      });
+    }),
+    http.get('/api/v1/search/autocomplete', ({ request }) => {
+      autocompleteCallCount += 1;
+      const url = new URL(request.url);
+      const q = url.searchParams.get('q') ?? '';
+      return HttpResponse.json({ code: 'OK', message: '성공', data: [`${q}1`, `${q}2`] });
+    }),
+  );
+
+  renderSearch('/search?q=토너');
+
+  // 진입 직후 결과는 렌더되지만, 사용자가 타이핑한 적이 없으므로 오버레이는 열리면 안 된다.
+  expect(await screen.findByText(SAMPLE_ITEM.name)).toBeInTheDocument();
+  expect(document.querySelector('[role=listbox]')).toBeNull();
+
+  // 300ms(디바운스 구간)를 실제로 흘려보내도 자동완성 요청 자체가 나가지 않아야 한다.
+  await new Promise((resolve) => setTimeout(resolve, 350));
+  expect(document.querySelector('[role=listbox]')).toBeNull();
+  expect(autocompleteCallCount).toBe(0);
+
+  // 이후 사용자가 실제로 타이핑하면 여전히 정상 동작한다(오버레이가 300ms 뒤에 열린다).
+  vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+  const input = screen.getByLabelText('검색어');
+  fireEvent.change(input, { target: { value: '토너2' } });
+  act(() => {
+    vi.advanceTimersByTime(300);
+  });
+  vi.useRealTimers();
+
+  await waitFor(() => expect(document.querySelector('[role=listbox]')).not.toBeNull());
+});
+
 test('검색어를 입력해 제출하면 ?q=가 갱신되고 결과가 렌더된다', async () => {
   server.use(
     http.get('/api/v1/search', ({ request }) => {

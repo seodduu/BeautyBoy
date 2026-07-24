@@ -1,4 +1,4 @@
-import { useEffect, useId, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { fetchAutocomplete } from '../../api/search';
 import { Button } from '../ui/Button';
 import { Field } from '../ui/Field';
@@ -26,9 +26,15 @@ export function SearchBox({ initialQuery, onSearch, onSuggestionsChange }: Searc
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [open, setOpen] = useState(false);
   const listboxId = useId();
+  // draft 변경이 "사용자가 지금 타이핑해서" 온 것인지 표시하는 플래그. 마운트 시 초기값 세팅,
+  // 딥링크·뒤로가기로 인한 initialQuery 동기화, commit() 이후에는 false로 되돌려
+  // 자동완성 오버레이가 사용자 타이핑 없이 열리지 않게 한다.
+  const typingRef = useRef(false);
 
   // 딥링크(/search?q=토너)나 뒤로가기로 바깥에서 검색어가 바뀌면 입력값도 따라간다.
+  // 이건 사용자가 타이핑한 게 아니므로 typingRef를 내려 자동완성이 뜨지 않게 한다.
   useEffect(() => {
+    typingRef.current = false;
     setDraft(initialQuery);
   }, [initialQuery]);
 
@@ -36,15 +42,23 @@ export function SearchBox({ initialQuery, onSearch, onSuggestionsChange }: Searc
   // 이전 예약은 취소되고 마지막 값만 실제로 fetchAutocomplete를 호출한다("마지막 호출만 승리").
   useEffect(() => {
     const keyword = draft.trim();
-    if (!keyword) {
+    if (!keyword || !typingRef.current) {
       setSuggestions([]);
       setOpen(false);
       return;
     }
 
     const timer = setTimeout(() => {
+      // 타이머가 발화하는 시점에도 여전히 사용자 타이핑 유래인지 다시 확인한다 —
+      // 그 사이 commit()이나 딥링크 동기화가 typingRef를 꺼뜨렸을 수 있다.
+      if (!typingRef.current) {
+        return;
+      }
       fetchAutocomplete(keyword)
         .then((result) => {
+          if (!typingRef.current) {
+            return;
+          }
           setSuggestions(result);
           setOpen(result.length > 0);
         })
@@ -63,10 +77,17 @@ export function SearchBox({ initialQuery, onSearch, onSuggestionsChange }: Searc
 
   function commit(keyword: string) {
     const trimmed = keyword.trim();
+    typingRef.current = false;
     setDraft(trimmed);
     setSuggestions([]);
     setOpen(false);
     onSearch(trimmed);
+  }
+
+  function handleDraftChange(value: string) {
+    // Field의 onChange는 사용자 입력에서만 불린다 — 여기서만 typingRef를 켠다.
+    typingRef.current = true;
+    setDraft(value);
   }
 
   const activeSuggestions = open ? suggestions : [];
@@ -92,7 +113,7 @@ export function SearchBox({ initialQuery, onSearch, onSuggestionsChange }: Searc
           id="search-keyword"
           label="검색어"
           value={draft}
-          onChange={setDraft}
+          onChange={handleDraftChange}
           onKeyDown={handleKeyDown}
           placeholder="스킨케어, 클렌징, 헤어 검색"
           autoComplete="off"

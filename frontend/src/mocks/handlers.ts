@@ -3,7 +3,7 @@ import { goodsFixtures } from './fixtures/goods';
 import type { GoodsFixture } from './fixtures/goods';
 import type { ApiEnvelope, PageResponse } from '../types/goods';
 import type { RankingItem } from '../types/ranking';
-import type { GoodsIngredientResponse } from '../types/detail';
+import type { GoodsDetail, GoodsIngredientResponse, GoodsOption } from '../types/detail';
 import type { ReviewItem, ReviewStats, QnaItem } from '../types/review';
 import {
   ingredientFixtures,
@@ -66,6 +66,50 @@ const categoryTree: CategoryNode[] = [
     children: [{ code: 'C006001', name: '베이스메이크업', children: [] }],
   },
 ];
+
+/** goodsFixture의 categoryCode(하위 depth까지 포함)를 categoryTree의 [대분류, 중분류] 이름으로 바꾼다. */
+function resolveCategoryPath(categoryCode: string): string[] {
+  for (const top of categoryTree) {
+    if (categoryCode.startsWith(top.code)) {
+      const child = top.children.find((node) => categoryCode.startsWith(node.code));
+      return child ? [top.name, child.name] : [top.name];
+    }
+  }
+  return [];
+}
+
+/** 브랜드명마다 안정적인 정수를 만든다 — mock 전용이라 실 브랜드 PK와 일치할 필요는 없다. */
+function brandIdFor(brandName: string): number {
+  let hash = 0;
+  for (let i = 0; i < brandName.length; i += 1) {
+    hash = (hash * 31 + brandName.charCodeAt(i)) % 100000;
+  }
+  return hash + 1;
+}
+
+/** 상세 조회용 옵션 1~2건 — 홀수 goodsNo는 대용량 옵션을 하나 더 갖는다. */
+function buildOptions(found: GoodsFixture): GoodsOption[] {
+  const base: GoodsOption = {
+    optionNo: found.goodsNo * 10 + 1,
+    name: '기본 옵션',
+    addPrice: 0,
+    stock: 20,
+    soldOut: false,
+  };
+
+  if (found.goodsNo % 2 === 0) {
+    return [base];
+  }
+
+  const large: GoodsOption = {
+    optionNo: found.goodsNo * 10 + 2,
+    name: '대용량',
+    addPrice: 3000,
+    stock: 15,
+    soldOut: false,
+  };
+  return [base, large];
+}
 
 /** T1 설계 정렬 규약: popular|new|sales|priceAsc|discount. */
 function sortGoods(items: GoodsFixture[], sort: string | null): GoodsFixture[] {
@@ -176,7 +220,30 @@ export const handlers = [
       );
     }
 
-    const body: ApiEnvelope<GoodsFixture> = { code: 'OK', message: 'success', data: found };
+    // 실 백엔드는 GoodsDetailResponse(GoodsDetail)를 내려준다 — GoodsFixture(목록 아이템 + mock 전용 필드)를
+    // 그대로 반환하면 summary/options 등 상세 전용 필드가 없어 화면이 undefined를 참조해 터진다.
+    const detail: GoodsDetail = {
+      goodsNo: found.goodsNo,
+      brandName: found.brandName,
+      brandId: brandIdFor(found.brandName),
+      name: found.name,
+      summary: `${found.brandName}의 데일리 케어 제품으로, 자극을 최소화한 성분을 담아 매일 편하게 사용할 수 있습니다.`,
+      categoryCode: found.categoryCode,
+      categoryPath: resolveCategoryPath(found.categoryCode),
+      thumbnailUrl: found.thumbnailUrl,
+      listPrice: found.listPrice,
+      salePrice: found.salePrice,
+      discountRate: found.discountRate,
+      badges: found.badges,
+      status: 'ON_SALE',
+      options: buildOptions(found),
+      rating: found.rating,
+      reviewCount: found.reviewCount,
+      wished: found.wished,
+      todayDreamAvailable: found.todayDreamAvailable,
+    };
+
+    const body: ApiEnvelope<GoodsDetail> = { code: 'OK', message: 'success', data: detail };
     return HttpResponse.json(body);
   }),
 

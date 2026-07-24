@@ -42,7 +42,7 @@ export function Detail() {
       return;
     }
     // 옵션이 있으면 첫 옵션, 없으면 optionNo 없이(null) 담는다.
-    const firstOption = detailQuery.data.options[0];
+    const firstOption = detailQuery.data.options?.[0];
     const optionNo = firstOption ? firstOption.optionNo : null;
 
     setAdding(true);
