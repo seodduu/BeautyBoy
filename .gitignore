@@ -17,3 +17,7 @@ tools/ingredient_pipeline/.cache/
 
 # macOS
 .DS_Store
+
+# 분석용 원본 데이터셋(추적 안 함 — 파이프라인은 API에서 받는다)
+cosmetics.csv
+*.pdf
