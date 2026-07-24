@@ -210,6 +210,20 @@ GET /reviews/me                    # 마이페이지 "내 리뷰": 상품명·�
 GET /qna?goodsNo=  POST /qna          # 답변은 admin
 ```
 
+### 관리자
+전부 ROLE_ADMIN 필요. `@PreAuthorize("hasRole('ADMIN')")`로 판정한다. 컨트롤러는 새 `admin` 패키지가
+아니라 각자 소유 도메인(`catalog`/`routine`/`qna`) 안에 둔다 — 패키지 = 서비스 경계 원칙을 admin
+엔드포인트도 그대로 따른다.
+```
+GET    /admin/goods?page=&size=&q=      # PageResponse<GoodsListItem> (HIDDEN 포함이 일반 목록과 다르다)
+POST   /admin/goods                     # 등록 → 201 + goodsNo
+PUT    /admin/goods/{goodsNo}           # 수정(이름·요약·가격·상태·카테고리·썸네일)
+DELETE /admin/goods/{goodsNo}           # 소프트 삭제(status=HIDDEN). 물리 삭제하지 않는다
+GET    /admin/routines                  # 템플릿 + 단계 목록(추천 상품 goodsNo만)
+PUT    /admin/routines/{templateId}/steps/{stepOrder}/goods   # 단계 추천 상품 전체 교체
+POST   /admin/qna/{qnaId}/answer        # 문의 답변
+```
+
 ### 결제 2단계 (핵심 설계)
 1. `POST /orders`: 장바구니를 서버가 재계산(가격 위변조 차단), "결제대기" 주문 + 결제 예정 금액 반환
 2. 프론트: 토스 결제창 → 성공 시 paymentKey 수신
