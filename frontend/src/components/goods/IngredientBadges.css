@@ -1,0 +1,44 @@
+/*
+  DESIGN.md 성분 경고 규칙: 색 단독 금지, 배경 채움 금지 — 글자·아이콘·1px 테두리로만 표현한다.
+  neutral은 graphite, caution은 signal-caution, danger는 signal-danger.
+*/
+.bb-ingredient-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.bb-ingredient-badge {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-xxs);
+  padding: var(--space-xxs) var(--space-sm);
+  border: 1px solid var(--color-hairline-soft);
+  border-radius: var(--rounded-full);
+  font-size: var(--fs-meta);
+  color: var(--color-graphite);
+  background: transparent;
+}
+
+.bb-ingredient-badge--caution {
+  border-color: var(--color-signal-caution);
+  color: var(--color-signal-caution);
+}
+
+.bb-ingredient-badge--danger {
+  border-color: var(--color-signal-danger);
+  color: var(--color-signal-danger);
+}
+
+.bb-ingredient-badge__name {
+  font-weight: var(--fw-body-strong);
+}
+
+.bb-ingredient-badge__key {
+  text-transform: uppercase;
+  font-size: var(--fs-micro-caps);
+  letter-spacing: var(--ls-micro-caps);
+}

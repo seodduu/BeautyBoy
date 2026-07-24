@@ -1,0 +1,10 @@
+.bb-search-box {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-md);
+}
+
+.bb-search-box__input-wrap {
+  position: relative;
+  flex: 1;
+}
