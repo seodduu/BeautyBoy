@@ -65,7 +65,10 @@ public enum ErrorCode {
     WISHLIST_ALREADY_ADDED(HttpStatus.CONFLICT, "이미 찜한 상품입니다"),
 
     // Wave 3 T1 — routine
-    ROUTINE_TEMPLATE_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 조건의 루틴을 찾을 수 없습니다");
+    ROUTINE_TEMPLATE_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 조건의 루틴을 찾을 수 없습니다"),
+
+    // Wave 3 T1 — compat
+    COMPAT_EMPTY_SELECTION(HttpStatus.BAD_REQUEST, "궁합을 확인할 상품을 선택해주세요");
 
     private final HttpStatus status;
     private final String message;
