@@ -9,6 +9,7 @@ import type {
   GoodsIngredientResponse,
   GoodsOption,
 } from '../types/detail';
+import type { GoodsAssessment } from '../types/assessment';
 import type { ReviewItem, ReviewStats, QnaItem } from '../types/review';
 import {
   ingredientFixtures,
@@ -210,6 +211,28 @@ export const handlers = [
       code: 'OK',
       message: 'success',
       data: { goodsNo, ingredients: ingredientFixtures, maxIrritation, maxComedogenic },
+    };
+    return HttpResponse.json(body);
+  }),
+
+  // 성분 종합판정 — /goods/:goodsNo 보다 먼저 등록한다(위 ingredients 주석 참조).
+  http.get('/api/v1/goods/:goodsNo/assessment', ({ params }) => {
+    const goodsNo = Number(params.goodsNo);
+    const body: ApiEnvelope<GoodsAssessment> = {
+      code: 'OK',
+      message: 'success',
+      data: {
+        goodsNo,
+        verdictCode: 'MOSTLY_FINE',
+        verdictText: '대체로 무난해요',
+        checkCount: 2,
+        rinseOff: true,
+        flagged: [
+          { ingredientId: 5, name: '살리실산', inciName: 'salicylic acid', flags: ['EXFOLIANT_ACID', 'LIMIT'], axis: 'CHECK', sourceRef: '* 배합한도 : <보존제> 살리실릭애씨드로서 0.5%' },
+          { ingredientId: 19, name: '리모넨', inciName: 'limonene', flags: ['ALLERGEN'], axis: 'CHECK', sourceRef: '식약처 착향제 알레르기 유발물질 25종' },
+          { ingredientId: 28, name: '토코페롤', inciName: 'tocopherol', flags: ['LIMIT'], axis: 'INFO', sourceRef: '* 배합한도 : ...' },
+        ],
+      },
     };
     return HttpResponse.json(body);
   }),

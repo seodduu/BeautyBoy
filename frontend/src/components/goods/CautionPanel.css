@@ -1,0 +1,121 @@
+/* 확인 성분 패널 — 데스크톱 우측 사이드패널 / 모바일 바텀시트. DESIGN.md: 색은 signal-* 텍스트만. */
+.bb-caution-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  justify-content: flex-end;
+  z-index: 100;
+}
+
+.bb-caution {
+  width: 100%;
+  max-width: 460px;
+  height: 100%;
+  background: var(--color-canvas);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.bb-caution__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-md) var(--space-lg);
+  border-bottom: 1px solid var(--color-hairline);
+  flex: none;
+}
+
+.bb-caution__title {
+  margin: 0;
+  font-size: var(--fs-heading-sm);
+  font-weight: var(--fw-heading-sm);
+  color: var(--color-ink);
+}
+
+.bb-caution__close {
+  appearance: none;
+  background: none;
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--rounded-sm);
+  padding: var(--space-xxs) var(--space-sm);
+  font-size: var(--fs-link-sm);
+  color: var(--color-graphite);
+  cursor: pointer;
+}
+
+.bb-caution__close:focus-visible {
+  outline: 2px solid var(--color-ink);
+  outline-offset: 2px;
+}
+
+/* 패널 내부만 스크롤 */
+.bb-caution__body {
+  padding: var(--space-lg);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.bb-caution__item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xxs);
+}
+
+.bb-caution__name {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-xs);
+  margin: 0;
+  font-size: var(--fs-body-strong);
+  font-weight: var(--fw-body-strong);
+  color: var(--color-ink);
+}
+
+.bb-caution__tag {
+  font-size: var(--fs-meta);
+  font-weight: var(--fw-body);
+  color: var(--color-signal-caution);
+}
+
+.bb-caution__line {
+  margin: 0;
+  font-size: var(--fs-body-tight);
+  color: var(--color-graphite);
+}
+
+.bb-caution__ref {
+  margin: 0;
+  font-size: var(--fs-meta);
+  color: var(--color-stone);
+}
+
+.bb-caution__info-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  border-top: 1px solid var(--color-hairline);
+  padding-top: var(--space-lg);
+}
+
+.bb-caution__subtitle {
+  margin: 0;
+  font-size: var(--fs-meta);
+  color: var(--color-stone);
+}
+
+/* 모바일: 아래에서 올라오는 바텀시트 */
+@media (max-width: 767px) {
+  .bb-caution-overlay {
+    align-items: flex-end;
+    justify-content: stretch;
+  }
+  .bb-caution {
+    max-width: none;
+    height: 82%;
+    border-radius: var(--rounded-lg) var(--rounded-lg) 0 0;
+  }
+}

@@ -2,14 +2,15 @@ import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { fetchGoodsDetail } from '../api/goods';
-import { fetchIngredients } from '../api/ingredient';
+import { fetchAssessment } from '../api/assessment';
 import { addCartItem } from '../api/cart';
 import { Price } from '../components/ui/Price';
 import { Rating } from '../components/ui/Rating';
 import { Badge, TodayDreamBadge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 import { Skeleton } from '../components/ui/Skeleton';
-import { IngredientBadges } from '../components/goods/IngredientBadges';
+import { AssessmentCard } from '../components/goods/AssessmentCard';
+import { CautionPanel } from '../components/goods/CautionPanel';
 import { DetailTabs } from '../components/goods/DetailTabs';
 import { useToast } from '../components/ui/useToast';
 import './Detail.css';
@@ -24,6 +25,7 @@ export function Detail() {
   const hasValidGoodsNo = Number.isFinite(goodsNo);
   const { toast } = useToast();
   const [adding, setAdding] = useState(false);
+  const [panelOpen, setPanelOpen] = useState(false);
 
   const detailQuery = useQuery({
     queryKey: ['goods-detail', goodsNo],
@@ -31,9 +33,9 @@ export function Detail() {
     enabled: hasValidGoodsNo,
   });
 
-  const ingredientQuery = useQuery({
-    queryKey: ['goods-ingredients', goodsNo],
-    queryFn: () => fetchIngredients(goodsNo),
+  const assessmentQuery = useQuery({
+    queryKey: ['goods-assessment', goodsNo],
+    queryFn: () => fetchAssessment(goodsNo),
     enabled: hasValidGoodsNo,
   });
 
@@ -69,7 +71,7 @@ export function Detail() {
   }
 
   const goods = detailQuery.data;
-  const ingredients = ingredientQuery.data?.ingredients ?? [];
+  const assessment = assessmentQuery.data;
 
   return (
     <div className="bb-detail">
@@ -95,6 +97,10 @@ export function Detail() {
             {goods.todayDreamAvailable && <TodayDreamBadge />}
           </div>
           <Price listPrice={goods.listPrice} salePrice={goods.salePrice} discountRate={goods.discountRate} />
+          {/* 성분 종합판정 — 가격 아래, 장바구니 버튼 위(설계 §0.4). */}
+          {assessment && (
+            <AssessmentCard assessment={assessment} onOpenPanel={() => setPanelOpen(true)} />
+          )}
           <Button
             className="bb-detail__cta"
             variant="primary"
@@ -106,9 +112,22 @@ export function Detail() {
         </div>
       </header>
 
-      <IngredientBadges ingredients={ingredients} />
-
       <DetailTabs goodsNo={goodsNo} />
+
+      {assessment && (
+        <p className="bb-detail__disclaimer">
+          이 정보는 성분 표시와 식약처 공개자료를 근거로 한 안내이며, 목록에 없다고 자극이 없다는 뜻은
+          아니고 의학적 판단이 아닙니다.
+        </p>
+      )}
+
+      {assessment && (
+        <CautionPanel
+          open={panelOpen}
+          flagged={assessment.flagged}
+          onClose={() => setPanelOpen(false)}
+        />
+      )}
     </div>
   );
 }

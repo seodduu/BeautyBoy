@@ -1,0 +1,63 @@
+/* 성분 판정 카드 — DESIGN.md: 배경 채움 금지, 색은 signal-* 만 텍스트·아이콘·1px 테두리로. */
+.bb-assessment {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  padding: var(--space-md);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--rounded-md);
+  background: transparent;
+}
+
+.bb-assessment__verdict {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  margin: 0;
+  font-size: var(--fs-body-strong);
+  font-weight: var(--fw-body-strong);
+  color: var(--color-ink);
+}
+
+.bb-assessment__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--rounded-full);
+  background: var(--color-stone);
+  flex: none;
+}
+
+.bb-assessment--caution .bb-assessment__dot {
+  background: var(--color-signal-caution);
+}
+.bb-assessment--danger .bb-assessment__dot {
+  background: var(--color-signal-danger);
+}
+
+.bb-assessment__note {
+  margin: 0;
+  font-size: var(--fs-meta);
+  color: var(--color-stone);
+}
+
+.bb-assessment__open {
+  align-self: flex-start;
+  appearance: none;
+  background: none;
+  border: none;
+  padding: 0;
+  margin-top: var(--space-xxs);
+  font-size: var(--fs-link-sm);
+  color: var(--color-graphite);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.bb-assessment--caution .bb-assessment__open {
+  color: var(--color-signal-caution);
+}
+
+.bb-assessment__open:focus-visible {
+  outline: 2px solid var(--color-ink);
+  outline-offset: 2px;
+}

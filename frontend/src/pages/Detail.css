@@ -90,3 +90,11 @@
   padding: var(--space-lg);
   color: var(--color-graphite);
 }
+
+/* 성분 판정 고지 — 단정적 표현 회피, 한계 명시(설계 §0.6/§15). */
+.bb-detail__disclaimer {
+  margin: 0;
+  max-width: 68ch;
+  font-size: var(--fs-meta);
+  color: var(--color-stone);
+}
