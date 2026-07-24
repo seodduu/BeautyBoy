@@ -29,7 +29,15 @@ import static org.mockito.Mockito.verify;
  * 대신 만족시켜 버려서 정확히 검증하려는 결함을 다시 가린다 — 스케줄러가 <b>스스로</b> 트랜잭션을
  * 열어야 한다는 것이 이 테스트의 요지다. 대신 만든 데이터는 {@link #정리()}에서 직접 지운다.
  */
-@SpringBootTest(properties = "beautyboy.view-count.redis=true")
+/*
+ * flush-initial-ms를 크게 잡아 실제 스케줄 틱을 이 테스트 밖으로 밀어낸다.
+ * @EnableScheduling은 전역이라 토글이 켜진 이 컨텍스트에서는 스케줄러가 refresh 직후부터 진짜로 도는데,
+ * 그 틱이 아래 스터빙 사이에 끼어들면 +7이 두 번 반영되거나 Mockito 스터빙/검증과 경합해 간헐 실패가 된다.
+ */
+@SpringBootTest(properties = {
+        "beautyboy.view-count.redis=true",
+        "beautyboy.view-count.flush-initial-ms=600000"
+})
 @ActiveProfiles("test")
 class ViewCountFlushSchedulerDbTest {
 

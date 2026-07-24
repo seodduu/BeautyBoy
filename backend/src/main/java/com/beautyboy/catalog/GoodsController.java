@@ -21,9 +21,11 @@ public class GoodsController {
     private static final int MAX_PAGE_SIZE = 100;
 
     private final GoodsService goodsService;
+    private final ViewCountRecorder viewCountRecorder;
 
-    public GoodsController(GoodsService goodsService) {
+    public GoodsController(GoodsService goodsService, ViewCountRecorder viewCountRecorder) {
         this.goodsService = goodsService;
+        this.viewCountRecorder = viewCountRecorder;
     }
 
     @GetMapping("/api/v1/goods")
@@ -46,10 +48,22 @@ public class GoodsController {
         return ResponseEntity.ok(ApiResponse.ok(goodsService.list(condition, memberId)));
     }
 
+    /**
+     * 조회수 기록을 서비스 <b>바깥</b>에서 하는 이유: {@code goodsService.detail}은
+     * {@code @Transactional(readOnly = true)}이라 커넥션을 하나 쥐고 있다. 그 안에서 기록이
+     * REQUIRES_NEW로 두 번째 커넥션을 잡으면 요청 하나가 커넥션 2개를 동시에 점유한다.
+     * Hikari 기본 풀이 10이라 동시 상세 10건이면 각자 바깥 커넥션을 쥔 채 안쪽 커넥션을 기다려
+     * 서로 막히는 교착이 된다. 트랜잭션이 끝나 커넥션이 반납된 뒤에 기록하면 중첩 자체가 사라진다.
+     *
+     * <p>detail이 먼저 성공해야 기록한다 — 404(없는/숨긴 상품)는 예외로 빠져 여기 도달하지 않으므로
+     * 존재하지 않는 goods_id로 카운터가 오염되지 않는다.
+     */
     @GetMapping("/api/v1/goods/{goodsNo}")
     public ResponseEntity<ApiResponse<GoodsDetailResponse>> detail(@PathVariable Long goodsNo,
                                                                     @AuthenticationPrincipal Long memberId) {
-        return ResponseEntity.ok(ApiResponse.ok(goodsService.detail(goodsNo, memberId)));
+        GoodsDetailResponse response = goodsService.detail(goodsNo, memberId);
+        viewCountRecorder.record(goodsNo);
+        return ResponseEntity.ok(ApiResponse.ok(response));
     }
 
     @GetMapping("/api/v1/goods/{goodsNo}/description")

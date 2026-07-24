@@ -15,6 +15,7 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 /**
  * 플러시 스케줄러. <b>테스트에 Redis를 요구하지 않는다</b> — RedisTemplate/HashOperations를 mock으로 대체해
@@ -59,6 +60,22 @@ class ViewCountFlushSchedulerTest {
         scheduler.flush();
 
         verifyNoInteractions(goodsRepository);
+    }
+
+    /**
+     * 숫자가 아닌 field 하나가 전체 플러시를 영구히 막으면 안 된다(독약 방지).
+     * 건너뛰고 나머지는 반영한 뒤 DEL까지 정상 진행해야 버퍼가 스스로 회복된다.
+     */
+    @Test
+    void 숫자가_아닌_field는_건너뛰고_나머지는_반영한다() {
+        given(redisTemplate.<String, Long>opsForHash()).willReturn(hashOps);
+        given(hashOps.entries(KEY)).willReturn(Map.of("1", 5L, "깨진필드", 9L));
+
+        assertThatCode(() -> scheduler.flush()).doesNotThrowAnyException();
+
+        verify(goodsRepository).addViewCount(1L, 5);
+        verifyNoMoreInteractions(goodsRepository);
+        verify(redisTemplate).delete(KEY);
     }
 
     @Test
