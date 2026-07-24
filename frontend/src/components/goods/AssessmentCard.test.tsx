@@ -4,12 +4,12 @@ import { AssessmentCard } from './AssessmentCard';
 import type { GoodsAssessment, FlaggedIngredient } from '../../types/assessment';
 
 const allergen: FlaggedIngredient = {
-  ingredientId: 19, name: '리모넨', inciName: 'limonene',
-  flags: ['ALLERGEN'], axis: 'CHECK', sourceRef: '착향제 25종',
+  ingredientId: 19, name: '리모넨', inciName: 'limonene', summary: '시트러스향 향료',
+  flags: ['ALLERGEN'], axis: 'CHECK', acidClass: null, limitText: null,
 };
 const limitInfo: FlaggedIngredient = {
-  ingredientId: 28, name: '토코페롤', inciName: 'tocopherol',
-  flags: ['LIMIT'], axis: 'INFO', sourceRef: '* 배합한도 : ...',
+  ingredientId: 28, name: '토코페롤', inciName: 'tocopherol', summary: '비타민E',
+  flags: ['LIMIT'], axis: 'INFO', acidClass: null, limitText: '* 배합한도 : ...',
 };
 
 function base(over: Partial<GoodsAssessment> = {}): GoodsAssessment {
@@ -24,13 +24,13 @@ describe('AssessmentCard', () => {
     const onOpen = vi.fn();
     render(<AssessmentCard assessment={base()} onOpenPanel={onOpen} />);
     expect(screen.getByText('대체로 무난해요')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: /확인 성분 1개/ }));
+    fireEvent.click(screen.getByRole('button', { name: /확인이 필요한 성분 1개/ }));
     expect(onOpen).toHaveBeenCalled();
   });
 
   it('CHECK 축 성분이 없으면(한도만) 확인 버튼을 숨기고 참고 문구를 낸다', () => {
     render(<AssessmentCard assessment={base({ flagged: [limitInfo] })} onOpenPanel={vi.fn()} />);
-    expect(screen.queryByRole('button', { name: /확인 성분/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: /확인이 필요한 성분/ })).toBeNull();
     expect(screen.getByText(/배합한도가 있는 성분 1개/)).toBeInTheDocument();
   });
 

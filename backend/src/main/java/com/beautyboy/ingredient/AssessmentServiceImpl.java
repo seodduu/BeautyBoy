@@ -46,13 +46,14 @@ public class AssessmentServiceImpl implements AssessmentService {
         boolean rinseOff = isRinseOff(goodsQueryService.categoryCode(goodsNo));
 
         // 같은 inci_name의 여러 플래그 행을 성분 단위로 접는다(정렬 유지).
+        // 행: [id, name, inci, summary, flag_type, source_ref, sort_order]
         Map<Long, Agg> byIngredient = new LinkedHashMap<>();
         for (Object[] r : regFlagRepository.findFlagRowsByGoodsId(goodsNo)) {
             Long ingredientId = ((Number) r[0]).longValue();
             Agg agg = byIngredient.computeIfAbsent(ingredientId,
-                    k -> new Agg(ingredientId, (String) r[1], (String) r[2]));
-            if (r[3] != null) {
-                agg.add((String) r[3], (String) r[4]);
+                    k -> new Agg(ingredientId, (String) r[1], (String) r[2], (String) r[3]));
+            if (r[4] != null) {
+                agg.add((String) r[4], (String) r[5]);
             }
         }
 
@@ -71,8 +72,8 @@ public class AssessmentServiceImpl implements AssessmentService {
                 checkCount++;
             }
             flagged.add(new FlaggedIngredient(
-                    agg.ingredientId, agg.name, agg.inciName,
-                    List.copyOf(agg.flags), agg.axis(), agg.representativeRef()));
+                    agg.ingredientId, agg.name, agg.inciName, agg.summary,
+                    List.copyOf(agg.flags), agg.axis(), agg.acidClass, agg.limitText));
         }
 
         String verdictCode;
@@ -109,25 +110,24 @@ public class AssessmentServiceImpl implements AssessmentService {
         final Long ingredientId;
         final String name;
         final String inciName;
+        final String summary;
         final Set<String> flags = new LinkedHashSet<>();
-        String checkRef;
-        String reviewRef;
-        String infoRef;
+        String acidClass;   // EXFOLIANT_ACID의 source_ref = "AHA"|"BHA"(분류)
+        String limitText;   // LIMIT의 source_ref = 배합한도 원문(근거)
 
-        Agg(Long ingredientId, String name, String inciName) {
+        Agg(Long ingredientId, String name, String inciName, String summary) {
             this.ingredientId = ingredientId;
             this.name = name;
             this.inciName = inciName;
+            this.summary = summary;
         }
 
         void add(String flagType, String sourceRef) {
             flags.add(flagType);
-            if ("ALLERGEN".equals(flagType) || "EXFOLIANT_ACID".equals(flagType)) {
-                if (checkRef == null) checkRef = sourceRef;
-            } else if ("BANNED".equals(flagType)) {
-                if (reviewRef == null) reviewRef = sourceRef;
-            } else { // LIMIT
-                if (infoRef == null) infoRef = sourceRef;
+            if ("EXFOLIANT_ACID".equals(flagType) && acidClass == null) {
+                acidClass = sourceRef;
+            } else if ("LIMIT".equals(flagType) && limitText == null) {
+                limitText = sourceRef;
             }
         }
 
@@ -135,12 +135,6 @@ public class AssessmentServiceImpl implements AssessmentService {
             if (flags.contains("ALLERGEN") || flags.contains("EXFOLIANT_ACID")) return "CHECK";
             if (flags.contains("BANNED")) return "REVIEW";
             return "INFO";
-        }
-
-        String representativeRef() {
-            if (checkRef != null) return checkRef;
-            if (reviewRef != null) return reviewRef;
-            return infoRef;
         }
     }
 }

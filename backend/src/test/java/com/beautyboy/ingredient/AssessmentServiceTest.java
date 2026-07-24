@@ -23,9 +23,9 @@ class AssessmentServiceTest {
     @Mock IngredientRegFlagRepository regFlagRepository;
     @InjectMocks AssessmentServiceImpl service;
 
-    /** reg_flag 조인 행: [ingredientId, name, inciName, flagType, sourceRef, sortOrder]. */
+    /** reg_flag 조인 행: [ingredientId, name, inciName, summary, flagType, sourceRef, sortOrder]. */
     private static Object[] row(long id, String name, String inci, String flag, String ref) {
-        return new Object[]{id, name, inci, flag, ref, 0};
+        return new Object[]{id, name, inci, name + " 설명", flag, ref, 0};
     }
 
     private void stub(long goodsNo, String category, List<Object[]> rows) {
@@ -94,8 +94,12 @@ class AssessmentServiceTest {
         GoodsAssessmentResponse r = service.assess(8L);
         assertThat(r.checkCount()).isEqualTo(1);        // 한 성분이므로 각질산 1회만
         assertThat(r.flagged()).hasSize(1);
-        assertThat(r.flagged().get(0).flags()).containsExactlyInAnyOrder("EXFOLIANT_ACID", "LIMIT");
-        assertThat(r.flagged().get(0).axis()).isEqualTo("CHECK");
+        var f = r.flagged().get(0);
+        assertThat(f.flags()).containsExactlyInAnyOrder("EXFOLIANT_ACID", "LIMIT");
+        assertThat(f.axis()).isEqualTo("CHECK");
+        assertThat(f.acidClass()).isEqualTo("BHA");                 // 분류(근거 아님)
+        assertThat(f.limitText()).isEqualTo("* 배합한도 : 0.5%");    // 실제 규제 근거
+        assertThat(f.summary()).isEqualTo("살리실산 설명");           // 성분별 설명
     }
 
     @Test

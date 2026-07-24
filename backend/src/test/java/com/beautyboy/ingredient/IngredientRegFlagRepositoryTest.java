@@ -46,15 +46,16 @@ class IngredientRegFlagRepositoryTest {
 
         List<Object[]> rows = regFlagRepository.findFlagRowsByGoodsId(goods.getId());
 
+        // 행: [id, name, inci, summary, flag_type(4), source_ref(5), sort_order(6)]
         Set<String> flags = rows.stream()
-                .filter(r -> r[3] != null)
-                .map(r -> (String) r[3])
+                .filter(r -> r[4] != null)
+                .map(r -> (String) r[4])
                 .collect(Collectors.toSet());
         assertThat(flags).containsExactlyInAnyOrder("EXFOLIANT_ACID", "LIMIT");
 
         // 세틸알코올(무플래그)도 LEFT JOIN으로 행에 존재한다
         boolean cetylPresentWithoutFlag = rows.stream()
-                .anyMatch(r -> ((Number) r[0]).longValue() == cetyl.getId() && r[3] == null);
+                .anyMatch(r -> ((Number) r[0]).longValue() == cetyl.getId() && r[4] == null);
         assertThat(cetylPresentWithoutFlag).isTrue();
     }
 

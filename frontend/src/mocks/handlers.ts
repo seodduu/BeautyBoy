@@ -228,9 +228,9 @@ export const handlers = [
         checkCount: 2,
         rinseOff: true,
         flagged: [
-          { ingredientId: 5, name: '살리실산', inciName: 'salicylic acid', flags: ['EXFOLIANT_ACID', 'LIMIT'], axis: 'CHECK', sourceRef: '* 배합한도 : <보존제> 살리실릭애씨드로서 0.5%' },
-          { ingredientId: 19, name: '리모넨', inciName: 'limonene', flags: ['ALLERGEN'], axis: 'CHECK', sourceRef: '식약처 착향제 알레르기 유발물질 25종' },
-          { ingredientId: 28, name: '토코페롤', inciName: 'tocopherol', flags: ['LIMIT'], axis: 'INFO', sourceRef: '* 배합한도 : ...' },
+          { ingredientId: 5, name: '살리실산', inciName: 'salicylic acid', summary: '모공 속 노폐물 정리에 강한 BHA', flags: ['EXFOLIANT_ACID', 'LIMIT'], axis: 'CHECK', acidClass: 'BHA', limitText: '* 배합한도 : <보존제> 살리실릭애씨드로서 0.5%' },
+          { ingredientId: 19, name: '리모넨', inciName: 'limonene', summary: '시트러스향에 흔한 향료 성분', flags: ['ALLERGEN'], axis: 'CHECK', acidClass: null, limitText: null },
+          { ingredientId: 28, name: '토코페롤', inciName: 'tocopherol', summary: '항산화 작용을 하는 비타민E', flags: ['LIMIT'], axis: 'INFO', acidClass: null, limitText: '* 배합한도 : 기타 제품에 20%' },
         ],
       },
     };

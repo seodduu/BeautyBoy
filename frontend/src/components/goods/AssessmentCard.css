@@ -49,6 +49,11 @@
 
 .bb-assessment__note {
   margin: 0;
+  font-size: var(--fs-body-tight);
+  color: var(--color-graphite);
+}
+
+.bb-assessment__note--muted {
   font-size: var(--fs-meta);
   color: var(--color-stone);
 }

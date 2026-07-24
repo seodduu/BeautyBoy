@@ -26,8 +26,14 @@ function toneFor(code: VerdictCode): Tone {
  */
 export function AssessmentCard({ assessment, onOpenPanel }: AssessmentCardProps) {
   const tone = toneFor(assessment.verdictCode);
-  const checkCount = assessment.flagged.filter((f) => f.axis === 'CHECK').length;
+  const checks = assessment.flagged.filter((f) => f.axis === 'CHECK');
+  const checkCount = checks.length;
   const limitCount = assessment.flagged.filter((f) => f.axis === 'INFO').length;
+
+  // 누가 확인해야 하는지 파생(설계 §8): 패널을 열지 않아도 대상을 알 수 있게 한다.
+  const who: string[] = [];
+  if (checks.some((f) => f.flags.includes('EXFOLIANT_ACID'))) who.push('민감하거나 건조한 피부');
+  if (checks.some((f) => f.flags.includes('ALLERGEN'))) who.push('향에 예민한 피부');
 
   return (
     <section className={`bb-assessment bb-assessment--${tone}`} aria-label="성분 종합판정">
@@ -36,13 +42,21 @@ export function AssessmentCard({ assessment, onOpenPanel }: AssessmentCardProps)
         {assessment.verdictText}
       </p>
 
+      {checkCount > 0 && who.length > 0 && (
+        <p className="bb-assessment__note">
+          {who.join(' · ')}라면 확인이 필요한 성분 {checkCount}개를 살펴보세요.
+        </p>
+      )}
+
       {limitCount > 0 && (
-        <p className="bb-assessment__note">배합한도가 있는 성분 {limitCount}개가 있어요(참고).</p>
+        <p className="bb-assessment__note bb-assessment__note--muted">
+          배합한도가 있는 성분 {limitCount}개가 있어요(참고).
+        </p>
       )}
 
       {checkCount > 0 && (
         <button type="button" className="bb-assessment__open" onClick={onOpenPanel}>
-          확인 성분 {checkCount}개 보기 →
+          확인이 필요한 성분 {checkCount}개 →
         </button>
       )}
     </section>
