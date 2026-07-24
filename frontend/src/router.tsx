@@ -8,6 +8,7 @@ import { GoodsList } from './pages/GoodsList';
 import { Detail } from './pages/Detail';
 import { Search } from './pages/Search';
 import { Ranking } from './pages/Ranking';
+import { Cart } from './pages/Cart';
 import { RequireAuth } from './components/auth/RequireAuth';
 import { Showcase } from './pages/dev/Showcase';
 
@@ -56,6 +57,14 @@ export const router = createBrowserRouter([
         element: (
           <RequireAuth>
             <Ranking />
+          </RequireAuth>
+        ),
+      },
+      {
+        path: 'cart',
+        element: (
+          <RequireAuth>
+            <Cart />
           </RequireAuth>
         ),
       },

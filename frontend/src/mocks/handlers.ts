@@ -11,6 +11,8 @@ import type {
 } from '../types/detail';
 import type { GoodsAssessment } from '../types/assessment';
 import type { ReviewItem, ReviewStats, QnaItem } from '../types/review';
+import type { CartItem } from '../api/cart';
+import type { CompatCheckResult } from '../api/compat';
 import {
   ingredientFixtures,
   maxIrritation,
@@ -135,6 +137,38 @@ function sortGoods(items: GoodsFixture[], sort: string | null): GoodsFixture[] {
       // mock에는 별도 인기 지표가 없어 등록 순서를 그대로 인기순으로 간주한다.
       return sorted;
   }
+}
+
+/**
+ * 장바구니 dev 목 상태 — 모듈 스코프 가변 배열. 수량 변경·삭제가 반영되는 것을
+ * 오프라인(VITE_USE_MOCK)에서도 눈으로 확인할 수 있도록 요청마다 재계산한다.
+ * (AHA 토너 × 레티노이드 세럼 조합으로 CONFLICT 배너를 기본 노출시켜 궁합 UI를 바로 볼 수 있게 한다.)
+ */
+let cartItemsFixture: CartItem[] = [
+  {
+    cartItemId: 1,
+    goodsNo: 101,
+    optionNo: 11,
+    goodsName: 'AHA 각질 토너',
+    optionName: '150ml',
+    unitPrice: 20000,
+    quantity: 2,
+    lineAmount: 40000,
+  },
+  {
+    cartItemId: 2,
+    goodsNo: 102,
+    optionNo: null,
+    goodsName: '레티노이드 나이트 세럼',
+    optionName: '',
+    unitPrice: 32000,
+    quantity: 1,
+    lineAmount: 32000,
+  },
+];
+
+function recomputeLineAmount(item: CartItem): CartItem {
+  return { ...item, lineAmount: item.unitPrice * item.quantity };
 }
 
 export const handlers = [
@@ -468,4 +502,51 @@ export const handlers = [
   http.post('/api/v1/cart/items', () =>
     HttpResponse.json({ code: 'OK', message: 'success', data: null }, { status: 201 }),
   ),
+
+  // 장바구니 조회/수정/삭제 — Task 4-9.
+  http.get('/api/v1/cart/items', () =>
+    HttpResponse.json({ code: 'OK', message: 'success', data: cartItemsFixture }),
+  ),
+
+  http.patch('/api/v1/cart/items/:cartItemId', async ({ params, request }) => {
+    const cartItemId = Number(params.cartItemId);
+    const { quantity } = (await request.json()) as { quantity: number };
+    cartItemsFixture = cartItemsFixture.map((item) =>
+      item.cartItemId === cartItemId ? recomputeLineAmount({ ...item, quantity }) : item,
+    );
+    return HttpResponse.json({ code: 'OK', message: 'success', data: null });
+  }),
+
+  http.delete('/api/v1/cart/items/:cartItemId', ({ params }) => {
+    const cartItemId = Number(params.cartItemId);
+    cartItemsFixture = cartItemsFixture.filter((item) => item.cartItemId !== cartItemId);
+    return HttpResponse.json({ code: 'OK', message: 'success', data: null });
+  }),
+
+  http.post('/api/v1/cart/items/bulk', () =>
+    HttpResponse.json({ code: 'OK', message: 'success', data: null }, { status: 201 }),
+  ),
+
+  // 궁합 체크 — 목 goodsNo 101(AHA)·102(레티노이드) 조합이면 CONFLICT를 낸다.
+  http.post('/api/v1/compat/check', async ({ request }) => {
+    const { goodsNos } = (await request.json()) as { goodsNos: number[] };
+    const hasConflictPair = goodsNos.includes(101) && goodsNos.includes(102);
+
+    const result: CompatCheckResult = hasConflictPair
+      ? {
+          overall: 'CONFLICT',
+          findings: [
+            {
+              verdict: 'CONFLICT',
+              categoryA: 'AHA',
+              categoryB: '레티노이드',
+              reason: '두 성분 모두 각질과 피부 턴오버를 촉진해 함께 쓰면 자극이 중첩돼요.',
+              goodsNos: [101, 102],
+            },
+          ],
+        }
+      : { overall: 'OK', findings: [] };
+
+    return HttpResponse.json({ code: 'OK', message: 'success', data: result });
+  }),
 ];
