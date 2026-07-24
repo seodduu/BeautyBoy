@@ -34,15 +34,18 @@ public class ReviewService {
     private final GoodsReviewStatRepository goodsReviewStatRepository;
     private final OrderQueryService orderQueryService;
     private final GoodsQueryService goodsQueryService;
+    private final ReviewHelpfulRepository reviewHelpfulRepository;
 
     public ReviewService(ReviewRepository reviewRepository,
                          GoodsReviewStatRepository goodsReviewStatRepository,
                          OrderQueryService orderQueryService,
-                         GoodsQueryService goodsQueryService) {
+                         GoodsQueryService goodsQueryService,
+                         ReviewHelpfulRepository reviewHelpfulRepository) {
         this.reviewRepository = reviewRepository;
         this.goodsReviewStatRepository = goodsReviewStatRepository;
         this.orderQueryService = orderQueryService;
         this.goodsQueryService = goodsQueryService;
+        this.reviewHelpfulRepository = reviewHelpfulRepository;
     }
 
     @Transactional
@@ -102,6 +105,20 @@ public class ReviewService {
                 .orElseGet(() -> new GoodsReviewStat(goodsNo));
         stat.update(count, sum, LocalDateTime.now());
         goodsReviewStatRepository.save(stat);
+    }
+
+    /**
+     * 도움됐어요. member×review 조합당 한 번만 허용한다.
+     */
+    @Transactional
+    public void markHelpful(Long reviewId, Long memberId) {
+        Review review = reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.REVIEW_NOT_FOUND));
+        if (reviewHelpfulRepository.existsByReviewIdAndMemberId(reviewId, memberId)) {
+            throw new BusinessException(ErrorCode.REVIEW_HELPFUL_DUPLICATED);
+        }
+        reviewHelpfulRepository.save(new ReviewHelpful(reviewId, memberId));
+        review.increaseHelpful(1);
     }
 
     private ReviewResponse toResponse(Review r) {

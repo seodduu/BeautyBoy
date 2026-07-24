@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -44,5 +45,12 @@ public class ReviewController {
     @GetMapping("/api/v1/reviews/stats")
     public ResponseEntity<ApiResponse<ReviewStatResponse>> stats(@RequestParam Long goodsNo) {
         return ResponseEntity.ok(ApiResponse.ok(reviewService.stat(goodsNo)));
+    }
+
+    @PostMapping("/api/v1/reviews/{reviewId}/helpful")
+    public ResponseEntity<ApiResponse<Void>> markHelpful(@AuthenticationPrincipal Long memberId,
+                                                          @PathVariable Long reviewId) {
+        reviewService.markHelpful(reviewId, memberId);
+        return ResponseEntity.ok(ApiResponse.ok(null));
     }
 }
