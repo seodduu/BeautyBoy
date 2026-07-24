@@ -206,6 +206,7 @@ POST /payments/confirm             # 토스 승인 검증 → 결제완료
 GET /orders, /orders/{orderNo}
 POST|DELETE /wishlist/{goodsNo}
 POST /reviews, POST /reviews/{id}/helpful
+GET /reviews/me                    # 마이페이지 "내 리뷰": 상품명·썸네일 곁들인 내가 쓴 글 목록
 GET /qna?goodsNo=  POST /qna          # 답변은 admin
 ```
 
