@@ -99,7 +99,7 @@ public class AddressService {
     }
 
     private void unmarkExistingDefault(Long memberId) {
-        addressRepository.findByMemberIdAndIsDefaultTrue(memberId)
+        addressRepository.findFirstByMemberIdAndIsDefaultTrueOrderByIdDesc(memberId)
                 .ifPresent(existing -> existing.markDefault(false));
     }
 }
