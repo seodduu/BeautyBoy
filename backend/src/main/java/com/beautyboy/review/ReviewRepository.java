@@ -14,6 +14,10 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
 
     boolean existsByMemberIdAndGoodsId(Long memberId, Long goodsId);
 
+    List<Review> findByMemberIdOrderByIdDesc(Long memberId, Pageable pageable);
+
+    long countByMemberId(Long memberId);
+
     @Query("select count(r), coalesce(sum(r.rating),0) from Review r where r.goodsId = :goodsNo")
     Object[] aggregate(Long goodsNo);
 }
