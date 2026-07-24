@@ -1,5 +1,6 @@
 # 로컬 전용 설정/시크릿
 application-local.yml
+.env
 .env.local
 
 # Node
@@ -10,3 +11,13 @@ build/
 
 # 브레인스토밍 비주얼 컴패니언 세션 (superpowers)
 .superpowers/
+
+# 성분 파이프라인 원본 API 캐시(재현 가능, 커밋 불필요)
+tools/ingredient_pipeline/.cache/
+
+# macOS
+.DS_Store
+
+# 분석용 원본 데이터셋(추적 안 함 — 파이프라인은 API에서 받는다)
+cosmetics.csv
+*.pdf

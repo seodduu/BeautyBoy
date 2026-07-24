@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import type { KeyboardEvent } from 'react';
+import { DescriptionPanel } from './DescriptionPanel';
 import { ReviewList } from './ReviewList';
 import { QnaList } from './QnaList';
 import './DetailTabs.css';
@@ -14,15 +15,14 @@ const TABS: Array<{ key: TabKey; label: string }> = [
 
 interface DetailTabsProps {
   goodsNo: number;
-  summary: string;
 }
 
 /**
  * 설계 6장 상세 화면 탭 — 설명/리뷰/Q&A.
  * WAI-ARIA Tabs 패턴: role=tablist/tab/tabpanel + roving tabindex + 화살표 키 이동.
- * 리뷰·Q&A는 activeTab일 때만 useQuery(enabled)로 lazy fetch한다.
+ * 세 탭 모두 activeTab일 때만 useQuery(enabled)로 lazy fetch한다.
  */
-export function DetailTabs({ goodsNo, summary }: DetailTabsProps) {
+export function DetailTabs({ goodsNo }: DetailTabsProps) {
   const [active, setActive] = useState<TabKey>('summary');
   const tabRefs = useRef<Map<TabKey, HTMLButtonElement>>(new Map());
 
@@ -75,7 +75,7 @@ export function DetailTabs({ goodsNo, summary }: DetailTabsProps) {
         hidden={active !== 'summary'}
         className="bb-detail-tabs__panel"
       >
-        <p className="bb-detail-tabs__summary">{summary}</p>
+        <DescriptionPanel goodsNo={goodsNo} active={active === 'summary'} />
       </div>
 
       <div

@@ -3,7 +3,13 @@ import { goodsFixtures } from './fixtures/goods';
 import type { GoodsFixture } from './fixtures/goods';
 import type { ApiEnvelope, PageResponse } from '../types/goods';
 import type { RankingItem } from '../types/ranking';
-import type { GoodsDetail, GoodsIngredientResponse, GoodsOption } from '../types/detail';
+import type {
+  GoodsDescription,
+  GoodsDetail,
+  GoodsIngredientResponse,
+  GoodsOption,
+} from '../types/detail';
+import type { GoodsAssessment } from '../types/assessment';
 import type { ReviewItem, ReviewStats, QnaItem } from '../types/review';
 import {
   ingredientFixtures,
@@ -205,6 +211,53 @@ export const handlers = [
       code: 'OK',
       message: 'success',
       data: { goodsNo, ingredients: ingredientFixtures, maxIrritation, maxComedogenic },
+    };
+    return HttpResponse.json(body);
+  }),
+
+  // 성분 종합판정 — /goods/:goodsNo 보다 먼저 등록한다(위 ingredients 주석 참조).
+  http.get('/api/v1/goods/:goodsNo/assessment', ({ params }) => {
+    const goodsNo = Number(params.goodsNo);
+    const body: ApiEnvelope<GoodsAssessment> = {
+      code: 'OK',
+      message: 'success',
+      data: {
+        goodsNo,
+        verdictCode: 'MOSTLY_FINE',
+        verdictText: '대체로 무난해요',
+        checkCount: 2,
+        rinseOff: true,
+        flagged: [
+          { ingredientId: 5, name: '살리실산', inciName: 'salicylic acid', summary: '모공 속 노폐물 정리에 강한 BHA', flags: ['EXFOLIANT_ACID', 'LIMIT'], axis: 'CHECK', acidClass: 'BHA', limitText: '* 배합한도 : <보존제> 살리실릭애씨드로서 0.5%' },
+          { ingredientId: 19, name: '리모넨', inciName: 'limonene', summary: '시트러스향에 흔한 향료 성분', flags: ['ALLERGEN'], axis: 'CHECK', acidClass: null, limitText: null },
+          { ingredientId: 28, name: '토코페롤', inciName: 'tocopherol', summary: '항산화 작용을 하는 비타민E', flags: ['LIMIT'], axis: 'INFO', acidClass: null, limitText: '* 배합한도 : 기타 제품에 20%' },
+        ],
+      },
+    };
+    return HttpResponse.json(body);
+  }),
+
+  // 설명 본문 — ingredients와 같은 이유로 /goods/:goodsNo 보다 먼저 등록한다.
+  http.get('/api/v1/goods/:goodsNo/description', ({ params }) => {
+    const goodsNo = Number(params.goodsNo);
+    const found = goodsFixtures.find((item) => item.goodsNo === goodsNo);
+
+    if (!found) {
+      return HttpResponse.json(
+        { code: 'GOODS_NOT_FOUND', message: '상품을 찾을 수 없습니다.', data: null },
+        { status: 404 },
+      );
+    }
+
+    const body: ApiEnvelope<GoodsDescription> = {
+      code: 'OK',
+      message: 'success',
+      data: {
+        goodsNo,
+        description:
+          `${found.name}은(는) 매일 쓰는 사용감에 초점을 맞춘 제품입니다.\n` +
+          '세안 후 결을 정돈하고 다음 단계 흡수를 돕도록 구성했으며, 아침저녁 모두 사용할 수 있습니다.',
+      },
     };
     return HttpResponse.json(body);
   }),

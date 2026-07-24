@@ -21,6 +21,12 @@ public interface GoodsQueryService {
     boolean exists(Long goodsNo);
 
     /**
+     * 상품의 leaf 카테고리 코드(예: "C002001"). 판정 엔진이 rinse-off(씻어내는 제품) 여부를
+     * 카테고리 접두사로 파생할 때 쓴다. 존재하지 않는 상품이면 null.
+     */
+    String categoryCode(Long goodsNo);
+
+    /**
      * 주문·장바구니가 쓰는 상품 스냅샷 조회.
      *
      * <p>왜 catalog가 내주는가: 주문 금액은 서버가 다시 계산해야 하는데(클라이언트 금액 불신),

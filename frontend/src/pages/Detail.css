@@ -4,6 +4,9 @@
   flex-direction: column;
   gap: var(--space-xl);
   padding: var(--space-lg);
+  /* 첫 화면에 이미지와 구매 정보가 함께 들어와야 한다 — 콘텐츠 폭을 가둔다. */
+  max-width: 1280px;
+  margin: 0 auto;
 }
 
 .bb-detail__header {
@@ -14,14 +17,17 @@
 
 @media (min-width: 768px) {
   .bb-detail__header {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    /* 이미지 560px 상한 + 구매 정보 480px 상한. 이미지가 원본 비율대로 무한정 커지지 않게 한다. */
+    grid-template-columns: minmax(0, 560px) minmax(0, 480px);
+    justify-content: start;
+    gap: var(--space-xxl);
     align-items: start;
   }
 }
 
 .bb-detail__media {
   aspect-ratio: 1 / 1;
-  background: var(--color-surface-cool);
+  background: var(--color-surface);
   overflow: hidden;
   border-radius: var(--rounded-md);
 }
@@ -29,7 +35,8 @@
 .bb-detail__image {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  /* 용기가 잘리지 않도록 contain — 남는 여백은 media의 surface가 받는다. */
+  object-fit: contain;
   display: block;
 }
 
@@ -58,6 +65,14 @@
   color: var(--color-ink);
 }
 
+/* 한 줄 평 — 상품명 다음으로 먼저 읽히도록 본문보다 한 단 키우고 ink에 가깝게 둔다. */
+.bb-detail__summary {
+  margin: 0;
+  font-size: var(--fs-body-lg);
+  line-height: var(--lh-body-lg);
+  color: var(--color-graphite);
+}
+
 .bb-detail__badges {
   display: flex;
   gap: var(--space-xs);
@@ -66,10 +81,20 @@
 
 .bb-detail__cta {
   margin-top: var(--space-sm);
-  align-self: flex-start;
+  /* 구매 영역 폭을 꽉 채우는 단일 행동. 높이는 기획 사양 52~56px. */
+  width: 100%;
+  min-height: 52px;
 }
 
 .bb-detail__error {
   padding: var(--space-lg);
   color: var(--color-graphite);
+}
+
+/* 성분 판정 고지 — 단정적 표현 회피, 한계 명시(설계 §0.6/§15). */
+.bb-detail__disclaimer {
+  margin: 0;
+  max-width: 68ch;
+  font-size: var(--fs-meta);
+  color: var(--color-stone);
 }

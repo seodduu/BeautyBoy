@@ -6,7 +6,7 @@ import { http, HttpResponse } from 'msw';
 import { server } from '../mocks/server';
 import { ToastProvider } from '../components/ui/ToastProvider';
 import { Detail } from './Detail';
-import type { GoodsDetail, GoodsIngredientResponse } from '../types/detail';
+import type { GoodsDescription, GoodsDetail, GoodsIngredientResponse } from '../types/detail';
 import type { ApiEnvelope, PageResponse } from '../types/goods';
 import type { ReviewItem, ReviewStats, QnaItem } from '../types/review';
 
@@ -39,6 +39,11 @@ function pageOf<T>(content: T[]): PageResponse<T> {
   return { content, page: 0, size: 20, totalElements: content.length, totalPages: 1, hasNext: false };
 }
 
+const DESCRIPTION: GoodsDescription = {
+  goodsNo: 1,
+  description: '얇게 발려 겉돌지 않고 아침저녁 모두 쓸 수 있는 본문 설명입니다.',
+};
+
 const INGREDIENTS: GoodsIngredientResponse = {
   goodsNo: 1,
   ingredients: [],
@@ -66,6 +71,7 @@ function registerDefaultHandlers() {
   server.use(
     http.get('/api/v1/goods/:goodsNo', () => HttpResponse.json(envelope(GOODS_DETAIL))),
     http.get('/api/v1/goods/:goodsNo/ingredients', () => HttpResponse.json(envelope(INGREDIENTS))),
+    http.get('/api/v1/goods/:goodsNo/description', () => HttpResponse.json(envelope(DESCRIPTION))),
     http.get('/api/v1/reviews/stats', () => HttpResponse.json(envelope(REVIEW_STATS))),
     http.get('/api/v1/reviews', () => HttpResponse.json(envelope(pageOf(REVIEWS)))),
     http.get('/api/v1/qna', () => HttpResponse.json(envelope(pageOf(QNA_ITEMS)))),
@@ -138,6 +144,7 @@ describe('Detail — 상세 페이지', () => {
     server.use(
       http.get('/api/v1/goods/:goodsNo', () => HttpResponse.json(envelope(detailWithoutOptions))),
       http.get('/api/v1/goods/:goodsNo/ingredients', () => HttpResponse.json(envelope(INGREDIENTS))),
+      http.get('/api/v1/goods/:goodsNo/description', () => HttpResponse.json(envelope(DESCRIPTION))),
       http.get('/api/v1/reviews/stats', () => HttpResponse.json(envelope(REVIEW_STATS))),
       http.get('/api/v1/reviews', () => HttpResponse.json(envelope(pageOf(REVIEWS)))),
       http.get('/api/v1/qna', () => HttpResponse.json(envelope(pageOf(QNA_ITEMS)))),
@@ -159,7 +166,23 @@ describe('Detail — 상세 페이지', () => {
     expect(await screen.findByText('장바구니에 담았어요')).toBeInTheDocument();
   });
 
-  it('설명 탭에 상품 summary 텍스트가 보인다', async () => {
+  it('한 줄 평(summary)이 상품명 아래·가격 위에 보인다', async () => {
+    registerDefaultHandlers();
+    server.use(http.post('/api/v1/cart/items', () => new HttpResponse(null, { status: 201 })));
+
+    const { container } = renderDetail();
+
+    const summary = await screen.findByText(GOODS_DETAIL.summary);
+    const heading = screen.getByRole('heading', { name: '테스트 세럼' });
+    const price = container.querySelector('.bb-price');
+
+    // compareDocumentPosition: FOLLOWING(4)이면 인자가 기준 노드보다 문서상 뒤에 있다.
+    expect(heading.compareDocumentPosition(summary) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(price).not.toBeNull();
+    expect(summary.compareDocumentPosition(price!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it('설명 탭은 summary가 아니라 /description 본문을 지연 로딩해 보여준다', async () => {
     registerDefaultHandlers();
     server.use(http.post('/api/v1/cart/items', () => new HttpResponse(null, { status: 201 })));
 
@@ -168,7 +191,7 @@ describe('Detail — 상세 페이지', () => {
     const summaryTab = await screen.findByRole('tab', { name: '설명' });
     fireEvent.click(summaryTab);
 
-    expect(await screen.findByText(GOODS_DETAIL.summary)).toBeInTheDocument();
+    expect(await screen.findByText(DESCRIPTION.description)).toBeInTheDocument();
   });
 
   it('장바구니 담기 실패 시 danger 톤 토스트가 뜬다', async () => {
@@ -199,6 +222,7 @@ describe('Detail — 상세 페이지', () => {
     server.use(
       http.get('/api/v1/goods/:goodsNo', () => HttpResponse.json(envelope(GOODS_DETAIL))),
       http.get('/api/v1/goods/:goodsNo/ingredients', () => HttpResponse.json(envelope(INGREDIENTS))),
+      http.get('/api/v1/goods/:goodsNo/description', () => HttpResponse.json(envelope(DESCRIPTION))),
       http.get('/api/v1/reviews/stats', () =>
         HttpResponse.json(envelope({ reviewCount: 0, averageRating: 0 })),
       ),
@@ -231,6 +255,7 @@ describe('Detail — 상세 페이지', () => {
     server.use(
       http.get('/api/v1/goods/:goodsNo', () => HttpResponse.json(envelope(GOODS_DETAIL))),
       http.get('/api/v1/goods/:goodsNo/ingredients', () => HttpResponse.json(envelope(INGREDIENTS))),
+      http.get('/api/v1/goods/:goodsNo/description', () => HttpResponse.json(envelope(DESCRIPTION))),
       http.get('/api/v1/reviews/stats', () => HttpResponse.json(envelope(REVIEW_STATS))),
       http.get('/api/v1/reviews', () => HttpResponse.json(envelope(pageOf(REVIEWS)))),
       http.get('/api/v1/qna', () => HttpResponse.json(envelope(pageOf([])))),

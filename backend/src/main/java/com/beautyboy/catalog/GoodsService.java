@@ -131,6 +131,12 @@ public class GoodsService implements GoodsQueryService {
         return goodsRepository.existsByIdAndStatusNot(goodsNo, Goods.STATUS_HIDDEN);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public String categoryCode(Long goodsNo) {
+        return goodsRepository.findById(goodsNo).map(Goods::getCategoryCode).orElse(null);
+    }
+
     /**
      * 주문·장바구니용 상품 스냅샷. 숨김 상품과 상품-옵션 불일치는 빈 값으로 답한다
      * (예외를 던지지 않는 이유는 인터페이스 문서 참고).
