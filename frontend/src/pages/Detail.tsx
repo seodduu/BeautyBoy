@@ -12,6 +12,9 @@ import { Skeleton } from '../components/ui/Skeleton';
 import { AssessmentCard } from '../components/goods/AssessmentCard';
 import { CautionPanel } from '../components/goods/CautionPanel';
 import { DetailTabs } from '../components/goods/DetailTabs';
+import { OptionSelector } from '../components/goods/OptionSelector';
+import { QuantityStepper } from '../components/goods/QuantityStepper';
+import { RecommendedSection } from '../components/goods/RecommendedSection';
 import { useToast } from '../components/ui/useToast';
 import './Detail.css';
 
@@ -26,6 +29,8 @@ export function Detail() {
   const { toast } = useToast();
   const [adding, setAdding] = useState(false);
   const [panelOpen, setPanelOpen] = useState(false);
+  const [selectedOptionNo, setSelectedOptionNo] = useState<number | null>(null);
+  const [quantity, setQuantity] = useState(1);
 
   const detailQuery = useQuery({
     queryKey: ['goods-detail', goodsNo],
@@ -39,17 +44,23 @@ export function Detail() {
     enabled: hasValidGoodsNo,
   });
 
+  const options = detailQuery.data?.options ?? [];
+  // 옵션이 하나뿐이면 고를 것이 없다 — 선택을 강요하면 클릭만 늘어나므로 자동 선택한다.
+  // 옵션이 0개(없음)이거나 2개 이상이면 사용자가 고르기 전까지는 미선택 상태를 유지한다.
+  const autoOptionNo = options.length === 1 ? options[0].optionNo : null;
+  const effectiveOptionNo = selectedOptionNo ?? autoOptionNo;
+  const selectedOption = options.find((option) => option.optionNo === effectiveOptionNo) ?? null;
+  // 옵션이 있는데(2개 이상) 아직 아무것도 안 골랐으면 담기를 막는다. 0개거나 자동선택된 경우는 통과.
+  const optionRequired = options.length > 0 && effectiveOptionNo === null;
+
   async function handleAddToCart() {
-    if (!detailQuery.data) {
+    if (!detailQuery.data || optionRequired) {
       return;
     }
-    // 옵션이 있으면 첫 옵션, 없으면 optionNo 없이(null) 담는다.
-    const firstOption = detailQuery.data.options?.[0];
-    const optionNo = firstOption ? firstOption.optionNo : null;
 
     setAdding(true);
     try {
-      await addCartItem(goodsNo, optionNo, 1);
+      await addCartItem(goodsNo, effectiveOptionNo, quantity);
       toast('장바구니에 담았어요');
     } catch {
       toast('담기에 실패했어요. 다시 시도해 주세요', { tone: 'danger' });
@@ -72,6 +83,9 @@ export function Detail() {
 
   const goods = detailQuery.data;
   const assessment = assessmentQuery.data;
+  // 표시 가격 규칙: salePrice + selectedOption.addPrice. 금액의 최종 진실은 여전히 서버(주문 시 재계산)이며
+  // 이 값은 화면 안내용이다.
+  const displaySalePrice = goods.salePrice + (selectedOption?.addPrice ?? 0);
 
   return (
     <div className="bb-detail">
@@ -96,15 +110,33 @@ export function Detail() {
             ))}
             {goods.todayDreamAvailable && <TodayDreamBadge />}
           </div>
-          <Price listPrice={goods.listPrice} salePrice={goods.salePrice} discountRate={goods.discountRate} />
+          <div data-testid="detail-price">
+            <Price listPrice={goods.listPrice} salePrice={displaySalePrice} discountRate={goods.discountRate} />
+          </div>
           {/* 성분 종합판정 — 가격 아래, 장바구니 버튼 위(설계 §0.4). */}
           {assessment && (
             <AssessmentCard assessment={assessment} onOpenPanel={() => setPanelOpen(true)} />
           )}
+          {options.length > 1 && (
+            <OptionSelector
+              options={options}
+              selectedOptionNo={effectiveOptionNo}
+              onSelect={(optionNo) => {
+                setSelectedOptionNo(optionNo);
+                setQuantity(1);
+              }}
+            />
+          )}
+          <QuantityStepper
+            quantity={quantity}
+            max={selectedOption?.stock ?? 1}
+            onChange={setQuantity}
+          />
           <Button
             className="bb-detail__cta"
             variant="primary"
             loading={adding}
+            disabled={optionRequired}
             onClick={handleAddToCart}
           >
             장바구니 담기
@@ -113,6 +145,8 @@ export function Detail() {
       </header>
 
       <DetailTabs goodsNo={goodsNo} />
+
+      <RecommendedSection goodsNo={goodsNo} />
 
       {assessment && (
         <p className="bb-detail__disclaimer">

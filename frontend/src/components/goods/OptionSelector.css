@@ -1,0 +1,35 @@
+/* 옵션 선택 — 테두리·그림자 없이 hairline 1px로만 항목을 구분한다(DESIGN.md flat 사양). */
+.bb-option-selector {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.bb-option-selector__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-sm);
+  border: 1px solid var(--color-hairline-soft);
+  border-radius: var(--rounded-sm);
+  cursor: pointer;
+}
+
+.bb-option-selector__item:has(.bb-option-selector__input:checked) {
+  border-color: var(--color-ink);
+}
+
+.bb-option-selector__item--sold-out {
+  cursor: not-allowed;
+  color: var(--color-signal-muted);
+}
+
+.bb-option-selector__input {
+  accent-color: var(--color-ink);
+}
+
+.bb-option-selector__label {
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  color: inherit;
+}

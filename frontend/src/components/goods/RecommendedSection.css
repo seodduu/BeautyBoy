@@ -1,0 +1,16 @@
+/* 추천 섹션 — 탭 아래, 페이지 하단 마감. 다른 섹션과 같은 heading-md 위계를 쓴다. */
+.bb-recommended {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  padding-top: var(--space-lg);
+  border-top: 1px solid var(--color-hairline);
+}
+
+.bb-recommended__title {
+  margin: 0;
+  font-size: var(--fs-heading-sm);
+  font-weight: var(--fw-heading-sm);
+  line-height: var(--lh-heading-sm);
+  color: var(--color-ink);
+}

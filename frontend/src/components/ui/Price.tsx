@@ -6,7 +6,8 @@ interface PriceProps {
   discountRate: number;
 }
 
-function formatWon(value: number) {
+/** 천 단위 구분자 포맷터 — Price가 쓰는 것과 동일한 규칙을 다른 컴포넌트(OptionSelector 등)도 재사용한다. */
+export function formatWon(value: number) {
   return `${value.toLocaleString('ko-KR')}원`;
 }
 

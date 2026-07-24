@@ -34,3 +34,12 @@ export async function fetchGoodsDescription(goodsNo: number): Promise<GoodsDescr
   const response = await api.get<ApiEnvelope<GoodsDescription>>(`/goods/${goodsNo}/description`);
   return response.data.data;
 }
+
+/**
+ * GET /goods/:goodsNo/recommended — "함께 보면 좋은 상품" 섹션.
+ * 페이지네이션 없는 단순 목록. 빈 배열이면 화면이 섹션 자체를 그리지 않는다(RecommendedSection).
+ */
+export async function fetchRecommended(goodsNo: number): Promise<GoodsListItem[]> {
+  const response = await api.get<ApiEnvelope<GoodsListItem[]>>(`/goods/${goodsNo}/recommended`);
+  return response.data.data;
+}

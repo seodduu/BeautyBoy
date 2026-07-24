@@ -262,6 +262,16 @@ export const handlers = [
     return HttpResponse.json(body);
   }),
 
+  // 추천 상품 — ingredients/description과 같은 이유로 /goods/:goodsNo 보다 먼저 등록한다.
+  // 자기 자신을 제외한 fixture 4건을 내려준다(페이지네이션 없음).
+  http.get('/api/v1/goods/:goodsNo/recommended', ({ params }) => {
+    const goodsNo = Number(params.goodsNo);
+    const recommended = goodsFixtures.filter((item) => item.goodsNo !== goodsNo).slice(0, 4);
+
+    const body: ApiEnvelope<GoodsFixture[]> = { code: 'OK', message: 'success', data: recommended };
+    return HttpResponse.json(body);
+  }),
+
   http.get('/api/v1/goods/:goodsNo', ({ params }) => {
     const goodsNo = Number(params.goodsNo);
     const found = goodsFixtures.find((item) => item.goodsNo === goodsNo);
