@@ -1,5 +1,6 @@
 import { api } from './client';
 import type { ApiEnvelope, GoodsListItem, PageResponse } from '../types/goods';
+import type { GoodsDetail } from '../types/detail';
 
 /** T1 설계의 정렬 규약 — mock(handlers.ts)과 실 API가 공유하는 값 집합. */
 export type GoodsSort = 'popular' | 'new' | 'sales' | 'priceAsc' | 'discount';
@@ -20,7 +21,7 @@ export async function fetchGoodsList(
 }
 
 /** GET /goods/:goodsNo — 404 등 에러는 그대로 던져 TanStack Query가 처리하게 한다. */
-export async function fetchGoodsDetail(goodsNo: number): Promise<GoodsListItem> {
-  const response = await api.get<ApiEnvelope<GoodsListItem>>(`/goods/${goodsNo}`);
+export async function fetchGoodsDetail(goodsNo: number): Promise<GoodsDetail> {
+  const response = await api.get<ApiEnvelope<GoodsDetail>>(`/goods/${goodsNo}`);
   return response.data.data;
 }
