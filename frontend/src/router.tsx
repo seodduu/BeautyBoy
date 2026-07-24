@@ -5,6 +5,9 @@ import { Login } from './pages/Login';
 import { Signup } from './pages/Signup';
 import { Main } from './pages/Main';
 import { GoodsList } from './pages/GoodsList';
+import { Detail } from './pages/Detail';
+import { Search } from './pages/Search';
+import { Ranking } from './pages/Ranking';
 import { RequireAuth } from './components/auth/RequireAuth';
 import { Showcase } from './pages/dev/Showcase';
 
@@ -29,6 +32,30 @@ export const router = createBrowserRouter([
         element: (
           <RequireAuth>
             <GoodsList />
+          </RequireAuth>
+        ),
+      },
+      {
+        path: 'goods/:goodsNo',
+        element: (
+          <RequireAuth>
+            <Detail />
+          </RequireAuth>
+        ),
+      },
+      {
+        path: 'search',
+        element: (
+          <RequireAuth>
+            <Search />
+          </RequireAuth>
+        ),
+      },
+      {
+        path: 'ranking',
+        element: (
+          <RequireAuth>
+            <Ranking />
           </RequireAuth>
         ),
       },

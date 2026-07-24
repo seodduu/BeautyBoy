@@ -1,0 +1,62 @@
+.bb-toast-region {
+  position: fixed;
+  left: 50%;
+  bottom: var(--space-xl);
+  transform: translateX(-50%);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  pointer-events: none;
+}
+
+.bb-toast {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  min-width: 240px;
+  max-width: 90vw;
+  padding: var(--space-sm) var(--space-md);
+  background: var(--color-canvas);
+  border: 1px solid var(--color-hairline-soft);
+  border-radius: var(--rounded-lg);
+  pointer-events: auto;
+}
+
+.bb-toast__accent {
+  flex: none;
+  width: 4px;
+  align-self: stretch;
+  border-radius: var(--rounded-full);
+  background: var(--color-signal-success);
+}
+
+.bb-toast--danger .bb-toast__accent {
+  background: var(--color-signal-danger);
+}
+
+.bb-toast__message {
+  font: var(--fw-body) var(--fs-body) / var(--lh-body) var(--font-body);
+  color: var(--color-ink);
+}
+
+.bb-toast--danger .bb-toast__message {
+  color: var(--color-signal-danger);
+}
+
+/* prefers-reduced-motion이면 이 클래스 자체를 붙이지 않으므로(Toast.tsx) 즉시
+   나타나고 사라진다. 애니메이션 정의는 여기 한 곳뿐이다. */
+.bb-toast--animate {
+  animation: bb-toast-in 0.2s ease-out;
+}
+
+@keyframes bb-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

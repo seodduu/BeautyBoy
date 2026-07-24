@@ -1,0 +1,39 @@
+/* Q&A 탭 — 질문 목록. 리뷰 목록과 같은 hairline 구분선 규칙을 공유한다. */
+.bb-qna-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.bb-qna-list__items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.bb-qna-list__item {
+  padding: var(--space-md) 0;
+  border-bottom: 1px solid var(--color-hairline);
+}
+
+.bb-qna-list__meta {
+  display: flex;
+  gap: var(--space-sm);
+  font-size: var(--fs-meta);
+  color: var(--color-stone);
+}
+
+.bb-qna-list__secret {
+  color: var(--color-graphite);
+}
+
+.bb-qna-list__question {
+  margin: var(--space-xs) 0 0;
+  color: var(--color-graphite);
+}
+
+.bb-qna-list__error {
+  color: var(--color-signal-danger);
+}

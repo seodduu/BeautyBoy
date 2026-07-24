@@ -1,0 +1,36 @@
+/*
+  DESIGN.md 대응: 네비게이션·검색 자동완성 오버레이.
+  카드가 아니라 입력 아래 붙는 목록이므로 그림자 없이 hairline로만 구분한다.
+*/
+.bb-autocomplete {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  margin: 0;
+  padding: var(--space-xxs) 0;
+  list-style: none;
+  background: var(--color-canvas-warm);
+  border: 1px solid var(--color-hairline);
+  border-top: none;
+}
+
+.bb-autocomplete__item {
+  padding: var(--space-sm) var(--space-md);
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  color: var(--color-ink);
+  cursor: pointer;
+  transition: background-color 0.12s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bb-autocomplete__item {
+    transition: none;
+  }
+}
+
+.bb-autocomplete__item--active {
+  background: var(--color-surface);
+}

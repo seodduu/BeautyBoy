@@ -62,7 +62,13 @@ public enum ErrorCode {
     REVIEW_HELPFUL_DUPLICATED(HttpStatus.CONFLICT, "이미 도움이 됐어요를 누른 리뷰입니다"),
     QNA_NOT_FOUND(HttpStatus.NOT_FOUND, "문의를 찾을 수 없습니다"),
     QNA_SECRET_FORBIDDEN(HttpStatus.FORBIDDEN, "비밀글은 작성자만 볼 수 있습니다"),
-    WISHLIST_ALREADY_ADDED(HttpStatus.CONFLICT, "이미 찜한 상품입니다");
+    WISHLIST_ALREADY_ADDED(HttpStatus.CONFLICT, "이미 찜한 상품입니다"),
+
+    // Wave 3 T1 — routine
+    ROUTINE_TEMPLATE_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 조건의 루틴을 찾을 수 없습니다"),
+
+    // Wave 3 T1 — compat
+    COMPAT_EMPTY_SELECTION(HttpStatus.BAD_REQUEST, "궁합을 확인할 상품을 선택해주세요");
 
     private final HttpStatus status;
     private final String message;

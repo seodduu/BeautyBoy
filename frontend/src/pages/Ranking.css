@@ -1,0 +1,36 @@
+.bb-ranking {
+  max-width: var(--landing-column);
+  margin: 0 auto;
+  padding: var(--space-xl) var(--space-lg) var(--space-section);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.bb-ranking__title {
+  font-size: var(--fs-heading-md);
+  font-weight: var(--fw-heading-md);
+  line-height: var(--lh-heading-md);
+  letter-spacing: var(--ls-heading-md);
+  color: var(--color-ink);
+}
+
+/* GoodsCard를 감싸는 래퍼. GoodsCard 자체(.bb-goods-card)가 position:relative라
+   래퍼 안에서 순위 배지를 절대 위치로 겹칠 수 있다. */
+.bb-ranking-item {
+  position: relative;
+}
+
+.bb-ranking-item__rank {
+  position: absolute;
+  top: var(--space-sm);
+  left: var(--space-sm);
+  z-index: 1;
+  padding: 2px var(--space-xs);
+  border-radius: var(--rounded-sm);
+  background: var(--color-ink);
+  color: var(--color-on-primary);
+  font-size: var(--fs-meta);
+  font-weight: var(--fw-body-strong);
+  line-height: var(--lh-meta);
+}
