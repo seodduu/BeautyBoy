@@ -7,6 +7,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
 
@@ -27,7 +29,10 @@ public class Review {
     @Column(name = "goods_id", nullable = false)
     private Long goodsId;
 
+    // V40 스키마가 rating을 TINYINT로 정의한다(스키마가 진실). 실 MySQL의
+    // ddl-auto=validate가 int(INTEGER)와 TINYINT를 불일치로 보므로 JDBC 타입을 맞춘다.
     @Column(nullable = false)
+    @JdbcTypeCode(SqlTypes.TINYINT)
     private int rating;
 
     @Column(nullable = false, length = 2000)
