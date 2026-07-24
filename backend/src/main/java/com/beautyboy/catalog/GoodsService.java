@@ -210,8 +210,12 @@ public class GoodsService implements GoodsQueryService {
     /**
      * 행 목록 → 카드 목록. 배지·별점·찜을 각각 <b>한 번씩만</b> 배치 조회한 뒤 메모리에서 합친다
      * (N+1 금지 — 상품별로 반복 조회하지 않는다).
+     *
+     * <p>패키지 접근(default)인 이유: 같은 catalog 패키지 소속인 {@code AdminGoodsService}가
+     * 관리자 목록(HIDDEN 포함)을 만들 때 이 매핑을 그대로 재사용한다 — 배지/별점/찜 조립 로직을
+     * 두 곳에 중복시키지 않는다.
      */
-    private List<GoodsListItem> toItems(List<GoodsQueryRepository.GoodsRow> rows, Long viewerId) {
+    List<GoodsListItem> toItems(List<GoodsQueryRepository.GoodsRow> rows, Long viewerId) {
         List<Long> goodsIds = rows.stream().map(GoodsQueryRepository.GoodsRow::goodsId).toList();
 
         Map<Long, List<String>> badgesByGoodsId = goodsQueryRepository.findValidBadges(goodsIds, LocalDateTime.now());

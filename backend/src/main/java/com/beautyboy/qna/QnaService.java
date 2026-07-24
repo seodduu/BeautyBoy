@@ -1,5 +1,7 @@
 package com.beautyboy.qna;
 
+import com.beautyboy.common.BusinessException;
+import com.beautyboy.common.ErrorCode;
 import com.beautyboy.common.PageResponse;
 import com.beautyboy.qna.dto.QnaCreateRequest;
 import com.beautyboy.qna.dto.QnaResponse;
@@ -10,10 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 /**
- * Q&A 질문 등록·조회 + 비밀글 마스킹.
- *
- * <p>답변 등록은 이 서비스의 몫이 아니다 — {@code answer}/{@code answeredAt}은 스키마에만 존재하고
- * Wave 4 admin이 채운다.
+ * Q&A 질문 등록·조회 + 비밀글 마스킹 + (Wave 4) 관리자 답변.
  */
 @Service
 public class QnaService {
@@ -29,6 +28,17 @@ public class QnaService {
     @Transactional
     public void create(Long memberId, QnaCreateRequest request) {
         qnaRepository.save(new Qna(memberId, request.goodsNo(), request.question(), request.isSecret()));
+    }
+
+    /** 관리자 답변 등록. 이미 답변된 문의면 QNA_ALREADY_ANSWERED — 답변은 한 번만 달린다. */
+    @Transactional
+    public void answer(Long qnaId, String answer) {
+        Qna qna = qnaRepository.findById(qnaId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.QNA_NOT_FOUND));
+        if (qna.getAnswer() != null) {
+            throw new BusinessException(ErrorCode.QNA_ALREADY_ANSWERED);
+        }
+        qna.answer(answer);
     }
 
     @Transactional(readOnly = true)

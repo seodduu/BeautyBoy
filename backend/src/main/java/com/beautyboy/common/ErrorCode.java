@@ -68,7 +68,14 @@ public enum ErrorCode {
     ROUTINE_TEMPLATE_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 조건의 루틴을 찾을 수 없습니다"),
 
     // Wave 3 T1 — compat
-    COMPAT_EMPTY_SELECTION(HttpStatus.BAD_REQUEST, "궁합을 확인할 상품을 선택해주세요");
+    COMPAT_EMPTY_SELECTION(HttpStatus.BAD_REQUEST, "궁합을 확인할 상품을 선택해주세요"),
+
+    // Wave 4 — admin
+    GOODS_CATEGORY_INVALID(HttpStatus.BAD_REQUEST, "존재하지 않는 카테고리입니다"),
+    GOODS_PRICE_INVALID(HttpStatus.BAD_REQUEST, "판매가는 정가보다 클 수 없습니다"),
+    ROUTINE_STEP_NOT_FOUND(HttpStatus.NOT_FOUND, "루틴 단계를 찾을 수 없습니다"),
+    ROUTINE_STEP_GOODS_INVALID(HttpStatus.BAD_REQUEST, "노출되지 않는 상품은 루틴에 넣을 수 없습니다"),
+    QNA_ALREADY_ANSWERED(HttpStatus.CONFLICT, "이미 답변된 문의입니다");
 
     private final HttpStatus status;
     private final String message;

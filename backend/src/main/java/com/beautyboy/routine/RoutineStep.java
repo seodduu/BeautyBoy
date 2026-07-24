@@ -73,4 +73,14 @@ public class RoutineStep {
     public Set<RoutineStepGoods> getStepGoods() {
         return stepGoods;
     }
+
+    /**
+     * 이 단계의 추천 상품 전체 교체. cascade=ALL + orphanRemoval=true가 이 컬렉션에 이미 걸려 있으므로
+     * (fetch join 트릭과 별개로, 관리자 편집을 위해 준비된 설정이다), 컬렉션을 비우고 다시 채우면
+     * flush 시점에 빠진 행은 삭제, 새 행은 삽입된다 — 별도 리포지토리로 step_id를 직접 건드릴 필요가 없다.
+     */
+    public void replaceStepGoods(List<RoutineStepGoods> newStepGoods) {
+        this.stepGoods.clear();
+        this.stepGoods.addAll(newStepGoods);
+    }
 }

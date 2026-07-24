@@ -115,6 +115,49 @@ public class GoodsQueryRepository {
                 .toList();
     }
 
+    /**
+     * 관리자 목록. 일반 목록({@link #findList})과의 유일한 차이는 {@code g.status <> :hidden} 필터가
+     * 없다는 것 — 숨긴 상품을 관리자가 못 보면 되살릴 방법이 없다. q는 상품명 부분 일치.
+     */
+    public List<GoodsRow> findAdminList(String q, int page, int size) {
+        StringBuilder jpql = new StringBuilder(
+                "select g.id, b.name, g.name, g.thumbnailUrl, g.listPrice, g.salePrice "
+                        + "from Goods g join g.brand b where 1 = 1");
+        if (q != null && !q.isBlank()) {
+            jpql.append(" and g.name like :q");
+        }
+        jpql.append(" order by g.id desc");
+
+        TypedQuery<Object[]> query = em.createQuery(jpql.toString(), Object[].class);
+        if (q != null && !q.isBlank()) {
+            query.setParameter("q", "%" + q + "%");
+        }
+        query.setFirstResult(page * size);
+        query.setMaxResults(size);
+
+        return query.getResultList().stream()
+                .map(row -> new GoodsRow(
+                        (Long) row[0],
+                        (String) row[1],
+                        (String) row[2],
+                        (String) row[3],
+                        (Integer) row[4],
+                        (Integer) row[5]))
+                .toList();
+    }
+
+    public long countAdmin(String q) {
+        StringBuilder jpql = new StringBuilder("select count(g) from Goods g where 1 = 1");
+        if (q != null && !q.isBlank()) {
+            jpql.append(" and g.name like :q");
+        }
+        TypedQuery<Long> query = em.createQuery(jpql.toString(), Long.class);
+        if (q != null && !q.isBlank()) {
+            query.setParameter("q", "%" + q + "%");
+        }
+        return query.getSingleResult();
+    }
+
     private void appendFilters(StringBuilder jpql, GoodsSearchCondition condition) {
         if (condition.categoryCode() != null && !condition.categoryCode().isBlank()) {
             jpql.append(" and g.categoryCode like :categoryPrefix");
