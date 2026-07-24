@@ -66,7 +66,7 @@ export function Header() {
   return (
     <header className="bb-header bb-header--dark">
       <div className="bb-header__bar">
-        <Link to="/" className="bb-header__logo" aria-label="뷰티보이 홈으로">
+        <Link to="/main" className="bb-header__logo" aria-label="뷰티보이 메인으로">
           BEAUTY BOY<span className="bb-header__logo-dot">.</span>
         </Link>
 
