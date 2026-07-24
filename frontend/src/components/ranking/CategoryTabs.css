@@ -1,0 +1,29 @@
+/* 랭킹 카테고리 탭 — DetailTabs와 동일하게 배경 채움 없이 밑줄 2px로만 활성 탭을 표시한다. */
+.bb-category-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-lg);
+  border-bottom: 1px solid var(--color-hairline);
+}
+
+.bb-category-tabs__tab {
+  appearance: none;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: var(--space-sm) 0;
+  font-size: var(--fs-body-strong);
+  font-weight: var(--fw-body-strong);
+  color: var(--color-stone);
+  cursor: pointer;
+}
+
+.bb-category-tabs__tab:focus-visible {
+  outline: 2px solid var(--color-ink);
+  outline-offset: 2px;
+}
+
+.bb-category-tabs__tab--active {
+  color: var(--color-ink);
+  border-bottom-color: var(--color-ink);
+}
