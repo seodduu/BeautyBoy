@@ -1,0 +1,52 @@
+/* 리뷰 탭 — 통계 요약 + 리뷰 카드 목록. 배경 채움 없이 hairline 구분선만 쓴다. */
+.bb-review-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.bb-review-list__stats {
+  font-size: var(--fs-body-strong);
+  font-weight: var(--fw-body-strong);
+  color: var(--color-ink);
+}
+
+.bb-review-list__items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.bb-review-list__item {
+  padding: var(--space-md) 0;
+  border-bottom: 1px solid var(--color-hairline);
+}
+
+.bb-review-list__meta {
+  display: flex;
+  gap: var(--space-sm);
+  font-size: var(--fs-meta);
+  color: var(--color-stone);
+}
+
+.bb-review-list__rating {
+  font-weight: var(--fw-body-strong);
+  color: var(--color-ink);
+}
+
+.bb-review-list__content {
+  margin: var(--space-xs) 0;
+  color: var(--color-graphite);
+}
+
+.bb-review-list__helpful {
+  margin: 0;
+  font-size: var(--fs-meta);
+  color: var(--color-stone);
+}
+
+.bb-review-list__error {
+  color: var(--color-signal-danger);
+}
