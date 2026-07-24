@@ -1,7 +1,47 @@
+# 로컬 전용 전체 스택. `docker compose up -d --build` 하나로 DB/백엔드/프론트가 뜬다.
+# 시크릿은 .env로 주입한다(.env.example 참고). 운영 값은 절대 여기 적지 않는다.
 services:
   mysql:
     image: mysql:8.4
     environment: { MYSQL_DATABASE: beautyboy, MYSQL_ROOT_PASSWORD: local1234 }
-    ports: ["3306:3306"]
+    # 호스트에 로컬 mysqld가 3306을 점유하는 경우가 많아 호스트 쪽만 13306으로 뺀다.
+    # 컨테이너끼리는 여전히 mysql:3306으로 붙는다.
+    ports: ["13306:3306"]
     volumes: [mysql-data:/var/lib/mysql]
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-plocal1234"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+
+  backend:
+    build: ./backend
+    environment:
+      # 컨테이너 안에서는 local 프로필(localhost:3306을 가리킴)을 쓰지 않고 환경변수로만 설정한다.
+      DB_URL: jdbc:mysql://mysql:3306/beautyboy
+      DB_USERNAME: root
+      DB_PASSWORD: local1234
+      # Base64 인코딩된 값이어야 한다: openssl rand -base64 48
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required - see .env.example}
+      TOSS_SECRET_KEY: ${TOSS_SECRET_KEY:-}
+    ports: ["8080:8080"]
+    depends_on:
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      # 액추에이터/curl 없이 확인하려고 bash의 /dev/tcp를 쓴다(temurin 이미지에 bash가 있다).
+      test: ["CMD", "bash", "-c", "echo > /dev/tcp/localhost/8080"]
+      interval: 10s
+      timeout: 3s
+      retries: 12
+      start_period: 40s
+
+  frontend:
+    build: ./frontend
+    ports: ["3000:80"]
+    depends_on:
+      backend:
+        condition: service_healthy
+
 volumes: { mysql-data: }
