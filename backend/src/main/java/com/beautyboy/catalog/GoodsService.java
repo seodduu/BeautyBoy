@@ -164,6 +164,27 @@ public class GoodsService implements GoodsQueryService {
                         option.getStock()));
     }
 
+    /**
+     * 타 도메인(routine 등)이 goods_no 목록을 카드로 바꿔갈 때 쓰는 배치 조회. HIDDEN은 제외한다
+     * (목록/상세와 같은 노출 기준). 목록 매핑(toItem)과 배지 조회를 그대로 재사용한다.
+     * 입력 순서를 보존하지 않으므로 호출자가 필요하면 자기 순서로 재정렬한다.
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public List<GoodsListItem> findListItems(java.util.Collection<Long> goodsNos) {
+        if (goodsNos.isEmpty()) {
+            return List.of();
+        }
+        List<GoodsQueryRepository.GoodsRow> rows = goodsQueryRepository.findByIds(goodsNos);
+
+        List<Long> goodsIds = rows.stream().map(GoodsQueryRepository.GoodsRow::goodsId).toList();
+        Map<Long, List<String>> badgesByGoodsId = goodsQueryRepository.findValidBadges(goodsIds, LocalDateTime.now());
+
+        return rows.stream()
+                .map(row -> toItem(row, badgesByGoodsId.getOrDefault(row.goodsId(), List.of())))
+                .toList();
+    }
+
     /** 코드 접두사(C001, C001001, C001001001)를 한 번에 IN 조회해 depth 1→3 순서 이름 배열로 만든다. */
     private List<String> categoryPath(String leafCode) {
         List<String> prefixes = List.of(

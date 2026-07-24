@@ -1,5 +1,9 @@
 package com.beautyboy.catalog;
 
+import com.beautyboy.catalog.dto.GoodsListItem;
+
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -30,6 +34,10 @@ public interface GoodsQueryService {
      * @return 주문 가능한 상품이면 스냅샷, 아니면 빈 값
      */
     Optional<OrderGoodsSnapshot> findOrderSnapshot(Long goodsNo, Long optionNo);
+
+    /** goods_no 목록 → 카드 아이템. HIDDEN 상품은 제외한다(목록·상세와 같은 노출 기준).
+     *  입력 순서를 보존하지 않는다 — 호출자가 필요하면 자기 순서로 재정렬한다. */
+    List<GoodsListItem> findListItems(Collection<Long> goodsNos);
 
     /**
      * 주문 시점에 복사해 둘 상품 정보.

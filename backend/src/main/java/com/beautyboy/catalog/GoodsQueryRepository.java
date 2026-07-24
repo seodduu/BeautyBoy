@@ -6,6 +6,7 @@ import jakarta.persistence.TypedQuery;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -87,6 +88,31 @@ public class GoodsQueryRepository {
             badgesByGoodsId.computeIfAbsent(goodsId, id -> new java.util.ArrayList<>()).add(badgeType);
         }
         return badgesByGoodsId;
+    }
+
+    /**
+     * id 목록으로 경량 프로젝션을 1쿼리 일괄 조회한다. HIDDEN은 목록·상세와 같은 기준으로 제외.
+     * 입력 순서를 보존하지 않는다(IN 조회 결과 순서). description(TEXT)은 프로젝션에 없다.
+     */
+    public List<GoodsRow> findByIds(Collection<Long> ids) {
+        if (ids.isEmpty()) {
+            return List.of();
+        }
+        return em.createQuery(
+                        "select g.id, b.name, g.name, g.thumbnailUrl, g.listPrice, g.salePrice "
+                                + "from Goods g join g.brand b where g.id in :ids and g.status <> :hidden",
+                        Object[].class)
+                .setParameter("ids", ids)
+                .setParameter("hidden", Goods.STATUS_HIDDEN)
+                .getResultList().stream()
+                .map(row -> new GoodsRow(
+                        (Long) row[0],
+                        (String) row[1],
+                        (String) row[2],
+                        (String) row[3],
+                        (Integer) row[4],
+                        (Integer) row[5]))
+                .toList();
     }
 
     private void appendFilters(StringBuilder jpql, GoodsSearchCondition condition) {
