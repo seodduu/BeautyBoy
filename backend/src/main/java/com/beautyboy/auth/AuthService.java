@@ -6,6 +6,7 @@ import com.beautyboy.common.ErrorCode;
 import com.beautyboy.config.JwtProperties;
 import com.beautyboy.member.MemberService;
 import com.beautyboy.member.dto.MemberCredentials;
+import com.beautyboy.member.dto.MemberMeResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,8 +41,15 @@ public class AuthService {
         return issueTokens(credentials);
     }
 
+    /**
+     * 새로고침 부트스트랩(App.tsx)이 accessToken과 함께 회원 정보까지 한 번에 받아야
+     * RequireAdmin 같은 role 기반 가드가 새로고침 직후에도 즉시 판정할 수 있다 —
+     * accessToken만 내리면 프론트 authStore.member가 새로고침 후 계속 null로 남는다
+     * (Task 4-14a에서 발견된 admin 패널 새로고침 시 튕김 버그). MemberMeResponse는
+     * GET /members/me(MemberService.getMe)와 같은 조립을 그대로 재사용한다.
+     */
     @Transactional
-    public LoginResult refresh(String rawRefreshToken) {
+    public RefreshResult refresh(String rawRefreshToken) {
         RefreshToken saved = refreshTokenRepository.findByTokenHash(hash(rawRefreshToken))
                 .orElseThrow(() -> new BusinessException(ErrorCode.UNAUTHORIZED));
 
@@ -53,7 +61,9 @@ public class AuthService {
         }
 
         MemberCredentials credentials = memberService.getCredentials(saved.getMemberId());
-        return issueTokens(credentials);
+        LoginResult tokens = issueTokens(credentials);
+        MemberMeResponse member = memberService.getMe(credentials.memberId());
+        return new RefreshResult(tokens.accessToken(), tokens.refreshToken(), member);
     }
 
     @Transactional
@@ -83,5 +93,9 @@ public class AuthService {
     }
 
     public record LoginResult(String accessToken, String refreshToken) {
+    }
+
+    /** refresh() 전용 반환 타입 — LoginResult에 member를 더한다. */
+    public record RefreshResult(String accessToken, String refreshToken, MemberMeResponse member) {
     }
 }

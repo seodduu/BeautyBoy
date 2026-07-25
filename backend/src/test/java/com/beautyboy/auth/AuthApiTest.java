@@ -98,6 +98,21 @@ class AuthApiTest {
     }
 
     @Test
+    void 리프레시_응답에_회원_정보가_포함된다() throws Exception {
+        // GET /members/me 새로고침 시 admin 등 role 기반 라우팅 가드가 즉시 판정할 수 있도록
+        // 리프레시 응답이 accessToken뿐 아니라 member(GET /members/me와 같은 형태)도 함께 실어야 한다.
+        MvcResult loginResult = login("auth@b.com", "pw123456");
+        Cookie refreshCookie = loginResult.getResponse().getCookie("refresh_token");
+
+        mockMvc.perform(post("/api/v1/auth/refresh").cookie(refreshCookie))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.accessToken").exists())
+                .andExpect(jsonPath("$.data.member.email").value("auth@b.com"))
+                .andExpect(jsonPath("$.data.member.nickname").value("인증맨"))
+                .andExpect(jsonPath("$.data.member.role").value("USER"));
+    }
+
+    @Test
     void 로그아웃하면_리프레시_쿠키가_만료되고_재사용시_401이다() throws Exception {
         MvcResult loginResult = login("auth@b.com", "pw123456");
         Cookie refreshCookie = loginResult.getResponse().getCookie("refresh_token");
