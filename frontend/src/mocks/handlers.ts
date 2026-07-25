@@ -13,8 +13,10 @@ import type { GoodsAssessment } from '../types/assessment';
 import type { ReviewItem, ReviewStats, QnaItem } from '../types/review';
 import type { CartItem } from '../api/cart';
 import type { CompatCheckResult } from '../api/compat';
-import type { Address, AddressInput } from '../api/member';
+import type { Address, AddressInput, ProfileInput } from '../api/member';
 import type { OrderCreateRequest } from '../api/order';
+import type { RoutineResponse, SkinType } from '../api/routine';
+import { ROUTINE_STEPS } from '../features/routine/steps';
 import {
   ingredientFixtures,
   maxIrritation,
@@ -566,6 +568,42 @@ export const handlers = [
       : { overall: 'OK', findings: [] };
 
     return HttpResponse.json({ code: 'OK', message: 'success', data: result });
+  }),
+
+  // 루틴 가이드 — Task 4-12. skinType×time 단순 룩업(설계 8장 "1차: 템플릿 매칭").
+  // steps.ts(ROUTINE_STEPS)의 5단계 매핑을 그대로 써서 카테고리별 fixture를 추천으로 묶는다.
+  http.get('/api/v1/routines', ({ request }) => {
+    const url = new URL(request.url);
+    const skinType = (url.searchParams.get('skinType') as SkinType | null) ?? 'COMBINATION';
+    const time = url.searchParams.get('time') ?? 'BASIC';
+
+    const body: ApiEnvelope<RoutineResponse> = {
+      code: 'OK',
+      message: 'success',
+      data: {
+        templateId: 1,
+        name: `${skinType} 기본 루틴`,
+        skinType,
+        time,
+        description: '피부타입에 맞춰 고른 기본 5단계입니다. 추천은 단계마다 첫 번째가 기본 선택돼요.',
+        steps: ROUTINE_STEPS.map((step) => ({
+          stepOrder: step.order,
+          stepName: step.label,
+          beginnerTip: step.copy,
+          recommendations: goodsFixtures
+            .filter((item) => item.categoryCode.startsWith(step.categoryCode))
+            .slice(0, 3),
+        })),
+      },
+    };
+
+    return HttpResponse.json(body);
+  }),
+
+  // 프로필 수정 — Task 4-12(로컬 퀴즈 결과 승격). 실 서버 응답은 소비하지 않으므로 데이터 없이 OK만 낸다.
+  http.put('/api/v1/members/me/profile', async ({ request }) => {
+    await (request.json() as Promise<ProfileInput>);
+    return HttpResponse.json({ code: 'OK', message: 'success', data: null });
   }),
 
   // 배송지 조회/등록 — Task 4-10.

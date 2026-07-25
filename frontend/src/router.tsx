@@ -8,6 +8,7 @@ import { GoodsList } from './pages/GoodsList';
 import { Detail } from './pages/Detail';
 import { Search } from './pages/Search';
 import { Ranking } from './pages/Ranking';
+import { Routine } from './pages/Routine';
 import { Cart } from './pages/Cart';
 import { Order } from './pages/Order';
 import { OrderComplete } from './pages/OrderComplete';
@@ -63,6 +64,10 @@ export const router = createBrowserRouter([
           </RequireAuth>
         ),
       },
+      // 로그인 불필요 — 설계 8장 "비회원=3문항 퀴즈"이고 SecurityConfig가 GET /routines·
+      // POST /compat/check를 permitAll로 열어둔다. 전체 담기(POST /cart/items/bulk)만
+      // 인증이 필요하며, 비회원이 누르면 401 → 토스트로 실패 안내한다(가드로 막지 않는다).
+      { path: 'routine', element: <Routine /> },
       {
         path: 'cart',
         element: (
