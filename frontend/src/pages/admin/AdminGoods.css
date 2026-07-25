@@ -1,0 +1,105 @@
+.bb-admin-goods {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  min-width: 0;
+}
+
+.bb-admin-goods__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+}
+
+.bb-admin-goods__title {
+  margin: 0;
+  font-size: var(--fs-heading-sm);
+  font-weight: var(--fw-heading-sm);
+  line-height: var(--lh-heading-sm);
+  color: var(--color-ink);
+}
+
+.bb-admin-goods__error {
+  color: var(--color-signal-danger);
+}
+
+.bb-admin-goods__form,
+.bb-admin-goods__edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding: var(--space-lg);
+  border: 1px solid var(--color-hairline);
+}
+
+.bb-admin-goods__edit-actions {
+  display: flex;
+  gap: var(--space-sm);
+  justify-content: flex-end;
+}
+
+/* 테이블은 좁은 뷰포트에서 넘칠 수 있으므로 자체 스크롤 컨테이너로 가둔다 —
+   부모(.bb-admin__content)가 옆으로 밀리지 않게 하기 위함. */
+.bb-admin-goods__table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.bb-admin-goods__table {
+  width: 100%;
+  min-width: 560px;
+  border-collapse: collapse;
+}
+
+.bb-admin-goods__table th,
+.bb-admin-goods__table td {
+  padding: var(--space-sm) var(--space-md);
+  text-align: left;
+  border-bottom: 1px solid var(--color-hairline);
+  font-size: var(--fs-body);
+  color: var(--color-ink);
+}
+
+.bb-admin-goods__table th {
+  font-size: var(--fs-meta);
+  font-weight: var(--fw-body-strong);
+  color: var(--color-stone);
+}
+
+.bb-admin-goods__hidden-badge {
+  font-size: var(--fs-meta);
+  font-weight: var(--fw-body-strong);
+  color: var(--color-signal-caution);
+  border: 1px solid var(--color-signal-caution);
+  padding: 2px var(--space-xs);
+}
+
+.bb-admin-goods__action {
+  appearance: none;
+  background: none;
+  border: none;
+  padding: 0;
+  margin-right: var(--space-sm);
+  font-size: var(--fs-link-sm);
+  font-weight: var(--fw-link-sm);
+  color: var(--color-graphite);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.bb-admin-goods__confirm {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-size: var(--fs-meta);
+  color: var(--color-signal-danger);
+}
+
+@media (max-width: 768px) {
+  .bb-admin-goods__header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-sm);
+  }
+}

@@ -1,0 +1,89 @@
+/* MyPageLayout.css와 같은 뼈대(좌측 탭 네비 + 콘텐츠) — 768px에서 상단 가로 탭바로 접힌다. */
+.bb-admin {
+  max-width: var(--landing-column);
+  margin: 0 auto;
+  padding: var(--space-section) var(--space-lg);
+  width: 100%;
+}
+
+.bb-admin__title {
+  margin: 0 0 var(--space-xl);
+  font-size: var(--fs-heading-md);
+  font-weight: var(--fw-heading-md);
+  line-height: var(--lh-heading-md);
+  letter-spacing: var(--ls-heading-md);
+  color: var(--color-ink);
+}
+
+.bb-admin__body {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-xl);
+}
+
+.bb-admin__nav {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  width: 160px;
+  border-right: 1px solid var(--color-hairline);
+}
+
+.bb-admin__nav-link {
+  padding: var(--space-sm) var(--space-md);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  color: var(--color-graphite);
+  border-left: 2px solid transparent;
+}
+
+.bb-admin__nav-link--active {
+  color: var(--color-ink);
+  font-weight: var(--fw-body-strong);
+  border-left-color: var(--color-ink);
+}
+
+.bb-admin__content {
+  /* MyPageLayout.css 교훈: flex:1만으로는 부족하다 — min-width:0이 없으면 넓은 테이블 자식이
+     flex 아이템의 콘텐츠 고유 폭을 밀어 올려 부모(.bb-admin__body)가 옆으로 넘친다. */
+  flex: 1;
+  min-width: 0;
+}
+
+@media (max-width: 900px) {
+  .bb-admin {
+    padding: var(--space-xl) var(--space-md);
+  }
+
+  .bb-admin__title {
+    font-size: var(--fs-heading-sm);
+    line-height: var(--lh-heading-sm);
+  }
+
+  .bb-admin__body {
+    /* MyPageLayout.css와 동일한 위험: column 전환 시 align-items:flex-start를 그대로 두면
+       교차축(수평)에서 자식이 stretch되지 않고 콘텐츠 폭으로 packed된다. stretch로 되돌린다. */
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-lg);
+  }
+
+  .bb-admin__nav {
+    flex-direction: row;
+    width: 100%;
+    overflow-x: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--color-hairline);
+  }
+
+  .bb-admin__nav-link {
+    flex-shrink: 0;
+    border-left: none;
+    border-bottom: 2px solid transparent;
+  }
+
+  .bb-admin__nav-link--active {
+    border-left-color: transparent;
+    border-bottom-color: var(--color-ink);
+  }
+}
