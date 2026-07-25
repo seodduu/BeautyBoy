@@ -3,6 +3,7 @@ package com.beautyboy.qna;
 import com.beautyboy.auth.TokenProvider;
 import com.beautyboy.common.BusinessException;
 import com.beautyboy.common.ErrorCode;
+import com.beautyboy.common.PageResponse;
 import com.beautyboy.config.MethodSecurityConfig;
 import com.beautyboy.config.SecurityConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -16,10 +17,13 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.List;
 import java.util.Map;
 
+import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willDoNothing;
 import static org.mockito.BDDMockito.willThrow;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -77,5 +81,21 @@ class AdminQnaControllerTest {
                         .content(답변_바디()))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("QNA_ALREADY_ANSWERED"));
+    }
+
+    @Test
+    @WithMockUser(roles = "USER")
+    void 일반_회원이_문의_목록_조회를_부르면_403이다() throws Exception {
+        mockMvc.perform(get("/api/v1/admin/qna"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void 관리자는_문의_목록을_조회할_수_있다() throws Exception {
+        given(qnaService.adminList(0)).willReturn(PageResponse.of(List.of(), 0, 20, 0));
+
+        mockMvc.perform(get("/api/v1/admin/qna"))
+                .andExpect(status().isOk());
     }
 }
