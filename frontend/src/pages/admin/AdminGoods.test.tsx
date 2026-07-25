@@ -155,4 +155,80 @@ describe('AdminGoods — 관리자 상품 관리', () => {
     await waitFor(() => expect(deleteGoodsSpy).toHaveBeenCalledWith(1));
     await waitFor(() => expect(screen.queryByText('그린티 토너')).not.toBeInTheDocument());
   });
+
+  it('가격만 고쳐 저장해도 원래 categoryCode·summary·brandId가 그대로 전송된다', async () => {
+    // 리뷰에서 잡힌 실제 버그의 회귀 테스트. AdminGoodsListItem(목록 응답)에는 categoryCode·
+    // summary가 없어서, 수정 폼이 그 값을 빈 값/하드코딩 폴백으로 채워 보내면 백엔드
+    // Goods.updateInfo()(전체 덮어쓰기)가 실제 카테고리·설명을 조용히 지운다. startEdit이
+    // GET /goods/:goodsNo로 실제 값을 먼저 채우는지 이 테스트가 증명한다.
+    loginAs('ADMIN');
+    server.use(
+      http.get('/api/v1/admin/goods', () => HttpResponse.json(envelope(pageOf([VISIBLE_GOODS])))),
+      http.get('/api/v1/goods/:goodsNo', () =>
+        HttpResponse.json(
+          envelope({
+            goodsNo: 1,
+            brandName: '뷰티보이랩',
+            brandId: 7,
+            name: '그린티 토너',
+            summary: '실제 상품 설명입니다.',
+            categoryCode: 'C001002',
+            categoryPath: ['스킨케어', '에센스/세럼'],
+            thumbnailUrl: '/thumb1.jpg',
+            listPrice: 20000,
+            salePrice: 18000,
+            discountRate: 10,
+            badges: [],
+            status: 'ON_SALE',
+            options: [],
+            rating: 4.5,
+            reviewCount: 10,
+            wished: false,
+            todayDreamAvailable: false,
+          }),
+        ),
+      ),
+      http.put('/api/v1/admin/goods/:goodsNo', () => HttpResponse.json(envelope(null))),
+    );
+    const updateGoodsSpy = vi.spyOn(adminApi, 'updateAdminGoods');
+
+    renderAt('/admin/goods');
+
+    fireEvent.click(await screen.findByRole('button', { name: '수정' }));
+
+    // 상세 조회가 끝나 실제 값으로 채워진 폼이 뜰 때까지 기다린다.
+    await screen.findByLabelText('정가');
+    fireEvent.change(screen.getByLabelText('정가'), { target: { value: '19000' } });
+
+    fireEvent.click(screen.getByRole('button', { name: '저장' }));
+
+    await waitFor(() =>
+      expect(updateGoodsSpy).toHaveBeenCalledWith(
+        1,
+        expect.objectContaining({
+          categoryCode: 'C001002',
+          summary: '실제 상품 설명입니다.',
+          brandId: 7,
+          listPrice: 19000,
+        }),
+      ),
+    );
+  });
+
+  it('상세 조회가 실패하면(숨김 등) 수정 모드로 진입하지 않는다', async () => {
+    loginAs('ADMIN');
+    server.use(
+      http.get('/api/v1/admin/goods', () => HttpResponse.json(envelope(pageOf([HIDDEN_GOODS])))),
+      http.get('/api/v1/goods/:goodsNo', () =>
+        HttpResponse.json({ code: 'GOODS_NOT_FOUND', message: '상품을 찾을 수 없습니다.', data: null }, { status: 404 }),
+      ),
+    );
+
+    renderAt('/admin/goods');
+
+    fireEvent.click(await screen.findByRole('button', { name: '수정' }));
+
+    await screen.findByText(/불러오지 못해/);
+    expect(screen.queryByLabelText('정가')).not.toBeInTheDocument();
+  });
 });

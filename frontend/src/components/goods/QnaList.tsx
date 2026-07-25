@@ -11,9 +11,10 @@ interface QnaListProps {
   active: boolean;
 }
 
+/** 실제 백엔드 값은 WAITING이다(backend/.../qna/Qna.java:45,62) — PENDING이 아니다. */
 const STATUS_LABEL: Record<string, string> = {
   ANSWERED: '답변완료',
-  PENDING: '답변대기',
+  WAITING: '답변대기',
 };
 
 /** YYYY.MM.DD 포맷 — ReviewList와 동일 규약. */

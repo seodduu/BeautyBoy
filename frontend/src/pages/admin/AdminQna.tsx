@@ -9,9 +9,10 @@ import { Skeleton } from '../../components/ui/Skeleton';
 import { useToast } from '../../components/ui/useToast';
 import './AdminQna.css';
 
+/** 실제 백엔드 값은 WAITING이다(backend/.../qna/Qna.java:45,62) — QnaList.tsx와 동일 라벨. */
 const STATUS_LABEL: Record<string, string> = {
   ANSWERED: '답변완료',
-  PENDING: '답변대기',
+  WAITING: '답변대기',
 };
 
 function AnswerCell({ item, goodsNo }: { item: QnaItem; goodsNo: number }) {
