@@ -89,9 +89,9 @@ export function Header() {
             <span className="bb-header__auth-skeleton" aria-hidden="true" />
           ) : member ? (
             <>
-              <span className="bb-header__nav-link bb-header__nav-link--member" aria-label="로그인됨">
+              <Link to="/mypage" className="bb-header__nav-link bb-header__nav-link--member">
                 {member.nickname}님
-              </span>
+              </Link>
               <button type="button" className="bb-header__logout" onClick={handleLogout}>
                 로그아웃
               </button>

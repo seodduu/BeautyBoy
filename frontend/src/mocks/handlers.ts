@@ -14,7 +14,8 @@ import type { ReviewItem, ReviewStats, QnaItem } from '../types/review';
 import type { CartItem } from '../api/cart';
 import type { CompatCheckResult } from '../api/compat';
 import type { Address, AddressInput, ProfileInput } from '../api/member';
-import type { OrderCreateRequest } from '../api/order';
+import type { OrderCreateRequest, OrderDetail, OrderSummary } from '../api/order';
+import type { MyReviewItem } from '../api/review';
 import type { RoutineResponse, SkinType } from '../api/routine';
 import { ROUTINE_STEPS } from '../features/routine/steps';
 import {
@@ -191,6 +192,116 @@ let addressesFixture: Address[] = [
 /** 이미 승인된 주문번호(mock 전용). 실 서버의 결제 상태 대신 중복 승인만 흉내낸다. */
 const confirmedOrderNos = new Set<string>();
 
+/** 마이페이지 찜 dev 목 상태 — goodsFixtures의 1·3번을 미리 찜해둬 화면을 바로 확인할 수 있게 한다(Task 4-13). */
+let wishlistFixture: Set<number> = new Set([1, 3]);
+
+/**
+ * 마이페이지 주문내역 dev 목 상태(Task 4-13). 목록(OrderSummary)과 상세(OrderDetail)를 각각 둔다 —
+ * 실 서버도 두 응답의 필드가 다르다(목록은 대표상품 요약, 상세는 스냅샷 전량).
+ * 상세의 배송지(수령인 "박서준"·판교)는 addressesFixture의 현재 배송지(수령인 "민수"·강남)와
+ * 의도적으로 다른 값이다 — 마이페이지 상세 화면이 스냅샷을 쓰는지 눈으로도 구분되게 한다.
+ */
+const myOrdersFixture: OrderSummary[] = [
+  {
+    orderNo: 'ORD-20260710-0001',
+    status: 'PAID',
+    representativeGoodsName: goodsFixtures[0].name,
+    itemCount: 2,
+    payableAmount: 38000,
+    orderedAt: '2026-07-10T14:20:00',
+  },
+  {
+    orderNo: 'ORD-20260620-0002',
+    status: 'PAID',
+    representativeGoodsName: goodsFixtures[3].name,
+    itemCount: 1,
+    payableAmount: 21000,
+    orderedAt: '2026-06-20T09:05:00',
+  },
+];
+
+const myOrderDetailFixture: Record<string, OrderDetail> = {
+  'ORD-20260710-0001': {
+    orderNo: 'ORD-20260710-0001',
+    status: 'PAID',
+    totalAmount: 40000,
+    discountAmount: 2000,
+    payableAmount: 38000,
+    receiverName: '박서준',
+    receiverPhone: '01055556666',
+    zipcode: '13529',
+    address1: '경기도 성남시 분당구 판교역로 235',
+    address2: 'H스퀘어 4층',
+    deliveryType: 'NORMAL',
+    orderedAt: '2026-07-10T14:20:00',
+    paidAt: '2026-07-10T14:21:00',
+    items: [
+      {
+        goodsName: goodsFixtures[0].name,
+        optionName: '기본',
+        unitPrice: 20000,
+        quantity: 1,
+        lineAmount: 20000,
+      },
+      {
+        goodsName: goodsFixtures[1].name,
+        optionName: '기본',
+        unitPrice: 20000,
+        quantity: 1,
+        lineAmount: 20000,
+      },
+    ],
+  },
+  'ORD-20260620-0002': {
+    orderNo: 'ORD-20260620-0002',
+    status: 'PAID',
+    totalAmount: 21000,
+    discountAmount: 0,
+    payableAmount: 21000,
+    receiverName: '박서준',
+    receiverPhone: '01055556666',
+    zipcode: '13529',
+    address1: '경기도 성남시 분당구 판교역로 235',
+    address2: 'H스퀘어 4층',
+    deliveryType: 'NORMAL',
+    orderedAt: '2026-06-20T09:05:00',
+    paidAt: '2026-06-20T09:06:00',
+    items: [
+      {
+        goodsName: goodsFixtures[3].name,
+        optionName: '기본',
+        unitPrice: 21000,
+        quantity: 1,
+        lineAmount: 21000,
+      },
+    ],
+  },
+};
+
+/** 마이페이지 내 리뷰 dev 목 상태(Task 4-13). backend MyReviewItem과 필드를 1:1로 맞춘다. */
+const myReviewsFixture: MyReviewItem[] = [
+  {
+    reviewId: 1001,
+    goodsNo: goodsFixtures[0].goodsNo,
+    goodsName: goodsFixtures[0].name,
+    thumbnailUrl: goodsFixtures[0].thumbnailUrl,
+    rating: 4.5,
+    content: '자극 없이 순하게 쓰고 있어요. 재구매 의사 있습니다.',
+    helpfulCount: 12,
+    createdAt: '2026-07-15T11:00:00',
+  },
+  {
+    reviewId: 1002,
+    goodsNo: goodsFixtures[3].goodsNo,
+    goodsName: goodsFixtures[3].name,
+    thumbnailUrl: goodsFixtures[3].thumbnailUrl,
+    rating: 4.0,
+    content: '향이 은은하고 흡수가 빨라요.',
+    helpfulCount: 4,
+    createdAt: '2026-06-25T20:30:00',
+  },
+];
+
 export const handlers = [
   /* 인증 목 — mock 모드에서 /main 같은 보호 라우트에 도달하려면 로그인이 성립해야 한다.
      비밀번호를 검증하지 않는다: 목적은 화면 흐름 확인이지 인증 로직 재현이 아니다.
@@ -212,11 +323,20 @@ export const handlers = [
     }),
   ),
 
+  // 마이페이지 프로필 탭이 skinType/concerns/ageBand을 그리므로 실 Me 형태에 맞춰 채운다(Task 4-13).
   http.get('/api/v1/members/me', () =>
     HttpResponse.json({
       code: 'OK',
       message: '성공',
-      data: { id: 1, email: 'mock@beautyboy.dev', nickname: '민수', grade: 'BRONZE' },
+      data: {
+        id: 1,
+        email: 'mock@beautyboy.dev',
+        nickname: '민수',
+        grade: 'BRONZE',
+        skinType: 'COMBINATION',
+        concerns: ['PORE'],
+        ageBand: '20s',
+      },
     }),
   ),
 
@@ -618,6 +738,82 @@ export const handlers = [
     return HttpResponse.json({ code: 'OK', message: 'success', data: created }, { status: 201 });
   }),
 
+  // 배송지 수정(기본배송지 지정 겸용) — updateAddress Javadoc(api/member.ts) 참고: 전용 엔드포인트가
+  // 없어 이 PUT에 isDefault를 실어 보낸다(Task 4-13). "기본으로 설정"이면 나머지를 전부 false로 내린다
+  // — 실 서버는 DB 유니크 제약(4-2)이 이를 보장하지만, mock은 배열이라 직접 흉내낸다.
+  http.put('/api/v1/members/me/addresses/:id', async ({ params, request }) => {
+    const id = Number(params.id);
+    const body = (await request.json()) as AddressInput;
+    addressesFixture = addressesFixture.map((address) => {
+      if (address.id === id) {
+        return { id, ...body };
+      }
+      return body.isDefault ? { ...address, isDefault: false } : address;
+    });
+    return HttpResponse.json({ code: 'OK', message: 'success', data: null });
+  }),
+
+  http.delete('/api/v1/members/me/addresses/:id', ({ params }) => {
+    const id = Number(params.id);
+    addressesFixture = addressesFixture.filter((address) => address.id !== id);
+    return new HttpResponse(null, { status: 204 });
+  }),
+
+  // 찜 조회/등록/해제 — Task 4-13. 백엔드 WishlistItemResponse처럼 goodsNo만 내려준다.
+  http.get('/api/v1/wishlist', () =>
+    HttpResponse.json({
+      code: 'OK',
+      message: 'success',
+      data: Array.from(wishlistFixture).map((goodsNo) => ({ goodsNo })),
+    }),
+  ),
+
+  http.post('/api/v1/wishlist/:goodsNo', ({ params }) => {
+    wishlistFixture.add(Number(params.goodsNo));
+    return HttpResponse.json({ code: 'OK', message: 'success', data: null }, { status: 201 });
+  }),
+
+  http.delete('/api/v1/wishlist/:goodsNo', ({ params }) => {
+    wishlistFixture.delete(Number(params.goodsNo));
+    return new HttpResponse(null, { status: 204 });
+  }),
+
+  // 내 리뷰 — Task 4-13.
+  http.get('/api/v1/reviews/me', ({ request }) => {
+    const url = new URL(request.url);
+    const page = Number(url.searchParams.get('page') ?? '0');
+    const size = 20;
+    const start = page * size;
+    const content = myReviewsFixture.slice(start, start + size);
+    const totalElements = myReviewsFixture.length;
+
+    const body: ApiEnvelope<PageResponse<MyReviewItem>> = {
+      code: 'OK',
+      message: 'success',
+      data: {
+        content,
+        page,
+        size,
+        totalElements,
+        totalPages: Math.max(1, Math.ceil(totalElements / size)),
+        hasNext: start + size < totalElements,
+      },
+    };
+    return HttpResponse.json(body);
+  }),
+
+  // 주문 상세 — Task 4-13. /orders 목록보다 먼저 등록할 필요는 없다(경로 형태가 겹치지 않는다).
+  http.get('/api/v1/orders/:orderNo', ({ params }) => {
+    const detail = myOrderDetailFixture[String(params.orderNo)];
+    if (!detail) {
+      return HttpResponse.json(
+        { code: 'ORDER_NOT_FOUND', message: '주문을 찾을 수 없습니다.', data: null },
+        { status: 404 },
+      );
+    }
+    return HttpResponse.json({ code: 'OK', message: 'success', data: detail });
+  }),
+
   // 주문 생성 — Task 4-10. payableAmount는 장바구니 lineAmount 합으로 mock 계산한다
   // (실 서버는 항상 재고·가격을 재검증해 다시 계산한다 — 이 mock은 오프라인 화면 확인용).
   http.post('/api/v1/orders', async ({ request }) => {
@@ -633,7 +829,11 @@ export const handlers = [
     );
   }),
 
-  http.get('/api/v1/orders', () => HttpResponse.json({ code: 'OK', message: 'success', data: [] })),
+  // 마이페이지 주문내역 목록 — Task 4-13 이전에는 빈 배열 고정이었다. 목 dev 데이터(myOrdersFixture)로
+  // 채워 목록·상세 화면을 실제로 확인할 수 있게 한다.
+  http.get('/api/v1/orders', () =>
+    HttpResponse.json({ code: 'OK', message: 'success', data: myOrdersFixture }),
+  ),
 
   // 결제 승인 — Task 4-11(성공/실패 화면)이 소비하지만, 목 스택 일관성을 위해 여기서 함께 등록한다.
   // 같은 주문번호로 두 번 들어오면 실 서버처럼 PAYMENT_ALREADY_CONFIRMED로 막는다 — 완료 화면이

@@ -1,4 +1,4 @@
-import { createBrowserRouter } from 'react-router-dom';
+import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { Layout } from './components/layout/Layout';
 import { Home } from './pages/Home';
 import { Login } from './pages/Login';
@@ -15,6 +15,11 @@ import { OrderComplete } from './pages/OrderComplete';
 import { OrderFail } from './pages/OrderFail';
 import { RequireAuth } from './components/auth/RequireAuth';
 import { Showcase } from './pages/dev/Showcase';
+import { MyPageLayout } from './pages/mypage/MyPageLayout';
+import { MyOrders } from './pages/mypage/MyOrders';
+import { MyWishlist } from './pages/mypage/MyWishlist';
+import { MyReviews } from './pages/mypage/MyReviews';
+import { MyProfile } from './pages/mypage/MyProfile';
 
 export const router = createBrowserRouter([
   {
@@ -101,6 +106,22 @@ export const router = createBrowserRouter([
             <OrderFail />
           </RequireAuth>
         ),
+      },
+      {
+        path: 'mypage',
+        element: (
+          <RequireAuth>
+            <MyPageLayout />
+          </RequireAuth>
+        ),
+        children: [
+          { index: true, element: <Navigate to="orders" replace /> },
+          { path: 'orders', element: <MyOrders /> },
+          { path: 'orders/:orderNo', element: <MyOrders /> },
+          { path: 'wishlist', element: <MyWishlist /> },
+          { path: 'reviews', element: <MyReviews /> },
+          { path: 'profile', element: <MyProfile /> },
+        ],
       },
     ],
   },
