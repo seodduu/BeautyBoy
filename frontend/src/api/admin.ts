@@ -3,16 +3,12 @@ import type { ApiEnvelope, PageResponse } from '../types/goods';
 
 /**
  * GET /admin/goods 응답 아이템.
- * 실제 백엔드 GoodsListItem(backend/src/main/java/com/beautyboy/catalog/dto/GoodsListItem.java:9-22)과
+ * 실제 백엔드 AdminGoodsListItem(backend/src/main/java/com/beautyboy/catalog/dto/AdminGoodsListItem.java)과
  * 필드를 맞춘다.
  *
- * KNOWN GAP(Task 4-14): 실제 GoodsListItem에는 `status`가 없다 — AdminGoodsService.list()가 쓰는
- * GoodsQueryRepository.findAdminList()도 status 컬럼을 프로젝션하지 않는다
- * (backend/.../catalog/GoodsQueryRepository.java:122-147, GoodsRow record는 goodsId/brandName/name/
- * thumbnailUrl/listPrice/salePrice 6개뿐). 즉 **실 서버 응답에서 이 필드는 항상 undefined다** —
- * 숨김 상품 배지("숨김")는 지금 백엔드로는 정확히 구현할 수 없다. catalog 패키지는 이 태스크의
- * Files 목록 밖이라 손대지 않았고, 백엔드 확장(예: GoodsListItem에 status append)이 필요하다는
- * 사실을 보고서로 넘긴다. mocks/handlers.ts는 화면 확인을 위해 이 필드를 채워 둔다.
+ * Task 4-14a가 AdminGoodsService.list()에 status를 얹어 내려주기 시작했다(GoodsQueryRepository의
+ * AdminGoodsRow가 status 컬럼을 프로젝션한다) — 이제 실 서버 응답에 항상 존재하므로 optional이 아니다.
+ * Goods.java의 실제 상태 3값(ON_SALE/SOLD_OUT/HIDDEN)을 그대로 반영한다.
  */
 export interface AdminGoodsListItem {
   goodsNo: number;
@@ -27,8 +23,35 @@ export interface AdminGoodsListItem {
   reviewCount: number;
   wished: boolean;
   todayDreamAvailable: boolean;
-  /** KNOWN GAP — 위 문서 주석 참고. 실 서버 응답에는 없다. */
-  status?: 'ON_SALE' | 'HIDDEN';
+  status: 'ON_SALE' | 'SOLD_OUT' | 'HIDDEN';
+}
+
+/**
+ * GET /admin/goods/{goodsNo} 응답 — 인라인 수정 폼 채움 전용(Task 4-14a).
+ * 실제 백엔드 AdminGoodsDetailResponse(backend/.../catalog/dto/AdminGoodsDetailResponse.java)와
+ * 필드를 1:1로 맞춘다. 공개 상세(GoodsDetail, api/goods.ts)와 달리 **HIDDEN 상품도 조회된다**
+ * (AdminGoodsService.detail()이 findById를 쓴다 — GoodsService.detail()의 STATUS_HIDDEN 제외와 다른 지점).
+ */
+export interface AdminGoodsDetailResponse {
+  goodsNo: number;
+  brandId: number;
+  categoryCode: string;
+  name: string;
+  summary: string;
+  thumbnailUrl: string;
+  listPrice: number;
+  salePrice: number;
+  status: string;
+}
+
+/**
+ * GET /admin/goods/{goodsNo} — 인라인 수정 진입 시 실제 categoryCode·summary·brandId·status를
+ * 확보하기 위해 부른다. HIDDEN 상품도 조회되므로(위 AdminGoodsDetailResponse 문서 참고)
+ * 숨김 상품도 인라인 수정에 진입할 수 있다.
+ */
+export async function fetchAdminGoodsDetail(goodsNo: number): Promise<AdminGoodsDetailResponse> {
+  const response = await api.get<ApiEnvelope<AdminGoodsDetailResponse>>(`/admin/goods/${goodsNo}`);
+  return response.data.data;
 }
 
 /** POST/PUT /admin/goods 요청 바디 — backend AdminGoodsSaveRequest와 필드를 1:1로 맞춘다. */
@@ -107,16 +130,34 @@ export async function replaceAdminRoutineStepGoods(
 }
 
 /**
- * POST /admin/qna/{qnaId}/answer — 이미 답변된 문의면 서버가 QNA_ALREADY_ANSWERED로 거절한다.
- *
- * KNOWN GAP(Task 4-14): admin이 문의 목록을 한 번에 조회하는 전용 엔드포인트가 없다
- * (backend/.../qna/AdminQnaController.java에는 answer 하나뿐). 이 화면은 실제로 존재하는
- * 공개 목록 GET /qna(goodsNo 필수)를 상품번호로 검색해 재사용한다. 또한 QnaService.visibleQuestion
- * (backend/.../qna/QnaService.java)의 주석 그대로 "관리자 노출은 Wave 4에서 role 검사로
- * 확장한다"고 적혀 있지만 실제로는 확장되지 않아 — admin이 봐도 비밀글은 작성자 본인이 아니면
- * "비밀글입니다."로 마스킹된 채 내려온다. 이 태스크는 qna 패키지가 Files 목록 밖이라 손대지
- * 않았고, 보고서로 넘긴다.
+ * GET /admin/qna 응답 아이템 — 실제 백엔드 AdminQnaResponse(backend/.../qna/dto/AdminQnaResponse.java)와
+ * 필드를 1:1로 맞춘다. 공개 QnaResponse와의 차이 둘: goodsNo를 포함하고(상품 필터 없이 전체를
+ * 훑으므로 어느 상품인지 알아야 한다), question이 마스킹되지 않는다(admin에게는 비밀글도 본문
+ * 그대로 내려온다 — QnaService.visibleQuestion의 admin 예외).
  */
+export interface AdminQnaResponse {
+  qnaId: number;
+  goodsNo: number;
+  question: string;
+  isSecret: boolean;
+  status: string;
+  createdAt: string;
+}
+
+/**
+ * GET /admin/qna — 상품 필터 없이 전체 문의를 조회한다(AdminQnaController.list,
+ * qnaService.adminList가 미답변 우선으로 정렬한다). Task 4-14a 신설 엔드포인트 — 이전에는
+ * 이 조회가 없어 admin이 공개 목록을 goodsNo로 손검색해 재사용했고, 그 경로는 비밀글 본문을
+ * "비밀글입니다."로 마스킹해 admin이 내용을 볼 수 없었다(Task 4-14 KNOWN GAP, 4-14b에서 해소).
+ */
+export async function fetchAdminQna(
+  params: { page?: number } = {},
+): Promise<PageResponse<AdminQnaResponse>> {
+  const response = await api.get<ApiEnvelope<PageResponse<AdminQnaResponse>>>('/admin/qna', { params });
+  return response.data.data;
+}
+
+/** POST /admin/qna/{qnaId}/answer — 이미 답변된 문의면 서버가 QNA_ALREADY_ANSWERED로 거절한다. */
 export async function answerAdminQna(qnaId: number, answer: string): Promise<void> {
   await api.post(`/admin/qna/${qnaId}/answer`, { answer });
 }

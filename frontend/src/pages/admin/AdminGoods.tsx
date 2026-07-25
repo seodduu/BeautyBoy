@@ -4,11 +4,11 @@ import {
   createAdminGoods,
   deleteAdminGoods,
   fetchAdminGoods,
+  fetchAdminGoodsDetail,
   updateAdminGoods,
   type AdminGoodsListItem,
   type AdminGoodsSaveInput,
 } from '../../api/admin';
-import { fetchGoodsDetail } from '../../api/goods';
 import { Button } from '../../components/ui/Button';
 import { Field } from '../../components/ui/Field';
 import { Skeleton } from '../../components/ui/Skeleton';
@@ -29,30 +29,28 @@ const EMPTY_DRAFT: AdminGoodsSaveInput = {
 /**
  * 관리자 상품 관리 `/admin/goods` — 테이블 + 인라인 편집의 최소 형태(DESIGN.md 편집디자인 톤).
  *
- * 실 백엔드 AdminGoodsController(backend/.../catalog/AdminGoodsController.java)의 4개
- * 엔드포인트(GET/POST/PUT/DELETE)를 그대로 매핑한다. 목록은 HIDDEN 상품도 포함한다
- * (AdminGoodsService.list Javadoc: "숨긴 상품을 관리자가 못 보면 되살릴 방법이 없다").
+ * 실 백엔드 AdminGoodsController(backend/.../catalog/AdminGoodsController.java)의 5개
+ * 엔드포인트(GET 목록/GET 상세/POST/PUT/DELETE)를 그대로 매핑한다. 목록은 HIDDEN 상품도
+ * 포함한다(AdminGoodsService.list Javadoc: "숨긴 상품을 관리자가 못 보면 되살릴 방법이 없다").
  *
- * KNOWN GAP: `status`는 실제 GoodsListItem에 없는 필드다(api/admin.ts의 AdminGoodsListItem
- * 문서 주석 참고) — 실 서버에서는 "숨김" 배지가 항상 비어 보인다. 백엔드 확장 전까지는
- * mock으로만 확인 가능하다.
+ * `status`는 Task 4-14a부터 AdminGoodsListItem(admin 전용 목록 DTO)에 실려 내려온다 —
+ * "숨김" 배지는 실 서버로도 정확히 동작한다.
  *
  * **인라인 수정과 데이터 손상 방지**: 백엔드 `Goods.updateInfo()`(catalog/Goods.java:113-123)는
  * 부분 수정 개념이 없다 — PUT이 name/summary/categoryCode/thumbnailUrl/listPrice/salePrice/status
- * 전부를 통째로 덮어쓴다. `AdminGoodsListItem`(목록 응답)에는애초에 categoryCode·summary가 없어서
- * (GoodsListItem.java:9-22) 그 두 값을 채우지 않은 채 PUT을 보내면 실제 카테고리·설명이 조용히
- * 손상된다(빈 값 또는 하드코딩된 폴백으로 덮어써짐 — 리뷰에서 잡힌 실제 버그, 4-14 fix report 참고).
- * 그래서 `startEdit`은 수정 모드 진입 시 `GET /goods/:goodsNo`(fetchGoodsDetail, categoryCode·
- * summary·brandId·status를 전부 포함하는 실제 상세 응답)를 먼저 불러 그 값으로 폼을 채운 뒤에만
- * 수정 모드를 연다 — 그러면 사용자가 안 건드린 필드도 원래 값 그대로 다시 저장되어 덮어쓰기가
- * 무해해진다.
+ * 전부를 통째로 덮어쓴다. `AdminGoodsListItem`(목록 응답)에는 애초에 categoryCode·summary가 없어서
+ * 그 두 값을 채우지 않은 채 PUT을 보내면 실제 카테고리·설명이 조용히 손상된다(빈 값 또는
+ * 하드코딩된 폴백으로 덮어써짐 — 리뷰에서 잡힌 실제 버그, 4-14 fix report 참고). 그래서
+ * `startEdit`은 수정 모드 진입 시 `GET /admin/goods/:goodsNo`(fetchAdminGoodsDetail,
+ * categoryCode·summary·brandId·status를 전부 포함하는 admin 전용 상세 응답)를 먼저 불러 그
+ * 값으로 폼을 채운 뒤에만 수정 모드를 연다 — 그러면 사용자가 안 건드린 필드도 원래 값 그대로
+ * 다시 저장되어 덮어쓰기가 무해해진다.
  *
- * **남는 위험**: `GET /goods/:goodsNo`는 HIDDEN 상품을 조회 대상에서 제외한다
- * (GoodsService.detail → goodsRepository.findDetailById(goodsNo, Goods.STATUS_HIDDEN))이므로
- * 숨김 상품은 이 조회가 404로 실패한다. 그 경우 실제 categoryCode·summary를 확보할 방법이
- * 프론트에 없으므로 **수정 모드 진입 자체를 막는다**(토스트 안내) — 손상 위험을 감수하고 진입시키지
- * 않는다. 즉 숨김 상품의 가격·이름 인라인 수정은 이 태스크 범위에서는 지원하지 않는다(백엔드가
- * admin 전용 상세 조회를 추가하기 전까지 남는 제약).
+ * **HIDDEN 상품도 인라인 수정된다(Task 4-14b)**: 공개 상세(`GET /goods/:goodsNo`)는 HIDDEN을
+ * 조회 대상에서 제외하지만, admin 전용 상세는 `findById`를 써서 HIDDEN도 조회한다
+ * (AdminGoodsService.detail Javadoc 참고) — 그래서 숨김 상품도 실제 categoryCode·summary를
+ * 확보해 안전하게 수정 모드에 들어갈 수 있다. 조회 자체가 실패(네트워크 오류 등)하면 그때만
+ * 여전히 수정 모드 진입을 막는다(토스트 안내) — 손상 위험을 감수하고 진입시키지 않는다.
  */
 export function AdminGoods() {
   const { toast } = useToast();
@@ -103,8 +101,9 @@ export function AdminGoods() {
     setEditLoadingId(item.goodsNo);
     try {
       // 실제 categoryCode·summary·brandId·status를 확보해야만 PUT(전체 덮어쓰기)이 무해하다 —
-      // 위 컴포넌트 문서 주석 "인라인 수정과 데이터 손상 방지" 참고.
-      const detail = await fetchGoodsDetail(item.goodsNo);
+      // 위 컴포넌트 문서 주석 "인라인 수정과 데이터 손상 방지" 참고. admin 전용 상세는 HIDDEN도
+      // 조회하므로 숨김 상품도 여기서 실제 값을 확보할 수 있다.
+      const detail = await fetchAdminGoodsDetail(item.goodsNo);
       setEditDraft({
         brandId: detail.brandId,
         categoryCode: detail.categoryCode,
@@ -117,9 +116,9 @@ export function AdminGoods() {
       });
       setEditingId(item.goodsNo);
     } catch {
-      // GET /goods/:goodsNo는 HIDDEN 상품을 제외한다 — 실제 값을 못 가져온 채로는
-      // 수정 모드에 진입시키지 않는다(진입시키면 categoryCode·summary가 손상될 수 있다).
-      toast('상품 정보를 불러오지 못해 수정을 열 수 없어요. 숨김 상품일 수 있어요.');
+      // 조회 자체가 실패한 경우(네트워크 오류 등)에만 진입을 막는다 — 실제 값을 못 가져온 채로는
+      // categoryCode·summary가 손상될 수 있다.
+      toast('상품 정보를 불러오지 못해 수정을 열 수 없어요.');
     } finally {
       setEditLoadingId(null);
     }
@@ -286,6 +285,7 @@ export function AdminGoods() {
                   <td>{item.salePrice.toLocaleString('ko-KR')}원</td>
                   <td>
                     {item.status === 'HIDDEN' && <span className="bb-admin-goods__hidden-badge">숨김</span>}
+                    {item.status === 'SOLD_OUT' && <span className="bb-admin-goods__soldout-badge">품절</span>}
                   </td>
                   <td>
                     {confirmingId === item.goodsNo ? (

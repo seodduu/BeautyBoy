@@ -17,7 +17,13 @@ import type { Address, AddressInput, ProfileInput } from '../api/member';
 import type { OrderCreateRequest, OrderDetail, OrderSummary } from '../api/order';
 import type { MyReviewItem } from '../api/review';
 import type { RoutineResponse, SkinType } from '../api/routine';
-import type { AdminGoodsListItem, AdminGoodsSaveInput, AdminRoutineTemplate } from '../api/admin';
+import type {
+  AdminGoodsDetailResponse,
+  AdminGoodsListItem,
+  AdminGoodsSaveInput,
+  AdminQnaResponse,
+  AdminRoutineTemplate,
+} from '../api/admin';
 import { ROUTINE_STEPS } from '../features/routine/steps';
 import {
   ingredientFixtures,
@@ -333,6 +339,16 @@ const adminRoutineTemplatesFixture: AdminRoutineTemplate[] = [
     })),
   },
 ];
+
+/**
+ * 관리자 문의 목록 dev 목 상태(Task 4-14b). qnaFixtures(공개 목록과 같은 원본)에 goodsNo만
+ * 얹어서 admin 전용 응답 모양(AdminQnaResponse)으로 재조립한다 — question은 원본 그대로
+ * 마스킹 없이 낸다(실 서버 QnaService.adminList와 동일하게 admin은 비밀글 본문을 그대로 본다).
+ */
+const adminQnaFixture: AdminQnaResponse[] = qnaFixtures.map((item, index) => ({
+  ...item,
+  goodsNo: goodsFixtures[index % goodsFixtures.length].goodsNo,
+}));
 
 export const handlers = [
   /* 인증 목 — mock 모드에서 /main 같은 보호 라우트에 도달하려면 로그인이 성립해야 한다.
@@ -673,6 +689,31 @@ export const handlers = [
     return HttpResponse.json(body);
   }),
 
+  // 관리자 문의 전체 목록 — Task 4-14b. AdminQnaController(GET /admin/qna)를 그대로 매핑.
+  // 공개 /qna와 달리 goodsNo 필터가 없고 question이 마스킹되지 않는다.
+  http.get('/api/v1/admin/qna', ({ request }) => {
+    const url = new URL(request.url);
+    const page = Number(url.searchParams.get('page') ?? '0');
+    const size = 20;
+    const start = page * size;
+    const content = adminQnaFixture.slice(start, start + size);
+    const totalElements = adminQnaFixture.length;
+
+    const body: ApiEnvelope<PageResponse<AdminQnaResponse>> = {
+      code: 'OK',
+      message: 'success',
+      data: {
+        content,
+        page,
+        size,
+        totalElements,
+        totalPages: Math.max(1, Math.ceil(totalElements / size)),
+        hasNext: start + size < totalElements,
+      },
+    };
+    return HttpResponse.json(body);
+  }),
+
   // 장바구니 담기 — 성공 토스트 확인용. 실 재고 검증은 서버 몫이라 mock에서는 항상 성공한다.
   http.post('/api/v1/cart/items', () =>
     HttpResponse.json({ code: 'OK', message: 'success', data: null }, { status: 201 }),
@@ -942,6 +983,35 @@ export const handlers = [
     return HttpResponse.json(body);
   }),
 
+  // 관리자 상품 상세(인라인 수정 진입) — Task 4-14a/4-14b. HIDDEN도 조회된다(admin 전용 상세).
+  http.get('/api/v1/admin/goods/:goodsNo', ({ params }) => {
+    const goodsNo = Number(params.goodsNo);
+    const found = adminGoodsFixture.find((item) => item.goodsNo === goodsNo);
+    const categoryCode = goodsFixtures.find((item) => item.goodsNo === goodsNo)?.categoryCode ?? '';
+
+    if (!found) {
+      return HttpResponse.json(
+        { code: 'GOODS_NOT_FOUND', message: '상품을 찾을 수 없습니다.', data: null },
+        { status: 404 },
+      );
+    }
+
+    const detail: AdminGoodsDetailResponse = {
+      goodsNo: found.goodsNo,
+      brandId: brandIdFor(found.brandName),
+      categoryCode,
+      name: found.name,
+      summary: `${found.brandName}의 데일리 케어 제품으로, 자극을 최소화한 성분을 담아 매일 편하게 사용할 수 있습니다.`,
+      thumbnailUrl: found.thumbnailUrl,
+      listPrice: found.listPrice,
+      salePrice: found.salePrice,
+      status: found.status,
+    };
+
+    const body: ApiEnvelope<AdminGoodsDetailResponse> = { code: 'OK', message: 'success', data: detail };
+    return HttpResponse.json(body);
+  }),
+
   http.post('/api/v1/admin/goods', async ({ request }) => {
     const body = (await request.json()) as AdminGoodsSaveInput;
     const nextGoodsNo = Math.max(0, ...adminGoodsFixture.map((item) => item.goodsNo)) + 1;
@@ -1022,6 +1092,12 @@ export const handlers = [
     const item = qnaFixtures.find((q) => q.qnaId === qnaId);
     if (item) {
       item.status = 'ANSWERED';
+    }
+    // adminQnaFixture는 qnaFixtures를 스프레드해 만든 별도 객체이므로 참조가 다르다 —
+    // admin 목록도 같이 갱신해야 답변 후 화면이 "답변완료"로 바뀐다.
+    const adminItem = adminQnaFixture.find((q) => q.qnaId === qnaId);
+    if (adminItem) {
+      adminItem.status = 'ANSWERED';
     }
     return HttpResponse.json({ code: 'OK', message: 'success', data: null });
   }),

@@ -75,6 +75,14 @@
   padding: 2px var(--space-xs);
 }
 
+.bb-admin-goods__soldout-badge {
+  font-size: var(--fs-meta);
+  font-weight: var(--fw-body-strong);
+  color: var(--color-signal-muted);
+  border: 1px solid var(--color-signal-muted);
+  padding: 2px var(--space-xs);
+}
+
 .bb-admin-goods__action {
   appearance: none;
   background: none;
