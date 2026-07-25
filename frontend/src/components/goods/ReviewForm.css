@@ -1,0 +1,83 @@
+/* 리뷰 작성 폼 — 별점 5개 + 텍스트 영역. 배경 채움 없이 hairline 구분선만 쓴다(DESIGN.md 편집디자인 톤). */
+.bb-review-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding-bottom: var(--space-lg);
+  border-bottom: 1px solid var(--color-hairline);
+  margin-bottom: var(--space-lg);
+}
+
+.bb-review-form--guest {
+  align-items: flex-start;
+  gap: var(--space-xs);
+}
+
+.bb-review-form__guest-text {
+  margin: 0;
+  color: var(--color-graphite);
+}
+
+.bb-review-form__login-link {
+  font-size: var(--fs-link-sm);
+  font-weight: var(--fw-link-sm);
+  color: var(--color-ink);
+  text-decoration: underline;
+}
+
+.bb-review-form__stars {
+  display: flex;
+  gap: var(--space-xxs);
+}
+
+.bb-review-form__star {
+  appearance: none;
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 24px;
+  line-height: 1;
+  color: var(--color-hairline-soft);
+  cursor: pointer;
+}
+
+.bb-review-form__star--active {
+  color: var(--color-ink);
+}
+
+.bb-review-form__star:focus-visible {
+  outline: 2px solid var(--color-ink);
+  outline-offset: 2px;
+}
+
+.bb-review-form__label {
+  font-size: var(--fs-meta);
+  color: var(--color-stone);
+}
+
+.bb-review-form__textarea {
+  min-height: 96px;
+  padding: var(--space-sm) 0;
+  border: none;
+  border-bottom: 1px solid var(--color-hairline-soft);
+  background: none;
+  font: var(--fs-body)/var(--lh-body) var(--font-body);
+  color: var(--color-ink);
+  resize: vertical;
+}
+
+.bb-review-form__textarea:focus-visible {
+  outline: none;
+  border-bottom-color: var(--color-ink);
+}
+
+.bb-review-form__error {
+  margin: 0;
+  font-size: var(--fs-meta);
+  color: var(--color-signal-danger);
+}
+
+.bb-review-form__submit {
+  align-self: flex-start;
+  min-width: 96px;
+}

@@ -12,3 +12,15 @@ export async function fetchQna(
   });
   return response.data.data;
 }
+
+/** POST /qna 요청 바디 — backend QnaCreateRequest와 필드를 1:1로 맞춘다. */
+export interface QnaCreateInput {
+  goodsNo: number;
+  question: string;
+  isSecret: boolean;
+}
+
+/** POST /qna — 문의 등록. 인증 필요(SecurityConfig anyRequest().authenticated()). */
+export async function createQna(input: QnaCreateInput): Promise<void> {
+  await api.post('/qna', input);
+}

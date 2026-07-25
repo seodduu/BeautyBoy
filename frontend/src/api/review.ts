@@ -43,3 +43,24 @@ export async function fetchMyReviews(page = 0): Promise<PageResponse<MyReviewIte
   });
   return response.data.data;
 }
+
+/** POST /reviews 요청 바디 — backend ReviewCreateRequest와 필드를 1:1로 맞춘다. */
+export interface ReviewCreateInput {
+  goodsNo: number;
+  rating: number;
+  content: string;
+}
+
+/**
+ * POST /reviews — 리뷰 작성. 인증 필요(SecurityConfig anyRequest().authenticated()).
+ * 구매하지 않은 상품이면 서버가 REVIEW_NOT_PURCHASED(403)로 거절한다 — 호출부가 그 메시지를
+ * 그대로 사용자에게 보여준다(project law: 돈·재고·구매이력 검증은 서버가 최종 판정한다).
+ */
+export async function createReview(input: ReviewCreateInput): Promise<void> {
+  await api.post('/reviews', input);
+}
+
+/** POST /reviews/{reviewId}/helpful — 도움돼요 표시. */
+export async function markHelpful(reviewId: number): Promise<void> {
+  await api.post(`/reviews/${reviewId}/helpful`);
+}
