@@ -15,30 +15,8 @@ import { Button } from '../../components/ui/Button';
 import { Field } from '../../components/ui/Field';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { useToast } from '../../components/ui/useToast';
+import { SkinProfileFields } from '../../components/skin-profile/SkinProfileFields';
 import './MyProfile.css';
-
-/**
- * 가입 2스텝(`SkinProfileStep`)과 같은 값·한글 라벨 세트를 쓰되, 이 화면 전용으로 따로 둔다.
- * `SkinProfileStep`의 라디오는 `<label>`이 desc 문구까지 감싸 접근성 이름이
- * "건성 당김·각질이 신경 쓰이는 편"처럼 길어진다 — 이 화면 테스트는
- * `getByRole('radio', { name: '건성' })`처럼 라벨 단독 이름을 요구하므로,
- * `aria-label`로 이름을 라벨 텍스트만으로 고정하는 별도 구현이 필요했다.
- */
-const SKIN_TYPES: { value: SkinType; label: string; desc: string }[] = [
-  { value: 'DRY', label: '건성', desc: '당김·각질이 신경 쓰이는 편' },
-  { value: 'OILY', label: '지성', desc: '번들거림·모공이 신경 쓰이는 편' },
-  { value: 'COMBINATION', label: '복합성', desc: 'T존은 유분, 볼은 건조한 편' },
-  { value: 'SENSITIVE', label: '민감성', desc: '자극·트러블에 예민한 편' },
-];
-
-const CONCERNS: { value: Concern; label: string }[] = [
-  { value: 'PORE', label: '모공' },
-  { value: 'TROUBLE', label: '트러블' },
-  { value: 'WRINKLE', label: '주름' },
-  { value: 'DARK_SPOT', label: '색소침착' },
-];
-
-const AGE_BANDS: AgeBand[] = ['10s', '20s', '30s', '40s', '50s+'];
 
 const EMPTY_ADDRESS_INPUT: AddressInput = {
   receiver: '',
@@ -50,7 +28,7 @@ const EMPTY_ADDRESS_INPUT: AddressInput = {
 };
 
 /**
- * 마이페이지 프로필 `/mypage/profile` — 피부 프로필(가입 2스텝 `SkinProfileStep` 재사용) +
+ * 마이페이지 프로필 `/mypage/profile` — 피부 프로필(가입 2스텝과 공유하는 `SkinProfileFields` 재사용) +
  * 배송지 관리 섹션. 배송지는 추가·수정·삭제·기본 지정을 전부 `PUT/POST/DELETE
  * /members/me/addresses`로 처리한다.
  *
@@ -119,64 +97,14 @@ export function MyProfile() {
       <section className="bb-my-profile__section">
         <h2 className="bb-my-profile__section-title">피부 프로필</h2>
 
-        <fieldset className="bb-skin-profile__group">
-          <legend className="bb-skin-profile__legend">피부타입</legend>
-          <div className="bb-skin-profile__type-grid">
-            {SKIN_TYPES.map((type) => (
-              <label
-                key={type.value}
-                className={`bb-skin-type-card${skinType === type.value ? ' bb-skin-type-card--active' : ''}`}
-              >
-                <input
-                  type="radio"
-                  name="skinType"
-                  aria-label={type.label}
-                  checked={skinType === type.value}
-                  onChange={() => setSkinType(type.value)}
-                />
-                <span className="bb-skin-type-card__label">{type.label}</span>
-                <span className="bb-skin-type-card__desc">{type.desc}</span>
-              </label>
-            ))}
-          </div>
-        </fieldset>
-
-        <fieldset className="bb-skin-profile__group">
-          <legend className="bb-skin-profile__legend">고민 (중복 선택 가능)</legend>
-          <div className="bb-skin-profile__chip-row">
-            {CONCERNS.map((concern) => {
-              const active = concerns.includes(concern.value);
-              return (
-                <button
-                  key={concern.value}
-                  type="button"
-                  className={`bb-chip${active ? ' bb-chip--active' : ''}`}
-                  aria-pressed={active}
-                  onClick={() => toggleConcern(concern.value)}
-                >
-                  {concern.label}
-                </button>
-              );
-            })}
-          </div>
-        </fieldset>
-
-        <fieldset className="bb-skin-profile__group">
-          <legend className="bb-skin-profile__legend">연령대</legend>
-          <div className="bb-skin-profile__chip-row">
-            {AGE_BANDS.map((band) => (
-              <button
-                key={band}
-                type="button"
-                className={`bb-chip${ageBand === band ? ' bb-chip--active' : ''}`}
-                aria-pressed={ageBand === band}
-                onClick={() => setAgeBand(band)}
-              >
-                {band}
-              </button>
-            ))}
-          </div>
-        </fieldset>
+        <SkinProfileFields
+          skinType={skinType}
+          concerns={concerns}
+          ageBand={ageBand}
+          onChangeSkinType={setSkinType}
+          onToggleConcern={toggleConcern}
+          onChangeAgeBand={setAgeBand}
+        />
 
         <Button
           className="bb-my-profile__save"

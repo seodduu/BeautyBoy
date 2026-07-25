@@ -1,38 +1,41 @@
-.bb-skin-step {
+.bb-skin-fields {
   display: flex;
   flex-direction: column;
-  gap: 28px;
+  gap: var(--space-lg);
 }
 
-.bb-skin-step__group {
+.bb-skin-fields__group {
   border: none;
   margin: 0;
   padding: 0;
 }
 
-.bb-skin-step__legend {
+.bb-skin-fields__legend {
   font-family: var(--font-body);
   font-size: var(--fs-eyebrow);
   font-weight: var(--fw-eyebrow);
   letter-spacing: var(--ls-eyebrow);
   text-transform: uppercase;
   color: var(--color-slate);
-  margin-bottom: 12px;
+  margin-bottom: var(--space-sm);
   padding: 0;
 }
 
-.bb-skin-step__type-grid {
+/* auto-fit이라 이 컴포넌트를 담는 컨테이너 폭에 맞춰 카드가 1~2열로 스스로
+   접힌다 — 가입 2스텝(좁은 인증 카드)과 마이페이지(넓은 본문 컬럼)가 서로 다른
+   컨테이너 폭을 갖는데, 고정 브레이크포인트 하나로는 양쪽을 동시에 맞출 수 없다. */
+.bb-skin-fields__type-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--space-sm);
 }
 
 .bb-skin-type-card {
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 14px 16px;
+  gap: var(--space-xxs);
+  padding: var(--space-sm) var(--space-md);
   border-radius: var(--rounded-sm);
   background: var(--color-canvas);
   border: 1px solid var(--color-hairline);
@@ -50,35 +53,37 @@
   border-color: var(--color-hairline-soft);
 }
 
+/* 선택 상태 배경으로 쓰는 --color-hairline은 무채색 사다리 톤이라 DESIGN.md의
+   signal-* 배경 금지 규칙과 무관하다(project law로 확인됨). */
 .bb-skin-type-card--active {
   border-color: var(--color-ink);
   background: var(--color-hairline);
 }
 
 .bb-skin-type-card__label {
-  font-size: 14px;
-  font-weight: 700;
+  font-size: var(--fs-body-strong);
+  font-weight: var(--fw-body-strong);
   color: var(--color-ink);
 }
 
 .bb-skin-type-card__desc {
-  font-size: 12px;
+  font-size: var(--fs-meta);
   color: var(--color-stone);
 }
 
-.bb-skin-step__chip-row {
+.bb-skin-fields__chip-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--space-xs);
 }
 
 .bb-chip {
-  padding: 8px 16px;
+  padding: var(--space-xs) var(--space-md);
   border-radius: var(--rounded-full);
   background: var(--color-canvas);
   border: 1px solid var(--color-hairline);
   color: var(--color-graphite);
-  font-size: 13px;
+  font-size: var(--fs-meta);
   cursor: pointer;
   transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
 }
@@ -91,10 +96,4 @@
   border-color: var(--color-ink);
   background: var(--color-hairline);
   color: var(--color-ink);
-}
-
-@media (max-width: 480px) {
-  .bb-skin-step__type-grid {
-    grid-template-columns: 1fr;
-  }
 }
