@@ -59,6 +59,12 @@
 
   .bb-mypage__body {
     flex-direction: column;
+    /* 데스크톱의 align-items: flex-start(교차축=수직, 두 컬럼 상단 정렬용)가 column 방향에서는
+       교차축이 수평으로 바뀌어 그대로 남아있으면 자식이 stretch되지 않고 콘텐츠 고유 폭으로
+       packed된다 — .bb-mypage__nav는 width:100%로 버텼지만 .bb-mypage__content는 그 규칙이
+       없어 쪼그라들었다(768에서 본문이 콘텐츠 폭의 절반도 안 채우는 결함). stretch로 되돌려
+       두 자식 다 컨테이너 폭을 채우게 한다. */
+    align-items: stretch;
     gap: var(--space-lg);
   }
 

@@ -31,6 +31,11 @@
 }
 
 .bb-my-reviews__body {
+  /* .bb-my-reviews__item(row)의 다른 자식(flex-shrink:0 썸네일)과 짝지어 나머지 폭을 명시적으로
+     차지하게 한다. 리뷰 본문 텍스트의 max-content 폭이 커서 flex-shrink만으로도 실제로는
+     남은 폭을 채워왔지만(round 3 리뷰가 지적한 mypage 전역 재점검 대상), 콘텐츠 길이에
+     의존하지 않도록 flex:1을 명시해 같은 계열의 잠재 결함을 방지한다. */
+  flex: 1;
   display: flex;
   flex-direction: column;
   gap: var(--space-xxs);

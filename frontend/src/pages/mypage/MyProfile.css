@@ -182,8 +182,11 @@
   }
 
   .bb-address-manager__item {
+    /* MyPageLayout.css의 .bb-mypage__body와 같은 계열의 위험: column으로 바뀌면 교차축이
+       수평이 되므로 align-items:flex-start를 그대로 두면 자식(수정 폼일 때는 .bb-address-manager__form
+       하나)이 stretch되지 않고 콘텐츠 폭으로 packed된다. stretch로 바꿔 폭을 항상 채운다. */
     flex-direction: column;
-    align-items: flex-start;
+    align-items: stretch;
     gap: var(--space-xs);
   }
 
