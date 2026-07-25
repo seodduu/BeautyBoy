@@ -1,7 +1,8 @@
 package com.beautyboy.catalog;
 
+import com.beautyboy.catalog.dto.AdminGoodsDetailResponse;
+import com.beautyboy.catalog.dto.AdminGoodsListItem;
 import com.beautyboy.catalog.dto.AdminGoodsSaveRequest;
-import com.beautyboy.catalog.dto.GoodsListItem;
 import com.beautyboy.common.ApiResponse;
 import com.beautyboy.common.PageResponse;
 import org.springframework.http.HttpStatus;
@@ -30,12 +31,19 @@ public class AdminGoodsController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/api/v1/admin/goods")
-    public ResponseEntity<ApiResponse<PageResponse<GoodsListItem>>> list(
+    public ResponseEntity<ApiResponse<PageResponse<AdminGoodsListItem>>> list(
             @RequestParam(required = false) String q,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         int clampedSize = Math.min(size, MAX_PAGE_SIZE);
         return ResponseEntity.ok(ApiResponse.ok(adminGoodsService.list(page, clampedSize, q)));
+    }
+
+    /** HIDDEN 상품도 조회된다(GoodsService.detail과 다른 지점) — admin 인라인 수정 진입용. */
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/api/v1/admin/goods/{goodsNo}")
+    public ResponseEntity<ApiResponse<AdminGoodsDetailResponse>> detail(@PathVariable Long goodsNo) {
+        return ResponseEntity.ok(ApiResponse.ok(adminGoodsService.detail(goodsNo)));
     }
 
     @PreAuthorize("hasRole('ADMIN')")

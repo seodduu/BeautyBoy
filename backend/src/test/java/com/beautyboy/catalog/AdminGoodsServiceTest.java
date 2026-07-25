@@ -1,7 +1,8 @@
 package com.beautyboy.catalog;
 
+import com.beautyboy.catalog.dto.AdminGoodsDetailResponse;
+import com.beautyboy.catalog.dto.AdminGoodsListItem;
 import com.beautyboy.catalog.dto.AdminGoodsSaveRequest;
-import com.beautyboy.catalog.dto.GoodsListItem;
 import com.beautyboy.common.BusinessException;
 import com.beautyboy.common.ErrorCode;
 import com.beautyboy.support.TestPersistence;
@@ -141,7 +142,49 @@ class AdminGoodsServiceTest {
 
         var content = adminGoodsService.list(0, 20, null).content();
 
-        assertThat(content).extracting(GoodsListItem::goodsNo)
+        assertThat(content).extracting(AdminGoodsListItem::goodsNo)
                 .contains(노출A.getId(), 숨김B.getId());
+    }
+
+    @Test
+    void 관리자_목록은_상태를_함께_내린다() {
+        카테고리();
+        Brand brand = 브랜드();
+        Goods 노출A = 상품_저장(brand, "노출A", 10000, 9000);
+        Goods 숨김B = 상품_저장(brand, "숨김B", 10000, 9000);
+        숨김B.hide();
+        goodsRepository.save(숨김B);
+        TestPersistence.DB_왕복_강제(em);
+
+        var content = adminGoodsService.list(0, 20, null).content();
+
+        assertThat(content).filteredOn(item -> item.goodsNo().equals(노출A.getId()))
+                .extracting(AdminGoodsListItem::status)
+                .containsExactly(Goods.STATUS_ON_SALE);
+        assertThat(content).filteredOn(item -> item.goodsNo().equals(숨김B.getId()))
+                .extracting(AdminGoodsListItem::status)
+                .containsExactly(Goods.STATUS_HIDDEN);
+    }
+
+    @Test
+    void 관리자_상세조회는_HIDDEN_상품도_조회된다() {
+        카테고리();
+        Goods 숨김상품 = 상품_저장(브랜드(), "숨김상품", 10000, 9000);
+        숨김상품.hide();
+        goodsRepository.save(숨김상품);
+        TestPersistence.DB_왕복_강제(em);
+
+        AdminGoodsDetailResponse response = adminGoodsService.detail(숨김상품.getId());
+
+        assertThat(response.goodsNo()).isEqualTo(숨김상품.getId());
+        assertThat(response.name()).isEqualTo("숨김상품");
+        assertThat(response.status()).isEqualTo(Goods.STATUS_HIDDEN);
+    }
+
+    @Test
+    void 관리자_상세조회는_존재하지_않으면_GOODS_NOT_FOUND다() {
+        assertThatThrownBy(() -> adminGoodsService.detail(999999L))
+                .isInstanceOf(BusinessException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.GOODS_NOT_FOUND);
     }
 }

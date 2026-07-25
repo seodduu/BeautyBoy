@@ -116,12 +116,16 @@ public class GoodsQueryRepository {
     }
 
     /**
-     * 관리자 목록. 일반 목록({@link #findList})과의 유일한 차이는 {@code g.status <> :hidden} 필터가
-     * 없다는 것 — 숨긴 상품을 관리자가 못 보면 되살릴 방법이 없다. q는 상품명 부분 일치.
+     * 관리자 목록. 일반 목록({@link #findList})과의 차이는 둘: {@code g.status <> :hidden} 필터가
+     * 없다는 것(숨긴 상품을 관리자가 못 보면 되살릴 방법이 없다) — 그리고 {@code status} 컬럼을
+     * 함께 프로젝션한다는 것(Task 4-14a: admin 화면의 "숨김" 배지가 실 API로 동작하려면 필요하다).
+     * 반환 타입이 공용 {@link GoodsRow}가 아니라 {@link AdminGoodsRow}인 이유도 그래서다 —
+     * 일반 목록·검색·랭킹·루틴이 의존하는 {@code GoodsRow}/{@code GoodsListItem}은 건드리지 않는다.
+     * q는 상품명 부분 일치.
      */
-    public List<GoodsRow> findAdminList(String q, int page, int size) {
+    public List<AdminGoodsRow> findAdminList(String q, int page, int size) {
         StringBuilder jpql = new StringBuilder(
-                "select g.id, b.name, g.name, g.thumbnailUrl, g.listPrice, g.salePrice "
+                "select g.id, b.name, g.name, g.thumbnailUrl, g.listPrice, g.salePrice, g.status "
                         + "from Goods g join g.brand b where 1 = 1");
         if (q != null && !q.isBlank()) {
             jpql.append(" and g.name like :q");
@@ -136,13 +140,14 @@ public class GoodsQueryRepository {
         query.setMaxResults(size);
 
         return query.getResultList().stream()
-                .map(row -> new GoodsRow(
+                .map(row -> new AdminGoodsRow(
                         (Long) row[0],
                         (String) row[1],
                         (String) row[2],
                         (String) row[3],
                         (Integer) row[4],
-                        (Integer) row[5]))
+                        (Integer) row[5],
+                        (String) row[6]))
                 .toList();
     }
 
@@ -200,5 +205,19 @@ public class GoodsQueryRepository {
             String thumbnailUrl,
             int listPrice,
             int salePrice) {
+    }
+
+    /**
+     * admin 목록 전용 프로젝션 — {@link GoodsRow}와 같은 6개 필드에 {@code status}만 더한다.
+     * admin 화면만 이 타입을 쓴다({@link #findAdminList}).
+     */
+    public record AdminGoodsRow(
+            Long goodsId,
+            String brandName,
+            String name,
+            String thumbnailUrl,
+            int listPrice,
+            int salePrice,
+            String status) {
     }
 }

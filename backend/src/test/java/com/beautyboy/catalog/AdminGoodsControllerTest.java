@@ -54,4 +54,18 @@ class AdminGoodsControllerTest {
         mockMvc.perform(get("/api/v1/admin/goods"))
                 .andExpect(status().isUnauthorized());
     }
+
+    @Test
+    @WithMockUser(roles = "USER")
+    void 일반_회원이_관리자_상세조회를_부르면_403이다() throws Exception {
+        mockMvc.perform(get("/api/v1/admin/goods/1"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void 관리자는_상세조회를_부를_수_있다() throws Exception {
+        mockMvc.perform(get("/api/v1/admin/goods/1"))
+                .andExpect(status().isOk());
+    }
 }
