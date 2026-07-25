@@ -158,6 +158,12 @@
 }
 
 .bb-address-manager__form {
+  /* .bb-address-manager__item은 flex-row 컨테이너다(수정 폼일 때는 이 폼이 그 행의 유일한
+     자식이 된다). flex:1이 없으면 stretch되지 않는 flex 아이템이라 콘텐츠 고유 폭으로
+     쪼그라들어 데스크톱에서 입력 필드가 좁게 잘린다 — 리뷰에서 잡힌 회귀. min-width:0으로
+     flex 기본값(auto)이 내용 폭 이하로 못 줄어드는 것도 함께 막는다. */
+  flex: 1 1 100%;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
