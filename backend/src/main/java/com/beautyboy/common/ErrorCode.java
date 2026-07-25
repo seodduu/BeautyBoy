@@ -75,7 +75,14 @@ public enum ErrorCode {
     GOODS_PRICE_INVALID(HttpStatus.BAD_REQUEST, "판매가는 정가보다 클 수 없습니다"),
     ROUTINE_STEP_NOT_FOUND(HttpStatus.NOT_FOUND, "루틴 단계를 찾을 수 없습니다"),
     ROUTINE_STEP_GOODS_INVALID(HttpStatus.BAD_REQUEST, "노출되지 않는 상품은 루틴에 넣을 수 없습니다"),
-    QNA_ALREADY_ANSWERED(HttpStatus.CONFLICT, "이미 답변된 문의입니다");
+    QNA_ALREADY_ANSWERED(HttpStatus.CONFLICT, "이미 답변된 문의입니다"),
+
+    // Wave 4 — auth (Task 4-16a, 리프레시 토큰 동시 사용)
+    // 401이 아니라 409인 이유: 이 코드는 "인증 실패"가 아니라 "같은 리프레시 토큰을 쓰는 요청이
+    // 동시에 들어와 내 요청이 한 발 늦었다"는 뜻이다. 401로 내리면 client.ts의 응답 인터셉터가
+    // refresh 401을 곧바로 세션 소멸(clear)로 해석해, 승자가 방금 정상 발급한 세션까지 지워버린다.
+    // (client.ts는 동결 계약이라 서버가 상태 코드로 구분해줘야 한다.)
+    AUTH_REFRESH_CONFLICT(HttpStatus.CONFLICT, "리프레시 토큰이 다른 요청에 의해 이미 교체되었습니다. 다시 시도해주세요");
 
     private final HttpStatus status;
     private final String message;
