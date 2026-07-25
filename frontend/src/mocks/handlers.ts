@@ -186,6 +186,9 @@ let addressesFixture: Address[] = [
   },
 ];
 
+/** 이미 승인된 주문번호(mock 전용). 실 서버의 결제 상태 대신 중복 승인만 흉내낸다. */
+const confirmedOrderNos = new Set<string>();
+
 export const handlers = [
   /* 인증 목 — mock 모드에서 /main 같은 보호 라우트에 도달하려면 로그인이 성립해야 한다.
      비밀번호를 검증하지 않는다: 목적은 화면 흐름 확인이지 인증 로직 재현이 아니다.
@@ -595,8 +598,21 @@ export const handlers = [
   http.get('/api/v1/orders', () => HttpResponse.json({ code: 'OK', message: 'success', data: [] })),
 
   // 결제 승인 — Task 4-11(성공/실패 화면)이 소비하지만, 목 스택 일관성을 위해 여기서 함께 등록한다.
+  // 같은 주문번호로 두 번 들어오면 실 서버처럼 PAYMENT_ALREADY_CONFIRMED로 막는다 — 완료 화면이
+  // 승인을 정확히 한 번만 보내는지(StrictMode 이중 마운트 포함) 브라우저에서도 드러나게 하려는 것이다.
+  // 금액 불일치(PAYMENT_AMOUNT_MISMATCH)는 목이 주문 금액을 보관하지 않아 판정할 수 없으므로
+  // 재현하지 않는다 — 그 경로는 유닛테스트가 msw 오버라이드로 덮는다.
   http.post('/api/v1/payments/confirm', async ({ request }) => {
     const { orderNo, amount } = (await request.json()) as { orderNo: string; amount: number };
+
+    if (confirmedOrderNos.has(orderNo)) {
+      return HttpResponse.json(
+        { code: 'PAYMENT_ALREADY_CONFIRMED', message: '이미 승인된 결제입니다', detail: null },
+        { status: 409 },
+      );
+    }
+    confirmedOrderNos.add(orderNo);
+
     return HttpResponse.json({
       code: 'OK',
       message: 'success',

@@ -10,6 +10,8 @@ import { Search } from './pages/Search';
 import { Ranking } from './pages/Ranking';
 import { Cart } from './pages/Cart';
 import { Order } from './pages/Order';
+import { OrderComplete } from './pages/OrderComplete';
+import { OrderFail } from './pages/OrderFail';
 import { RequireAuth } from './components/auth/RequireAuth';
 import { Showcase } from './pages/dev/Showcase';
 
@@ -74,6 +76,24 @@ export const router = createBrowserRouter([
         element: (
           <RequireAuth>
             <Order />
+          </RequireAuth>
+        ),
+      },
+      // 토스 리다이렉트 착지점. 전체 페이지 로드로 들어오므로 App의 /auth/refresh 세션 복원이
+      // 끝날 때까지 RequireAuth가 판정을 미룬다 — 승인 요청에 액세스 토큰이 필요하다.
+      {
+        path: 'order/complete',
+        element: (
+          <RequireAuth>
+            <OrderComplete />
+          </RequireAuth>
+        ),
+      },
+      {
+        path: 'order/fail',
+        element: (
+          <RequireAuth>
+            <OrderFail />
           </RequireAuth>
         ),
       },

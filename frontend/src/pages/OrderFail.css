@@ -1,0 +1,96 @@
+/* 결제 실패 화면. 토큰은 DESIGN.md(= src/index.css 변수)를 이름으로 참조한다 — hex 직접 기입 없음. */
+.bb-order-fail {
+  max-width: var(--landing-column);
+  margin: 0 auto;
+  padding: var(--space-section) var(--space-lg);
+}
+
+.bb-order-fail__title {
+  margin: 0 0 var(--space-md);
+  font-size: var(--fs-heading-md);
+  font-weight: var(--fw-heading-md);
+  line-height: var(--lh-heading-md);
+  letter-spacing: var(--ls-heading-md);
+  color: var(--color-ink);
+  word-break: keep-all;
+}
+
+/* 시그널색은 좌측 보더 액센트로만 쓴다(배경으로 칠하지 않는다). */
+.bb-order-fail__alert {
+  margin: 0 0 var(--space-xl);
+  padding: var(--space-md);
+  border: 1px solid var(--color-hairline-soft);
+  border-left: 4px solid var(--color-signal-danger);
+  border-radius: var(--rounded-lg);
+  background: var(--color-canvas);
+  font-size: var(--fs-body-tight);
+  line-height: var(--lh-body-tight);
+  color: var(--color-ink);
+  word-break: keep-all;
+}
+
+.bb-order-fail__facts {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--space-sm) var(--space-lg);
+  margin: 0 0 var(--space-lg);
+  padding: var(--space-lg) 0;
+  border-top: 1px solid var(--color-hairline-soft);
+  border-bottom: 1px solid var(--color-hairline-soft);
+}
+
+.bb-order-fail__facts dt {
+  font-size: var(--fs-body);
+  color: var(--color-graphite);
+  word-break: keep-all;
+}
+
+.bb-order-fail__facts dd {
+  margin: 0;
+  font-size: var(--fs-body-strong);
+  font-weight: var(--fw-body-strong);
+  color: var(--color-ink);
+  min-width: 0;
+}
+
+.bb-order-fail__note {
+  margin: 0 0 var(--space-xl);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  color: var(--color-graphite);
+  word-break: keep-all;
+}
+
+.bb-order-fail__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-lg);
+}
+
+/* DESIGN.md button-text-link과 같은 문법(밑줄 텍스트 링크). */
+.bb-order-fail__link {
+  font-size: var(--fs-link-sm);
+  font-weight: var(--fw-link-sm);
+  line-height: var(--lh-link-sm);
+  color: var(--color-ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  word-break: keep-all;
+}
+
+@media (max-width: 900px) {
+  .bb-order-fail {
+    padding: var(--space-xl) var(--space-md);
+  }
+
+  .bb-order-fail__title {
+    font-size: var(--fs-heading-sm);
+    line-height: var(--lh-heading-sm);
+    letter-spacing: var(--ls-heading-sm);
+  }
+
+  .bb-order-fail__facts {
+    grid-template-columns: 1fr;
+    gap: var(--space-xxs);
+  }
+}
