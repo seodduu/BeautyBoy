@@ -265,7 +265,7 @@ export function AdminGoods() {
                         <Button
                           variant="primary"
                           onClick={() =>
-                            // editDraft는 startEdit에서 fetchGoodsDetail로 채운 실제 값 위에
+                            // editDraft는 startEdit에서 fetchAdminGoodsDetail로 채운 실제 값 위에
                             // 사용자가 고친 필드만 얹은 것이다 — 하드코딩 폴백 없이 그대로 보낸다.
                             updateMutation.mutate({ goodsNo: item.goodsNo, input: editDraft })
                           }

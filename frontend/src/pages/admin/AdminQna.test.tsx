@@ -181,4 +181,38 @@ describe('AdminQna — 관리자 문의 관리', () => {
     // 상태 열 + 액션 열 둘 다 "답변완료"로 바뀐다(재조회로 목록이 갱신됨).
     await waitFor(() => expect(screen.getAllByText('답변완료')).toHaveLength(2));
   });
+
+  it('다음을 누르면 다음 페이지를 조회하고, 마지막 페이지에서는 다음이 비활성화된다', async () => {
+    // 리뷰 반영: 전사 목록으로 바뀌며 goodsNo 필터가 사라져 10건(백엔드 기본 페이지 크기) 초과가
+    // 흔해졌다 — page를 안 넘기면 0페이지 뒤 문의에 영구히 도달할 수 없다.
+    loginAs('ADMIN');
+    const PAGE_1_ITEM: AdminQnaResponse = { ...SECRET_QUESTION, qnaId: 3, goodsNo: 30 };
+    server.use(
+      http.get('/api/v1/admin/qna', ({ request }) => {
+        const url = new URL(request.url);
+        const page = Number(url.searchParams.get('page') ?? '0');
+        if (page === 0) {
+          return HttpResponse.json(
+            envelope({ content: [PUBLIC_QUESTION], page: 0, size: 20, totalElements: 2, totalPages: 2, hasNext: true }),
+          );
+        }
+        return HttpResponse.json(
+          envelope({ content: [PAGE_1_ITEM], page: 1, size: 20, totalElements: 2, totalPages: 2, hasNext: false }),
+        );
+      }),
+    );
+
+    renderAt('/admin/qna');
+
+    expect(await screen.findByText(PUBLIC_QUESTION.question)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '이전' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: '다음' })).not.toBeDisabled();
+
+    fireEvent.click(screen.getByRole('button', { name: '다음' }));
+
+    await screen.findByText(PAGE_1_ITEM.question);
+    expect(screen.queryByText(PUBLIC_QUESTION.question)).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '이전' })).not.toBeDisabled();
+    expect(screen.getByRole('button', { name: '다음' })).toBeDisabled();
+  });
 });

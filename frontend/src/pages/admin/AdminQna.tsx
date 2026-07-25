@@ -76,11 +76,19 @@ function AnswerCell({ item }: { item: AdminQnaResponse }) {
  *     목록엔 없던 goodsNo를 열로 노출해 어느 상품의 문의인지 알 수 있게 한다.
  * (2) `AdminQnaResponse.question`은 서버가 마스킹하지 않고 그대로 낸다 — 비밀글도 본문이
  *     보이되, `isSecret`으로 "비밀글" 표시를 얹어 admin이 인지할 수 있게 한다.
+ *
+ * **페이지네이션(리뷰 반영)**: 전사 목록으로 바뀌며 goodsNo 필터가 없어져 0페이지 이상으로
+ * 넘어가는 일이 흔해졌다(백엔드 기본 페이지 크기는 QnaService.DEFAULT_PAGE_SIZE=10). "이전/다음"
+ * 버튼만 있는 최소 형태 — 서버가 내려주는 `PageResponse.hasNext`/`totalPages`로 경계에서
+ * 비활성 처리한다.
  */
 export function AdminQna() {
-  const query = useQuery({ queryKey: ['admin-qna'], queryFn: () => fetchAdminQna() });
+  const [page, setPage] = useState(0);
+  const query = useQuery({ queryKey: ['admin-qna', page], queryFn: () => fetchAdminQna({ page }) });
 
   const items = query.data?.content ?? [];
+  const totalPages = query.data?.totalPages ?? 0;
+  const hasNext = query.data?.hasNext ?? false;
 
   return (
     <div className="bb-admin-qna">
@@ -93,33 +101,57 @@ export function AdminQna() {
       {query.isSuccess && items.length === 0 && <p className="bb-admin-qna__hint">등록된 문의가 없어요.</p>}
 
       {items.length > 0 && (
-        <div className="bb-admin-qna__table-wrap">
-          <table className="bb-admin-qna__table">
-            <thead>
-              <tr>
-                <th scope="col">상품번호</th>
-                <th scope="col">상태</th>
-                <th scope="col">질문</th>
-                <th scope="col">액션</th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((item) => (
-                <tr key={item.qnaId} className="bb-admin-qna__row">
-                  <td>{item.goodsNo}</td>
-                  <td>{STATUS_LABEL[item.status] ?? item.status}</td>
-                  <td className="bb-admin-qna__question-cell">
-                    {item.isSecret && <span className="bb-admin-qna__secret-badge">비밀글</span>}
-                    <span>{item.question}</span>
-                  </td>
-                  <td>
-                    <AnswerCell item={item} />
-                  </td>
+        <>
+          <div className="bb-admin-qna__table-wrap">
+            <table className="bb-admin-qna__table">
+              <thead>
+                <tr>
+                  <th scope="col">상품번호</th>
+                  <th scope="col">상태</th>
+                  <th scope="col">질문</th>
+                  <th scope="col">액션</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {items.map((item) => (
+                  <tr key={item.qnaId} className="bb-admin-qna__row">
+                    <td>{item.goodsNo}</td>
+                    <td>{STATUS_LABEL[item.status] ?? item.status}</td>
+                    <td className="bb-admin-qna__question-cell">
+                      {item.isSecret && <span className="bb-admin-qna__secret-badge">비밀글</span>}
+                      <span>{item.question}</span>
+                    </td>
+                    <td>
+                      <AnswerCell item={item} />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="bb-admin-qna__pagination">
+            <button
+              type="button"
+              className="bb-admin-qna__action"
+              onClick={() => setPage((prev) => prev - 1)}
+              disabled={page === 0}
+            >
+              이전
+            </button>
+            <span className="bb-admin-qna__pagination-status">
+              {page + 1} / {Math.max(totalPages, 1)}
+            </span>
+            <button
+              type="button"
+              className="bb-admin-qna__action"
+              onClick={() => setPage((prev) => prev + 1)}
+              disabled={!hasNext}
+            >
+              다음
+            </button>
+          </div>
+        </>
       )}
     </div>
   );
