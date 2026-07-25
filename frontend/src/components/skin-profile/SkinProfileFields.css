@@ -21,12 +21,9 @@
   padding: 0;
 }
 
-/* auto-fit이라 이 컴포넌트를 담는 컨테이너 폭에 맞춰 카드가 1~2열로 스스로
-   접힌다 — 가입 2스텝(좁은 인증 카드)과 마이페이지(넓은 본문 컬럼)가 서로 다른
-   컨테이너 폭을 갖는데, 고정 브레이크포인트 하나로는 양쪽을 동시에 맞출 수 없다. */
 .bb-skin-fields__type-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  grid-template-columns: repeat(2, 1fr);
   gap: var(--space-sm);
 }
 

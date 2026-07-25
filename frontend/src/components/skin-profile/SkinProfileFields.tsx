@@ -29,6 +29,13 @@ interface SkinProfileFieldsProps {
   onChangeSkinType: (value: SkinType) => void;
   onToggleConcern: (value: Concern) => void;
   onChangeAgeBand: (value: AgeBand) => void;
+  /**
+   * 호스트 페이지가 붙이는 부가 클래스. 카드 그리드를 1열로 접는 뷰포트 기준선은
+   * 가입 2스텝(좁은 인증 카드)과 마이페이지(사이드바 레이아웃이 통째로 접히는 900px
+   * 기준선)가 서로 달라 — 컴포넌트 내부에서 하나로 못 정한다. 각 호스트의 CSS 파일이
+   * 이 클래스를 셀렉터로 자기 기준선의 미디어쿼리를 얹는다.
+   */
+  className?: string;
 }
 
 /**
@@ -51,11 +58,12 @@ export function SkinProfileFields({
   onChangeSkinType,
   onToggleConcern,
   onChangeAgeBand,
+  className,
 }: SkinProfileFieldsProps) {
   const idPrefix = useId();
 
   return (
-    <div className="bb-skin-fields">
+    <div className={`bb-skin-fields${className ? ` ${className}` : ''}`}>
       <fieldset className="bb-skin-fields__group">
         <legend className="bb-skin-fields__legend">피부타입</legend>
         <div className="bb-skin-fields__type-grid">

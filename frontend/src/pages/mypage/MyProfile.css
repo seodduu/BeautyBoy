@@ -112,4 +112,11 @@
     align-items: stretch;
     gap: var(--space-xs);
   }
+
+  /* 사이드바 레이아웃이 탭 상단바로 접히는 기준선(MyPageLayout.css와 동일)에 맞춰
+     피부타입 카드도 1열로 접는다 — 가입 2스텝의 480px 기준선과는 다르다(근거는
+     SkinProfileFields.tsx의 className prop 주석 참고). */
+  .bb-skin-fields--mypage .bb-skin-fields__type-grid {
+    grid-template-columns: 1fr;
+  }
 }

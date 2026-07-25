@@ -1,0 +1,8 @@
+/* 가입 2스텝 전용 반응형 기준선. 인증 카드가 마이페이지 본문 컬럼보다 좁아서
+   피부타입 카드 2열이 480px 아래에서만 좁아진다(기준선 근거는
+   SkinProfileFields.tsx의 className prop 주석 참고). */
+@media (max-width: 480px) {
+  .bb-skin-fields--signup .bb-skin-fields__type-grid {
+    grid-template-columns: 1fr;
+  }
+}

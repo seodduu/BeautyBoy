@@ -104,6 +104,7 @@ export function MyProfile() {
           onChangeSkinType={setSkinType}
           onToggleConcern={toggleConcern}
           onChangeAgeBand={setAgeBand}
+          className="bb-skin-fields--mypage"
         />
 
         <Button
