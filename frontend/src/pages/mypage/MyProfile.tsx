@@ -194,11 +194,26 @@ export function MyProfile() {
   );
 }
 
+/** Address(id 포함) → AddressInput(PUT 바디용, id 제외)으로 좁힌다. 수정 폼 초기값 채우기용. */
+function toAddressInput(address: Address): AddressInput {
+  return {
+    receiver: address.receiver,
+    phone: address.phone,
+    zipcode: address.zipcode,
+    address1: address.address1,
+    address2: address.address2,
+    isDefault: address.isDefault,
+  };
+}
+
 function AddressManager({ addresses }: { addresses: Address[] }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [adding, setAdding] = useState(false);
   const [draft, setDraft] = useState<AddressInput>(EMPTY_ADDRESS_INPUT);
+  // 한 번에 하나만 수정한다 — 수정 중인 배송지 id. null이면 수정 폼이 전부 닫혀 있다.
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editDraft, setEditDraft] = useState<AddressInput>(EMPTY_ADDRESS_INPUT);
 
   const invalidateAddresses = () => queryClient.invalidateQueries({ queryKey: ['addresses'] });
 
@@ -214,17 +229,21 @@ function AddressManager({ addresses }: { addresses: Address[] }) {
 
   const setDefaultMutation = useMutation({
     mutationFn: (address: Address) =>
-      updateAddress(address.id, {
-        receiver: address.receiver,
-        phone: address.phone,
-        zipcode: address.zipcode,
-        address1: address.address1,
-        address2: address.address2,
-        isDefault: true,
-      }),
+      updateAddress(address.id, { ...toAddressInput(address), isDefault: true }),
     onSuccess: () => {
       invalidateAddresses();
       toast('기본배송지로 설정했어요');
+    },
+  });
+
+  // 필드 수정 저장 — updateAddress(id, fullInput)을 그대로 쓴다. isDefault는 수정 폼이
+  // 건드리지 않는 값이므로(그 역할은 "기본으로 설정" 버튼) editDraft에 담긴 값 그대로 보낸다.
+  const editMutation = useMutation({
+    mutationFn: (id: number) => updateAddress(id, editDraft),
+    onSuccess: () => {
+      invalidateAddresses();
+      toast('배송지를 수정했어요');
+      setEditingId(null);
     },
   });
 
@@ -236,6 +255,12 @@ function AddressManager({ addresses }: { addresses: Address[] }) {
     },
   });
 
+  function startEdit(address: Address) {
+    setAdding(false);
+    setEditingId(address.id);
+    setEditDraft(toAddressInput(address));
+  }
+
   return (
     <section className="bb-my-profile__section">
       <h2 className="bb-my-profile__section-title">배송지 관리</h2>
@@ -245,32 +270,97 @@ function AddressManager({ addresses }: { addresses: Address[] }) {
       <ul className="bb-address-manager__list">
         {addresses.map((address) => (
           <li key={address.id} className="bb-address-manager__item">
-            <div className="bb-address-manager__info">
-              <strong>
-                {address.isDefault ? '집' : '배송지'} · {address.address1}
-              </strong>
-              <span className="bb-address-manager__meta">
-                {address.receiver} · {address.phone}
-              </span>
-            </div>
-            <div className="bb-address-manager__actions">
-              {!address.isDefault && (
-                <button
-                  type="button"
-                  className="bb-address-manager__action"
-                  onClick={() => setDefaultMutation.mutate(address)}
-                >
-                  기본으로 설정
-                </button>
-              )}
-              <button
-                type="button"
-                className="bb-address-manager__action"
-                onClick={() => deleteMutation.mutate(address.id)}
-              >
-                삭제
-              </button>
-            </div>
+            {editingId === address.id ? (
+              <div className="bb-address-manager__form">
+                <Field
+                  id={`edit-address-receiver-${address.id}`}
+                  label="받는 분"
+                  value={editDraft.receiver}
+                  onChange={(value) => setEditDraft((prev) => ({ ...prev, receiver: value }))}
+                  required
+                />
+                <Field
+                  id={`edit-address-phone-${address.id}`}
+                  label="연락처"
+                  type="tel"
+                  inputMode="tel"
+                  value={editDraft.phone}
+                  onChange={(value) => setEditDraft((prev) => ({ ...prev, phone: value }))}
+                  required
+                />
+                <Field
+                  id={`edit-address-zipcode-${address.id}`}
+                  label="우편번호"
+                  inputMode="numeric"
+                  value={editDraft.zipcode}
+                  onChange={(value) => setEditDraft((prev) => ({ ...prev, zipcode: value }))}
+                  required
+                />
+                <Field
+                  id={`edit-address-address1-${address.id}`}
+                  label="주소"
+                  value={editDraft.address1}
+                  onChange={(value) => setEditDraft((prev) => ({ ...prev, address1: value }))}
+                  required
+                />
+                <Field
+                  id={`edit-address-address2-${address.id}`}
+                  label="상세주소"
+                  value={editDraft.address2}
+                  onChange={(value) => setEditDraft((prev) => ({ ...prev, address2: value }))}
+                  hint="선택 입력"
+                />
+                <div className="bb-address-manager__form-actions">
+                  <Button variant="ghost" onClick={() => setEditingId(null)}>
+                    취소
+                  </Button>
+                  <Button
+                    variant="primary"
+                    onClick={() => editMutation.mutate(address.id)}
+                    disabled={editMutation.isPending}
+                    loading={editMutation.isPending}
+                  >
+                    저장
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="bb-address-manager__info">
+                  <strong>
+                    {address.isDefault ? '집' : '배송지'} · {address.address1}
+                  </strong>
+                  <span className="bb-address-manager__meta">
+                    {address.receiver} · {address.phone}
+                  </span>
+                </div>
+                <div className="bb-address-manager__actions">
+                  <button
+                    type="button"
+                    className="bb-address-manager__action"
+                    onClick={() => startEdit(address)}
+                  >
+                    수정
+                  </button>
+                  {!address.isDefault && (
+                    <button
+                      type="button"
+                      className="bb-address-manager__action"
+                      onClick={() => setDefaultMutation.mutate(address)}
+                    >
+                      기본으로 설정
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    className="bb-address-manager__action"
+                    onClick={() => deleteMutation.mutate(address.id)}
+                  >
+                    삭제
+                  </button>
+                </div>
+              </>
+            )}
           </li>
         ))}
       </ul>
@@ -330,7 +420,13 @@ function AddressManager({ addresses }: { addresses: Address[] }) {
           </div>
         </div>
       ) : (
-        <Button variant="ghost" onClick={() => setAdding(true)}>
+        <Button
+          variant="ghost"
+          onClick={() => {
+            setEditingId(null);
+            setAdding(true);
+          }}
+        >
           새 배송지 추가
         </Button>
       )}

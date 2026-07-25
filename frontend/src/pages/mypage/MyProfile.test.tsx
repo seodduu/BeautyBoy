@@ -90,4 +90,40 @@ describe('MyProfile — 마이페이지 프로필', () => {
 
     updateProfileSpy.mockRestore();
   });
+
+  it('배송지 수정은 바뀐 값으로 PUT /members/me/addresses/{id}를 부른다', async () => {
+    registerHandlers();
+    const updateAddressSpy = vi.spyOn(memberApi, 'updateAddress');
+
+    renderMyProfile();
+
+    fireEvent.click(await screen.findByRole('button', { name: '수정' }));
+
+    // 값을 실제로 바꾼다 — 폼이 그대로 다시 전송되는 게 아니라 사용자가 고친 값이
+    // 전달되는지를 증명해야 한다(목 호출 횟수만 세는 것으로는 부족).
+    fireEvent.change(screen.getByLabelText('받는 분'), { target: { value: '이영희' } });
+    fireEvent.change(screen.getByLabelText('연락처'), { target: { value: '01099998888' } });
+
+    // "저장" 버튼이 화면에 둘(피부 프로필 저장 · 배송지 수정 저장) 있으므로 마지막(배송지
+    // 수정 폼) 것을 누른다 — 배송지 수정 폼이 DOM상 프로필 저장 버튼보다 뒤에 있다.
+    const saveButtons = screen.getAllByRole('button', { name: '저장' });
+    fireEvent.click(saveButtons[saveButtons.length - 1]);
+
+    await waitFor(() =>
+      expect(updateAddressSpy).toHaveBeenCalledWith(
+        1,
+        expect.objectContaining({
+          receiver: '이영희',
+          phone: '01099998888',
+          zipcode: '06236',
+          address1: '서울특별시 강남구 테헤란로 1',
+          address2: '101동 202호',
+          isDefault: true,
+        }),
+      ),
+    );
+    expect(await screen.findByText('배송지를 수정했어요')).toBeInTheDocument();
+
+    updateAddressSpy.mockRestore();
+  });
 });
