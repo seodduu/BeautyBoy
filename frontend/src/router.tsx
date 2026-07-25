@@ -9,6 +9,7 @@ import { Detail } from './pages/Detail';
 import { Search } from './pages/Search';
 import { Ranking } from './pages/Ranking';
 import { Cart } from './pages/Cart';
+import { Order } from './pages/Order';
 import { RequireAuth } from './components/auth/RequireAuth';
 import { Showcase } from './pages/dev/Showcase';
 
@@ -65,6 +66,14 @@ export const router = createBrowserRouter([
         element: (
           <RequireAuth>
             <Cart />
+          </RequireAuth>
+        ),
+      },
+      {
+        path: 'order',
+        element: (
+          <RequireAuth>
+            <Order />
           </RequireAuth>
         ),
       },

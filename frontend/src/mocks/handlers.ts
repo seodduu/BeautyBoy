@@ -13,6 +13,8 @@ import type { GoodsAssessment } from '../types/assessment';
 import type { ReviewItem, ReviewStats, QnaItem } from '../types/review';
 import type { CartItem } from '../api/cart';
 import type { CompatCheckResult } from '../api/compat';
+import type { Address, AddressInput } from '../api/member';
+import type { OrderCreateRequest } from '../api/order';
 import {
   ingredientFixtures,
   maxIrritation,
@@ -170,6 +172,19 @@ let cartItemsFixture: CartItem[] = [
 function recomputeLineAmount(item: CartItem): CartItem {
   return { ...item, lineAmount: item.unitPrice * item.quantity };
 }
+
+/** 배송지 dev 목 상태 — 기본배송지 1건을 미리 심어 자동선택 흐름을 mock에서도 볼 수 있게 한다(Task 4-10). */
+let addressesFixture: Address[] = [
+  {
+    id: 1,
+    receiver: '민수',
+    phone: '01000000000',
+    zipcode: '06236',
+    address1: '서울특별시 강남구 테헤란로 1',
+    address2: '101동 202호',
+    isDefault: true,
+  },
+];
 
 export const handlers = [
   /* 인증 목 — mock 모드에서 /main 같은 보호 라우트에 도달하려면 로그인이 성립해야 한다.
@@ -548,5 +563,44 @@ export const handlers = [
       : { overall: 'OK', findings: [] };
 
     return HttpResponse.json({ code: 'OK', message: 'success', data: result });
+  }),
+
+  // 배송지 조회/등록 — Task 4-10.
+  http.get('/api/v1/members/me/addresses', () =>
+    HttpResponse.json({ code: 'OK', message: 'success', data: addressesFixture }),
+  ),
+
+  http.post('/api/v1/members/me/addresses', async ({ request }) => {
+    const body = (await request.json()) as AddressInput;
+    const created: Address = { id: addressesFixture.length + 1, ...body };
+    addressesFixture = [...addressesFixture, created];
+    return HttpResponse.json({ code: 'OK', message: 'success', data: created }, { status: 201 });
+  }),
+
+  // 주문 생성 — Task 4-10. payableAmount는 장바구니 lineAmount 합으로 mock 계산한다
+  // (실 서버는 항상 재고·가격을 재검증해 다시 계산한다 — 이 mock은 오프라인 화면 확인용).
+  http.post('/api/v1/orders', async ({ request }) => {
+    const body = (await request.json()) as OrderCreateRequest;
+    const payableAmount = cartItemsFixture.reduce((sum, item) => sum + item.lineAmount, 0);
+    return HttpResponse.json(
+      {
+        code: 'OK',
+        message: 'success',
+        data: { orderNo: `ORD-MOCK-${Date.now()}`, payableAmount, deliveryType: body.deliveryType },
+      },
+      { status: 201 },
+    );
+  }),
+
+  http.get('/api/v1/orders', () => HttpResponse.json({ code: 'OK', message: 'success', data: [] })),
+
+  // 결제 승인 — Task 4-11(성공/실패 화면)이 소비하지만, 목 스택 일관성을 위해 여기서 함께 등록한다.
+  http.post('/api/v1/payments/confirm', async ({ request }) => {
+    const { orderNo, amount } = (await request.json()) as { orderNo: string; amount: number };
+    return HttpResponse.json({
+      code: 'OK',
+      message: 'success',
+      data: { orderNo, status: 'PAID', paidAmount: amount },
+    });
   }),
 ];
