@@ -95,10 +95,11 @@ class FlywayMigrationSmokeTest {
 
         // 지금까지의 대역: V1(member) · V10~V12(catalog/ingredient/seed) ·
         //   V20~V22(search/ranking) · V30~V32(cart/order/payment) · V40~V42(review/qna/wishlist) ·
-        //   V50~V51(routine 스키마/시드, Wave 3 T1).
+        //   V50~V51(routine 스키마/시드, Wave 3 T1) · V60~V62(ingredient 보강) ·
+        //   V64~V66(시드 회원·상품 150개·리뷰, Wave 4 T4-15). V63은 미머지 브랜치 소유라 제외.
         // 웨이브가 늘면 이 목록도 함께 늘린다 — 마이그레이션을 추가하고 여기를 안 고치면 바로 걸린다.
         assertThat(적용된_버전).contains("1", "10", "11", "12", "20", "21", "22", "30", "31", "32", "40", "41", "42",
-                "50", "51");
+                "50", "51", "60", "61", "62", "64", "65", "66");
     }
 
     @Test
