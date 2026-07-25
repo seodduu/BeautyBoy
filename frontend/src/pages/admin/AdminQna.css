@@ -1,0 +1,106 @@
+.bb-admin-qna {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  min-width: 0;
+}
+
+.bb-admin-qna__title {
+  margin: 0;
+  font-size: var(--fs-heading-sm);
+  font-weight: var(--fw-heading-sm);
+  line-height: var(--lh-heading-sm);
+  color: var(--color-ink);
+}
+
+.bb-admin-qna__search {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-md);
+  max-width: 320px;
+}
+
+.bb-admin-qna__hint {
+  color: var(--color-stone);
+}
+
+.bb-admin-qna__error {
+  color: var(--color-signal-danger);
+}
+
+.bb-admin-qna__table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.bb-admin-qna__table {
+  width: 100%;
+  min-width: 480px;
+  border-collapse: collapse;
+}
+
+.bb-admin-qna__table th,
+.bb-admin-qna__table td {
+  padding: var(--space-sm) var(--space-md);
+  text-align: left;
+  border-bottom: 1px solid var(--color-hairline);
+  font-size: var(--fs-body);
+  color: var(--color-ink);
+}
+
+.bb-admin-qna__table th {
+  font-size: var(--fs-meta);
+  font-weight: var(--fw-body-strong);
+  color: var(--color-stone);
+}
+
+.bb-admin-qna__action {
+  appearance: none;
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: var(--fs-link-sm);
+  font-weight: var(--fw-link-sm);
+  color: var(--color-graphite);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.bb-admin-qna__done {
+  font-size: var(--fs-meta);
+  color: var(--color-signal-success);
+}
+
+.bb-admin-qna__answer-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.bb-admin-qna__answer-textarea {
+  min-height: 64px;
+  padding: var(--space-xs) 0;
+  border: none;
+  border-bottom: 1px solid var(--color-hairline-soft);
+  background: none;
+  font: var(--fs-body)/var(--lh-body) var(--font-body);
+  color: var(--color-ink);
+  resize: vertical;
+}
+
+.bb-admin-qna__answer-textarea:focus-visible {
+  outline: none;
+  border-bottom-color: var(--color-ink);
+}
+
+.bb-admin-qna__answer-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+@media (max-width: 768px) {
+  .bb-admin-qna__search {
+    max-width: none;
+  }
+}

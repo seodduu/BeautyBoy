@@ -17,6 +17,7 @@ import type { Address, AddressInput, ProfileInput } from '../api/member';
 import type { OrderCreateRequest, OrderDetail, OrderSummary } from '../api/order';
 import type { MyReviewItem } from '../api/review';
 import type { RoutineResponse, SkinType } from '../api/routine';
+import type { AdminGoodsListItem, AdminGoodsSaveInput, AdminRoutineTemplate } from '../api/admin';
 import { ROUTINE_STEPS } from '../features/routine/steps';
 import {
   ingredientFixtures,
@@ -302,6 +303,37 @@ const myReviewsFixture: MyReviewItem[] = [
   },
 ];
 
+/**
+ * 관리자 상품 목록 dev 목 상태(Task 4-14). goodsFixtures에 status만 덧붙여 재사용한다.
+ * goodsNo 2는 HIDDEN으로 고정해 관리자 화면에서 "숨김" 배지를 바로 확인할 수 있게 한다.
+ * KNOWN GAP(api/admin.ts 문서 주석 참고): 실 서버 GoodsListItem에는 status가 없다 — 이 mock에서만
+ * 존재하는 필드다.
+ */
+let adminGoodsFixture: AdminGoodsListItem[] = goodsFixtures.map((item) => ({
+  ...item,
+  status: item.goodsNo === 2 ? 'HIDDEN' : 'ON_SALE',
+}));
+
+/** 관리자 루틴 템플릿 dev 목 상태(Task 4-14). ROUTINE_STEPS 5단계 + goodsFixtures로 조립한다. */
+const adminRoutineTemplatesFixture: AdminRoutineTemplate[] = [
+  {
+    templateId: 1,
+    name: '복합성 기본 루틴',
+    skinType: 'COMBINATION',
+    timeSlot: 'BASIC',
+    description: '피부타입에 맞춰 고른 기본 5단계입니다.',
+    steps: ROUTINE_STEPS.map((step) => ({
+      stepOrder: step.order,
+      stepName: step.label,
+      beginnerTip: step.copy,
+      goodsNos: goodsFixtures
+        .filter((item) => item.categoryCode.startsWith(step.categoryCode))
+        .slice(0, 3)
+        .map((item) => item.goodsNo),
+    })),
+  },
+];
+
 export const handlers = [
   /* 인증 목 — mock 모드에서 /main 같은 보호 라우트에 도달하려면 로그인이 성립해야 한다.
      비밀번호를 검증하지 않는다: 목적은 화면 흐름 확인이지 인증 로직 재현이 아니다.
@@ -324,6 +356,8 @@ export const handlers = [
   ),
 
   // 마이페이지 프로필 탭이 skinType/concerns/ageBand을 그리므로 실 Me 형태에 맞춰 채운다(Task 4-13).
+  // role: 'ADMIN'(Task 4-14) — 오프라인 mock은 페르소나가 하나뿐이라 admin 화면도 같은 로그인으로
+  // 확인할 수 있게 관리자로 고정한다. 실 서버는 회원마다 실제 role을 내려준다.
   http.get('/api/v1/members/me', () =>
     HttpResponse.json({
       code: 'OK',
@@ -336,6 +370,7 @@ export const handlers = [
         skinType: 'COMBINATION',
         concerns: ['PORE'],
         ageBand: '20s',
+        role: 'ADMIN',
       },
     }),
   ),
@@ -856,5 +891,138 @@ export const handlers = [
       message: 'success',
       data: { orderNo, status: 'PAID', paidAmount: amount },
     });
+  }),
+
+  // 리뷰 작성 — Task 4-14. goodsNo 102(레티노이드 세럼)는 REVIEW_NOT_PURCHASED 흐름을
+  // 화면에서 바로 확인할 수 있도록 고의로 거절한다. 그 외에는 성공 처리한다.
+  http.post('/api/v1/reviews', async ({ request }) => {
+    const body = (await request.json()) as { goodsNo: number; rating: number; content: string };
+    if (body.goodsNo === 102) {
+      return HttpResponse.json(
+        { code: 'REVIEW_NOT_PURCHASED', message: '구매한 상품에만 리뷰를 쓸 수 있습니다', data: null },
+        { status: 403 },
+      );
+    }
+    return HttpResponse.json({ code: 'OK', message: 'success', data: null }, { status: 201 });
+  }),
+
+  http.post('/api/v1/reviews/:reviewId/helpful', () =>
+    HttpResponse.json({ code: 'OK', message: 'success', data: null }),
+  ),
+
+  // 문의 작성 — Task 4-14.
+  http.post('/api/v1/qna', () =>
+    HttpResponse.json({ code: 'OK', message: 'success', data: null }, { status: 201 }),
+  ),
+
+  // 관리자 상품 관리 — Task 4-14. AdminGoodsController(GET/POST/PUT/DELETE /admin/goods)를 그대로 매핑.
+  http.get('/api/v1/admin/goods', ({ request }) => {
+    const url = new URL(request.url);
+    const q = url.searchParams.get('q');
+    const page = Number(url.searchParams.get('page') ?? '0');
+    const size = Number(url.searchParams.get('size') ?? '20');
+
+    const filtered = q ? adminGoodsFixture.filter((item) => item.name.includes(q)) : adminGoodsFixture;
+    const start = page * size;
+    const content = filtered.slice(start, start + size);
+    const totalElements = filtered.length;
+
+    const body: ApiEnvelope<PageResponse<AdminGoodsListItem>> = {
+      code: 'OK',
+      message: 'success',
+      data: {
+        content,
+        page,
+        size,
+        totalElements,
+        totalPages: Math.max(1, Math.ceil(totalElements / size)),
+        hasNext: start + size < totalElements,
+      },
+    };
+    return HttpResponse.json(body);
+  }),
+
+  http.post('/api/v1/admin/goods', async ({ request }) => {
+    const body = (await request.json()) as AdminGoodsSaveInput;
+    const nextGoodsNo = Math.max(0, ...adminGoodsFixture.map((item) => item.goodsNo)) + 1;
+    adminGoodsFixture = [
+      ...adminGoodsFixture,
+      {
+        goodsNo: nextGoodsNo,
+        brandName: `브랜드 #${body.brandId}`,
+        name: body.name,
+        thumbnailUrl: body.thumbnailUrl,
+        listPrice: body.listPrice,
+        salePrice: body.salePrice,
+        discountRate: body.listPrice > 0 ? Math.round((1 - body.salePrice / body.listPrice) * 100) : 0,
+        badges: [],
+        rating: 0,
+        reviewCount: 0,
+        wished: false,
+        todayDreamAvailable: false,
+        status: 'ON_SALE',
+      },
+    ];
+    return HttpResponse.json({ code: 'OK', message: 'success', data: nextGoodsNo }, { status: 201 });
+  }),
+
+  http.put('/api/v1/admin/goods/:goodsNo', async ({ params, request }) => {
+    const goodsNo = Number(params.goodsNo);
+    const body = (await request.json()) as AdminGoodsSaveInput;
+    adminGoodsFixture = adminGoodsFixture.map((item) =>
+      item.goodsNo === goodsNo
+        ? {
+            ...item,
+            name: body.name,
+            thumbnailUrl: body.thumbnailUrl || item.thumbnailUrl,
+            listPrice: body.listPrice,
+            salePrice: body.salePrice,
+            status: (body.status as AdminGoodsListItem['status']) ?? item.status,
+          }
+        : item,
+    );
+    return HttpResponse.json({ code: 'OK', message: 'success', data: null });
+  }),
+
+  http.delete('/api/v1/admin/goods/:goodsNo', ({ params }) => {
+    const goodsNo = Number(params.goodsNo);
+    adminGoodsFixture = adminGoodsFixture.map((item) =>
+      item.goodsNo === goodsNo ? { ...item, status: 'HIDDEN' } : item,
+    );
+    return HttpResponse.json({ code: 'OK', message: 'success', data: null });
+  }),
+
+  // 관리자 루틴 관리 — Task 4-14. AdminRoutineController(GET /admin/routines,
+  // PUT /admin/routines/{templateId}/steps/{stepOrder}/goods)를 그대로 매핑.
+  http.get('/api/v1/admin/routines', () => {
+    const body: ApiEnvelope<AdminRoutineTemplate[]> = {
+      code: 'OK',
+      message: 'success',
+      data: adminRoutineTemplatesFixture,
+    };
+    return HttpResponse.json(body);
+  }),
+
+  http.put('/api/v1/admin/routines/:templateId/steps/:stepOrder/goods', async ({ params, request }) => {
+    const templateId = Number(params.templateId);
+    const stepOrder = Number(params.stepOrder);
+    const { goodsNos } = (await request.json()) as { goodsNos: number[] };
+
+    const template = adminRoutineTemplatesFixture.find((t) => t.templateId === templateId);
+    const step = template?.steps.find((s) => s.stepOrder === stepOrder);
+    if (step) {
+      step.goodsNos = goodsNos;
+    }
+    return HttpResponse.json({ code: 'OK', message: 'success', data: null });
+  }),
+
+  // 관리자 문의 답변 — Task 4-14. AdminQnaController(POST /admin/qna/{qnaId}/answer)를 그대로 매핑.
+  http.post('/api/v1/admin/qna/:qnaId/answer', ({ params }) => {
+    const qnaId = Number(params.qnaId);
+    const item = qnaFixtures.find((q) => q.qnaId === qnaId);
+    if (item) {
+      item.status = 'ANSWERED';
+    }
+    return HttpResponse.json({ code: 'OK', message: 'success', data: null });
   }),
 ];

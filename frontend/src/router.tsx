@@ -14,12 +14,17 @@ import { Order } from './pages/Order';
 import { OrderComplete } from './pages/OrderComplete';
 import { OrderFail } from './pages/OrderFail';
 import { RequireAuth } from './components/auth/RequireAuth';
+import { RequireAdmin } from './components/auth/RequireAdmin';
 import { Showcase } from './pages/dev/Showcase';
 import { MyPageLayout } from './pages/mypage/MyPageLayout';
 import { MyOrders } from './pages/mypage/MyOrders';
 import { MyWishlist } from './pages/mypage/MyWishlist';
 import { MyReviews } from './pages/mypage/MyReviews';
 import { MyProfile } from './pages/mypage/MyProfile';
+import { AdminLayout } from './pages/admin/AdminLayout';
+import { AdminGoods } from './pages/admin/AdminGoods';
+import { AdminRoutine } from './pages/admin/AdminRoutine';
+import { AdminQna } from './pages/admin/AdminQna';
 
 export const router = createBrowserRouter([
   {
@@ -121,6 +126,20 @@ export const router = createBrowserRouter([
           { path: 'wishlist', element: <MyWishlist /> },
           { path: 'reviews', element: <MyReviews /> },
           { path: 'profile', element: <MyProfile /> },
+        ],
+      },
+      {
+        path: 'admin',
+        element: (
+          <RequireAdmin>
+            <AdminLayout />
+          </RequireAdmin>
+        ),
+        children: [
+          { index: true, element: <Navigate to="goods" replace /> },
+          { path: 'goods', element: <AdminGoods /> },
+          { path: 'routine', element: <AdminRoutine /> },
+          { path: 'qna', element: <AdminQna /> },
         ],
       },
     ],
