@@ -13,13 +13,6 @@
   color: var(--color-ink);
 }
 
-.bb-admin-qna__search {
-  display: flex;
-  align-items: flex-end;
-  gap: var(--space-md);
-  max-width: 320px;
-}
-
 .bb-admin-qna__hint {
   color: var(--color-stone);
 }
@@ -52,6 +45,27 @@
   font-size: var(--fs-meta);
   font-weight: var(--fw-body-strong);
   color: var(--color-stone);
+}
+
+.bb-admin-qna__question-cell {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-xs);
+}
+
+/* DESIGN.md {badge-neutral} — 흰 바탕 + graphite 글자 + micro-caps, 배경 채움 없음.
+   비밀글은 경고·오류가 아니라 "누가 볼 수 있는가"를 알리는 중립 표시라 signal-* 대신 이 톤을 쓴다. */
+.bb-admin-qna__secret-badge {
+  flex-shrink: 0;
+  padding: 4px;
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--rounded-none);
+  font-size: var(--fs-micro-caps);
+  font-weight: var(--fw-micro-caps);
+  line-height: var(--lh-micro-caps);
+  letter-spacing: var(--ls-micro-caps);
+  color: var(--color-graphite);
+  text-transform: uppercase;
 }
 
 .bb-admin-qna__action {

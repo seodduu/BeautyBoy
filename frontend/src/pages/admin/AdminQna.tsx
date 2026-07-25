@@ -1,10 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { fetchQna } from '../../api/qna';
-import { answerAdminQna } from '../../api/admin';
-import type { QnaItem } from '../../types/review';
+import { answerAdminQna, fetchAdminQna, type AdminQnaResponse } from '../../api/admin';
 import { Button } from '../../components/ui/Button';
-import { Field } from '../../components/ui/Field';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { useToast } from '../../components/ui/useToast';
 import './AdminQna.css';
@@ -15,7 +12,7 @@ const STATUS_LABEL: Record<string, string> = {
   WAITING: '답변대기',
 };
 
-function AnswerCell({ item, goodsNo }: { item: QnaItem; goodsNo: number }) {
+function AnswerCell({ item }: { item: AdminQnaResponse }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [answering, setAnswering] = useState(false);
@@ -24,7 +21,7 @@ function AnswerCell({ item, goodsNo }: { item: QnaItem; goodsNo: number }) {
   const mutation = useMutation({
     mutationFn: () => answerAdminQna(item.qnaId, answer),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-qna', goodsNo] });
+      queryClient.invalidateQueries({ queryKey: ['admin-qna'] });
       toast('답변을 등록했어요');
       setAnswering(false);
       setAnswer('');
@@ -71,28 +68,17 @@ function AnswerCell({ item, goodsNo }: { item: QnaItem; goodsNo: number }) {
 /**
  * 관리자 문의 관리 `/admin/qna` — POST /admin/qna/{qnaId}/answer(AdminQnaController)로 답변을 단다.
  *
- * KNOWN GAP: admin 전용 문의 "전체" 목록 엔드포인트가 없다(AdminQnaController에는 answer 하나뿐).
- * 그래서 이 화면은 실제로 존재하는 공개 목록 GET /qna(goodsNo 필수)를 상품번호로 검색해 재사용한다.
- * 비밀글은 QnaService.visibleQuestion 기준으로 작성자 본인에게만 보이므로(admin 예외 없음),
- * admin이 조회해도 비밀글 본문은 "비밀글입니다."로 마스킹된 채 내려온다 — api/admin.ts의
- * answerAdminQna 문서 주석 참고.
+ * Task 4-14a가 admin 전용 전체 목록(GET /admin/qna)을 신설했다 — 4-14는 이 엔드포인트가 없어
+ * goodsNo를 손으로 입력해 공개 목록(GET /qna)을 상품별로 검색해 재사용했었다. 공개 목록은
+ * 비밀글 본문을 "비밀글입니다."로 마스킹하므로 admin이 답변해야 할 비밀글 내용을 볼 수 없는
+ * 문제가 있었다(Task 4-14 KNOWN GAP). 이 배선으로 두 가지가 바뀐다:
+ * (1) goodsNo 손입력 검색 UI를 제거하고 전체 문의를 한 번에 페이지로 받는다 — 대신 공개
+ *     목록엔 없던 goodsNo를 열로 노출해 어느 상품의 문의인지 알 수 있게 한다.
+ * (2) `AdminQnaResponse.question`은 서버가 마스킹하지 않고 그대로 낸다 — 비밀글도 본문이
+ *     보이되, `isSecret`으로 "비밀글" 표시를 얹어 admin이 인지할 수 있게 한다.
  */
 export function AdminQna() {
-  const [goodsNoInput, setGoodsNoInput] = useState('');
-  const [searchedGoodsNo, setSearchedGoodsNo] = useState<number | null>(null);
-
-  const query = useQuery({
-    queryKey: ['admin-qna', searchedGoodsNo],
-    queryFn: () => fetchQna(searchedGoodsNo as number),
-    enabled: searchedGoodsNo !== null,
-  });
-
-  function handleSearch() {
-    const parsed = Number(goodsNoInput);
-    if (Number.isFinite(parsed) && parsed > 0) {
-      setSearchedGoodsNo(parsed);
-    }
-  }
+  const query = useQuery({ queryKey: ['admin-qna'], queryFn: () => fetchAdminQna() });
 
   const items = query.data?.content ?? [];
 
@@ -100,37 +86,18 @@ export function AdminQna() {
     <div className="bb-admin-qna">
       <h2 className="bb-admin-qna__title">문의 관리</h2>
 
-      <div className="bb-admin-qna__search">
-        <Field
-          id="admin-qna-goods-no"
-          label="상품번호(goodsNo)"
-          type="number"
-          inputMode="numeric"
-          value={goodsNoInput}
-          onChange={setGoodsNoInput}
-        />
-        <Button variant="primary" onClick={handleSearch}>
-          조회
-        </Button>
-      </div>
+      {query.isLoading && <Skeleton ratio="16 / 5" />}
 
-      {searchedGoodsNo === null && <p className="bb-admin-qna__hint">상품번호로 문의를 조회하세요.</p>}
+      {query.isError && <p className="bb-admin-qna__error">문의 목록을 불러오지 못했어요.</p>}
 
-      {searchedGoodsNo !== null && query.isLoading && <Skeleton ratio="16 / 5" />}
+      {query.isSuccess && items.length === 0 && <p className="bb-admin-qna__hint">등록된 문의가 없어요.</p>}
 
-      {searchedGoodsNo !== null && query.isError && (
-        <p className="bb-admin-qna__error">문의 목록을 불러오지 못했어요.</p>
-      )}
-
-      {searchedGoodsNo !== null && query.isSuccess && items.length === 0 && (
-        <p className="bb-admin-qna__hint">이 상품에 등록된 문의가 없어요.</p>
-      )}
-
-      {searchedGoodsNo !== null && items.length > 0 && (
+      {items.length > 0 && (
         <div className="bb-admin-qna__table-wrap">
           <table className="bb-admin-qna__table">
             <thead>
               <tr>
+                <th scope="col">상품번호</th>
                 <th scope="col">상태</th>
                 <th scope="col">질문</th>
                 <th scope="col">액션</th>
@@ -139,10 +106,14 @@ export function AdminQna() {
             <tbody>
               {items.map((item) => (
                 <tr key={item.qnaId} className="bb-admin-qna__row">
+                  <td>{item.goodsNo}</td>
                   <td>{STATUS_LABEL[item.status] ?? item.status}</td>
-                  <td>{item.isSecret ? '비밀글입니다.' : item.question}</td>
+                  <td className="bb-admin-qna__question-cell">
+                    {item.isSecret && <span className="bb-admin-qna__secret-badge">비밀글</span>}
+                    <span>{item.question}</span>
+                  </td>
                   <td>
-                    <AnswerCell item={item} goodsNo={searchedGoodsNo} />
+                    <AnswerCell item={item} />
                   </td>
                 </tr>
               ))}
