@@ -97,7 +97,7 @@ export function Detail() {
   // 표시 규칙(태그확장): 상세는 전부 표시한다(최대 개수 제한 없음, flex-wrap으로 줄바꿈).
   // 정렬만 EFFECT → PROPERTY → TEXTURE 순으로 하고, 동순위 안에서는 백엔드가 내려준 원래 순서를 지킨다.
   const displayTags = [...goods.tags].sort(
-    (a, b) => TAG_KIND_ORDER[a.kind] - TAG_KIND_ORDER[b.kind],
+    (a, b) => (TAG_KIND_ORDER[a.kind] ?? 99) - (TAG_KIND_ORDER[b.kind] ?? 99),
   );
 
   return (

@@ -4,7 +4,7 @@
 
 **Goal:** PDP 하단에 "다음 단계" 슬롯을 만든다 — 루틴에서 다음에 올 단계의 상품을 전이 규칙으로 골라, 이유 문장과 함께 보여주고, 최종 후보는 성분 궁합 게이트(CONFLICT 제거)를 통과시킨다.
 
-**Architecture:** `routine` 도메인이 `routine_flow_rule`(V72) 소유. `GET /api/v1/goods/{goodsNo}/next-step` 서버 단일 엔드포인트가 규칙 매칭 → 후보 조회(폴백 사다리) → 궁합 게이트 순으로 계산한다. 태그 축은 product-tags 계획(V70/V71) 산출물에 의존하고, 타 도메인 접근은 인터페이스 신설/확장으로만 한다(catalog: `GoodsQueryService` 확장, compat: `CompatQueryService` 신설).
+**Architecture:** `routine` 도메인이 `routine_flow_rule`(V74) 소유. `GET /api/v1/goods/{goodsNo}/next-step` 서버 단일 엔드포인트가 규칙 매칭 → 후보 조회(폴백 사다리) → 궁합 게이트 순으로 계산한다. 태그 축은 product-tags 계획(V70/V71) 산출물에 의존하고, 타 도메인 접근은 인터페이스 신설/확장으로만 한다(catalog: `GoodsQueryService` 확장, compat: `CompatQueryService` 신설).
 
 **Tech Stack:** Spring Boot(JPQL), MySQL 8.4 + Flyway, React SPA(Vite+TS) + TanStack Query + MSW, Vitest.
 
@@ -12,7 +12,7 @@
 
 ## Global Constraints
 
-- **선행 의존: product-tags 계획(`docs/plans/2026-07-25-product-tags.md`, V70/V71)이 먼저 머지돼 있어야 한다.** 착수 전 `backend/src/main/resources/db/migration/V71__seed_product_tag.sql` 존재와 `catalog/dto/TagView.java` 존재를 확인하고, 없으면 중단·보고.
+- **선행 의존: product-tags 계획(`docs/plans/2026-07-25-product-tags.md`, V70/V71)이 먼저 머지돼 있어야 한다.** 착수 전 `backend/src/main/resources/db/migration/V71__seed_product_tag.sql` 존재와 `catalog/dto/TagView.java` 존재를 확인하고, 없으면 중단·보고. 또한 `backend/src/main/resources/db/migration/V72__expand_product_tag.sql`(태그 확장) 존재도 함께 확인한다 — 존재하면 위 "시드 규칙 12행" 절의 주의사항대로 V72 반영 후 실데이터로 재산정한다.
 - `reason` 문구의 유일한 출처는 `routine_flow_rule.reason` 컬럼 — **코드·프론트에 추천 이유 문구를 하드코딩하지 않는다.**
 - 패키지 = 서비스 경계. routine은 자기 테이블만 접근, catalog/compat은 이 계획이 정의한 인터페이스로만.
 - `GoodsListItem`은 동결 계약 — 수정하지 않는다(블록 DTO가 감싼다).
@@ -66,8 +66,8 @@ superpowers:finishing-a-development-branch 로 main 머지까지 마친다.
 ## File Structure
 
 **백엔드 신규**
-- `V72__routine_flow_rule.sql` — 전이 규칙 DDL.
-- `V73__seed_routine_flow_rule.sql` — 규칙 12행 시드.
+- `V74__routine_flow_rule.sql` — 전이 규칙 DDL.
+- `V75__seed_routine_flow_rule.sql` — 규칙 12행 시드.
 - `routine/RoutineFlowRule.java`, `routine/RoutineFlowRuleRepository.java`
 - `routine/NextStepService.java`, `routine/NextStepController.java`
 - `routine/dto/NextStepResponse.java`, `routine/dto/NextStepBlock.java`
@@ -93,10 +93,10 @@ superpowers:finishing-a-development-branch 로 main 머지까지 마친다.
 
 ## 공유 계약
 
-### DDL (V72 — 완전)
+### DDL (V74 — 완전)
 
 ```sql
--- V72__routine_flow_rule.sql — 루틴 전이 규칙. reason이 화면 문구의 유일한 출처.
+-- V74__routine_flow_rule.sql — 루틴 전이 규칙. reason이 화면 문구의 유일한 출처.
 -- tag slug·category code에 물리 FK를 걸지 않는다(패키지 경계 너머 물리 FK 금지 관례).
 CREATE TABLE routine_flow_rule (
   id                 BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -153,12 +153,14 @@ public interface CompatQueryService {
 }
 ```
 
-### 시드 규칙 12행 (V73 — 완전. 시드 상품·V71 태그와 대조 완료)
+> **주의(2026-07-27):** 아래 시드 근거는 V71 기준으로 산정된 것이다. V72(태그 확장 — is_key 조건 제거·신규 5종)가 머지되어 상품별 태그가 크게 늘었으므로, 착수 시 V72 반영 후 실데이터로 근거·기대값을 재산정하라.
+
+### 시드 규칙 12행 (V75 — 완전. 시드 상품·V71 태그와 대조 완료)
 
 시드 근거: 태그는 V71 파생 규칙 기준 — 클렌징폼 goods 9·10(BHA is_key)=`exfoliate`, 토너 goods 2(AHA)=`exfoliate`, 진정토너 goods 3(CENTELLA)=`soothe`, 크림 goods 6(HYALURONIC)=`moisture`, 애프터선 goods 26·27(CENTELLA)=`soothe`, 클렌징오일/밤 goods 11·12=`cleanse`(C002 일괄), 선케어 goods 21~25=`uv`.
 
 ```sql
--- V73__seed_routine_flow_rule.sql
+-- V75__seed_routine_flow_rule.sql
 -- priority: BUFFER=10 < NEXT_STEP=20 — 같은 상품에 둘 다 매칭되면 완충이 이긴다(설계 §4).
 INSERT INTO routine_flow_rule
   (from_category_code, from_tag_slug, to_category_code, to_tag_slug, edge_kind, reason, priority) VALUES
@@ -195,10 +197,10 @@ INSERT INTO routine_flow_rule
 
 ---
 
-## Task 1: V72 스키마 + 엔티티 + 리포지토리
+## Task 1: V74 스키마 + 엔티티 + 리포지토리
 
 **Files:**
-- Create: `backend/src/main/resources/db/migration/V72__routine_flow_rule.sql`
+- Create: `backend/src/main/resources/db/migration/V74__routine_flow_rule.sql`
 - Create: `backend/src/main/java/com/beautyboy/routine/RoutineFlowRule.java`
 - Create: `backend/src/main/java/com/beautyboy/routine/RoutineFlowRuleRepository.java`
 - Test: `backend/src/test/java/com/beautyboy/routine/RoutineFlowRuleRepositoryTest.java`
@@ -206,7 +208,7 @@ INSERT INTO routine_flow_rule
 **Interfaces:**
 - Produces: `RoutineFlowRuleRepository.findAllByOrderByPriorityAscIdAsc() -> List<RoutineFlowRule>` (Task 4가 소비), 엔티티 getter: `getFromCategoryCode() getFromTagSlug() getToCategoryCode() getToTagSlug() getEdgeKind() getReason() getPriority()`.
 
-- [ ] **Step 1: V72 DDL 작성** — 위 "공유 계약"의 DDL을 그대로 파일로.
+- [ ] **Step 1: V74 DDL 작성** — 위 "공유 계약"의 DDL을 그대로 파일로.
 - [ ] **Step 2: 실패 테스트 작성**
 
 ```java
@@ -224,7 +226,7 @@ INSERT INTO routine_flow_rule
 - [ ] **Step 3: 실패 확인** — `./gradlew test --tests RoutineFlowRuleRepositoryTest` → FAIL(클래스 없음).
 - [ ] **Step 4: 엔티티·리포지토리 구현** — `RoutineFlowRule`: `@Entity @Table(name = "routine_flow_rule")`, 필드 7개 스칼라 매핑(연관관계 없음), 기존 `RoutineStep` 패턴(보호 기본 생성자 + 전체 필드 생성자 + getter). `RoutineFlowRuleRepository extends JpaRepository<RoutineFlowRule, Long>`에 메서드명 파생 쿼리 `findAllByOrderByPriorityAscIdAsc()`.
 - [ ] **Step 5: 통과 확인** — PASS.
-- [ ] **Step 6: 커밋** — `feat(routine): 전이 규칙 스키마·엔티티(V72)`
+- [ ] **Step 6: 커밋** — `feat(routine): 전이 규칙 스키마·엔티티(V74)`
 
 ---
 
@@ -388,7 +390,7 @@ List<Long> findCandidateIdsByTag(@Param("prefix") String prefix, @Param("tagSlug
 - Produces: `GET /api/v1/goods/{goodsNo}/next-step -> ApiResponse<NextStepResponse>` (Task 6 프론트가 소비).
 
 - [ ] **Step 1: DTO 2개 작성** — 위 "공유 계약" record 그대로.
-- [ ] **Step 2: 실패 테스트 작성 (서비스)** — 픽스처 자가주입(상품·태그·성분·규칙·전이규칙 모두. V73 시드 의존 금지 — 시드 검증은 Task 5).
+- [ ] **Step 2: 실패 테스트 작성 (서비스)** — 픽스처 자가주입(상품·태그·성분·규칙·전이규칙 모두. V75 시드 의존 금지 — 시드 검증은 Task 5).
 
 ```java
 // NextStepServiceTest — @SpringBootTest @ActiveProfiles("test") @Transactional
@@ -551,16 +553,16 @@ public class NextStepService {
 
 ---
 
-## Task 5: V73 시드 + 시드 검증 (충돌 0건 · 커버리지)
+## Task 5: V75 시드 + 시드 검증 (충돌 0건 · 커버리지)
 
 **Files:**
-- Create: `backend/src/main/resources/db/migration/V73__seed_routine_flow_rule.sql`
+- Create: `backend/src/main/resources/db/migration/V75__seed_routine_flow_rule.sql`
 - Test: `backend/src/integrationTest/java/com/beautyboy/routine/NextStepSeedIT.java` (기존 integrationTest 소스셋·실 MySQL 관례를 따른다 — 위치·베이스클래스는 기존 IT 파일과 동일하게)
 
 **Interfaces:**
-- Consumes: Task 4 `NextStepService.find`, V12·V71·V73 시드 전체.
+- Consumes: Task 4 `NextStepService.find`, V12·V71·V75 시드 전체.
 
-- [ ] **Step 1: V73 작성** — 위 "공유 계약"의 시드 12행 그대로.
+- [ ] **Step 1: V75 작성** — 위 "공유 계약"의 시드 12행 그대로.
 - [ ] **Step 2: 시드 검증 테스트 작성** (실 시드 전제 — 자가주입 아님)
 
 ```java
@@ -604,7 +606,7 @@ public class NextStepService {
 (시드 기대치: 토너 3 + 세럼 2 + 크림 2 + 폼 3 + 오일/밤 2 + 필링 2 + 선크림 3 + 선스틱 2 + 쉐이빙폼/젤 2 = 21개 커버 / 39개 ≈ 54%.)
 
 - [ ] **Step 3: 실 MySQL clean 로드 + IT 실행** — 메모리 [[curl-smoke-recipe]]의 13306 임시 MySQL 사용. `./gradlew integrationTest` PASS. 커버리지 출력값을 태스크 보고서에 기록.
-- [ ] **Step 4: 커밋** — `feat(routine): 전이 규칙 시드 12행 + 충돌0·커버리지 검증(V73)`
+- [ ] **Step 4: 커밋** — `feat(routine): 전이 규칙 시드 12행 + 충돌0·커버리지 검증(V75)`
 
 ---
 
@@ -725,4 +727,4 @@ curl -s localhost:8080/api/v1/goods/19/next-step | jq '.data.blocks | length'
 
 **타입 일관성:** `NextStepBlock(edgeKind, reason, items)`가 백 record·프론트 type·MSW·테스트 동일. `worstVerdicts`·`tagSlugs`·`findCandidateGoodsNos`·`findAllByOrderByPriorityAscIdAsc` 명명이 정의(공유 계약)와 소비(Task 4) 일치. queryKey `['goods-next-step', goodsNo]` 일관.
 
-**시드 정합:** 규칙 12행의 태그 전제(goods 2 exfoliate, goods 3 soothe, goods 6 moisture, goods 26·27 soothe, C002 cleanse, C004 uv)는 V71 파생 규칙과 대조 완료. 단 **V71에는 수동 보정 재량이 있으므로**(product-tags Task 2 Step 3), 터미널 ② 착수 시 V71 최종본과 위 전제를 대조하고 어긋나면 V73 행을 맞춰 조정 후 보고한다.
+**시드 정합:** 규칙 12행의 태그 전제(goods 2 exfoliate, goods 3 soothe, goods 6 moisture, goods 26·27 soothe, C002 cleanse, C004 uv)는 V71 파생 규칙과 대조 완료. 단 **V71에는 수동 보정 재량이 있으므로**(product-tags Task 2 Step 3), 터미널 ② 착수 시 V71 최종본과 위 전제를 대조하고 어긋나면 V75 행을 맞춰 조정 후 보고한다.

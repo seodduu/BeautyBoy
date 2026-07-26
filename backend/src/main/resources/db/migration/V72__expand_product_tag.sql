@@ -50,6 +50,10 @@ JOIN (
   UNION ALL SELECT 'VITAMIN_C', 'antioxidant'
 ) m ON m.category = i.category
 JOIN tag t ON t.slug = m.slug
+-- 같은 (goods_id, tag_id) 중복 후보 중 is_key=1 성분이 먼저 삽입되도록 정렬해
+-- 어느 성분이 이겨서 source_ingredient_id로 남는지를 결정적으로 만든다(정렬 없으면 삽입 순서가
+-- 옵티마이저 재량 — 실행마다 달라질 수 있었다).
+ORDER BY gi.goods_id, t.id, gi.is_key DESC
 ON DUPLICATE KEY UPDATE sort_order = goods_tag.sort_order;
 
 -- =====================================================================
@@ -69,6 +73,9 @@ JOIN tag t ON t.slug = CASE gi.ingredient_id
   WHEN 30 THEN 'bright'
   ELSE NULL END
 WHERE gi.ingredient_id IN (25, 26, 27, 28, 29, 30)
+-- b-1과 동일한 이유: 같은 (goods_id, tag_id)에 26·27처럼 서로 다른 ingredient_id가
+-- 동시에 매핑될 수 있어(둘 다 soothe), is_key 행이 먼저 들어가도록 결정화한다.
+ORDER BY gi.goods_id, t.id, gi.is_key DESC
 ON DUPLICATE KEY UPDATE sort_order = goods_tag.sort_order;
 
 -- =====================================================================
