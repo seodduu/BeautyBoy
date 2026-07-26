@@ -1,7 +1,9 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import './Header.css';
 import { useAuthStore } from '../../stores/authStore';
 import { logout } from '../../api/auth';
+import { fetchCartItems } from '../../api/cart';
 
 /* 라우트가 없는 자리표시 항목들. Login은 실제 화면이 있으므로 아래에서 링크로 따로 낸다. */
 const LANDING_NAV = ['About', 'Work', 'Services', 'Packages'] as const;
@@ -23,6 +25,25 @@ export function Header() {
   /* 로그인·가입은 좌우 스플릿(왼쪽 검정 브랜드 패널)이 자체 워드마크를 가진다 —
      공용 헤더를 얹으면 스플릿 상단이 잘리므로 이 화면들에서는 헤더를 렌더하지 않는다. */
   const isAuth = pathname === '/login' || pathname === '/signup';
+
+  /*
+   * queryKey는 Cart.tsx:27과 반드시 같은 ['cart']를 쓴다 — 장바구니 화면의 수량 변경·삭제가
+   * 부르는 invalidateQueries({ queryKey: ['cart'] })(Cart.tsx:45,51)가 이 쿼리도 함께
+   * 무효화해, 담기·삭제 시 헤더 배지가 별도 배선 없이 따라 갱신된다.
+   *
+   * enabled: !!member — GET /cart/items는 인증이 필요하다. 비로그인에 그냥 쏘면 401 →
+   * 리프레시 인터셉터가 매 페이지에서 불필요한 왕복을 만든다. 비로그인 사용자에게는
+   * 아예 요청을 보내지 않는다.
+   */
+  const cartQuery = useQuery({
+    queryKey: ['cart'],
+    queryFn: fetchCartItems,
+    enabled: !!member,
+  });
+  // 개수의 정의: 라인 수(items.length) — 장바구니 화면이 나열하는 줄 수와 같은 값이다.
+  // 수량 합계가 아니다(수량 2개인 상품 1줄이면 배지는 1). Cart.tsx의 items.map과 동일한 단위로
+  // 맞춰야 "헤더 배지 = 장바구니에서 보이는 줄 수"라는 사용자 기대가 어긋나지 않는다.
+  const cartCount = cartQuery.data?.length;
 
   const handleLogout = async () => {
     try {
@@ -80,11 +101,15 @@ export function Header() {
         </div>
 
         <nav className="bb-header__nav" aria-label="주요 메뉴">
-          {/* 장바구니 페이지는 후속 웨이브 범위 — 라우트 없이 자리만 표시 */}
-          <span className="bb-header__nav-link" aria-label="장바구니(준비 중)">
+          <Link to="/cart" className="bb-header__nav-link" aria-label="장바구니">
             장바구니
-            <span className="bb-header__cart-count">0</span>
-          </span>
+            {/* 로딩 중(cartCount === undefined)에는 배지를 그리지 않는다 — 하드코드 0을 그려
+                실제 개수와 어긋나던 이전 결함을 반복하지 않기 위해서다. 데이터가 도착한 뒤에는
+                0이어도 그린다 — 로그인 상태의 실제 장바구니 상태(비어 있음)를 숨기지 않는다. */}
+            {member && cartCount !== undefined && (
+              <span className="bb-header__cart-count">{cartCount}</span>
+            )}
+          </Link>
           {isBootstrapping ? (
             <span className="bb-header__auth-skeleton" aria-hidden="true" />
           ) : member ? (
