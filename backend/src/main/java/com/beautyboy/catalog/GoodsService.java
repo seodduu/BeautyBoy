@@ -138,6 +138,22 @@ public class GoodsService implements GoodsQueryService {
     }
 
     /**
+     * 대표 옵션 선택 순서: {@code sortOrder} 오름차순, 동률이면 {@code id} 오름차순.
+     *
+     * <p>왜 sortOrder인가: 상세 화면의 옵션 목록도 sortOrder 순으로 내려가므로, 손님이 화면에서
+     * 처음 보는 옵션과 서버가 고르는 대표 옵션이 같아진다. 그래서 담긴 옵션·가격이 화면과 어긋나지 않는다.
+     *
+     * <p>왜 "재고 있는 옵션 우선"이 아닌가: 그러면 손님이 본 것과 다른 옵션·다른 가격이 조용히 담긴다.
+     * 대표 옵션이 품절이면 숨기지 않고 {@code ORDER_OUT_OF_STOCK}으로 정직하게 막는 것이 옳다.
+     *
+     * <p>왜 id를 2차 키로 두는가: 결정적이어야 한다. sortOrder가 동률인데 순서가 컬렉션 로딩 순서에
+     * 좌우되면 같은 입력에 다른 답이 나오고 테스트가 흔들린다.
+     */
+    private static final java.util.Comparator<GoodsOption> 대표_옵션_순서 =
+            java.util.Comparator.comparingInt(GoodsOption::getSortOrder)
+                    .thenComparing(GoodsOption::getId);
+
+    /**
      * 주문·장바구니용 상품 스냅샷. 숨김 상품과 상품-옵션 불일치는 빈 값으로 답한다
      * (예외를 던지지 않는 이유는 인터페이스 문서 참고).
      */
@@ -152,22 +168,35 @@ public class GoodsService implements GoodsQueryService {
         Goods goods = found.get();
 
         if (optionNo == null) {
-            // 옵션이 없는 상품. 재고 관리 단위가 옵션이므로 상품 단위 재고는 무제한으로 본다.
-            return Optional.of(new OrderGoodsSnapshot(
-                    goods.getId(), null, goods.getName(), null, goods.getSalePrice(), Integer.MAX_VALUE));
+            // optionNo가 null인 것은 "옵션을 특정하지 않았다"는 뜻일 뿐 "상품에 옵션이 없다"는 뜻이 아니다.
+            // 예전에는 이 둘을 같게 보고 무조건 재고 MAX_VALUE로 답했고, 그래서 루틴 전체담기
+            // (항상 optionNo=null을 보낸다)로 담은 품절 상품이 재고 게이트를 통째로 통과했다.
+            // 옵션이 있으면 서버가 대표 옵션을 골라 재고·추가금·옵션명을 모두 그 옵션으로 채운다.
+            return goods.getOptions().stream()
+                    .min(대표_옵션_순서)
+                    .map(option -> 스냅샷(goods, option))
+                    // 옵션이 진짜 하나도 없는 상품만 여기로 온다. 재고 관리 단위가 옵션이므로
+                    // 이 경우에만 상품 단위 재고를 무제한으로 본다.
+                    .or(() -> Optional.of(new OrderGoodsSnapshot(
+                            goods.getId(), null, goods.getName(), null,
+                            goods.getSalePrice(), Integer.MAX_VALUE)));
         }
 
         // 옵션은 반드시 그 상품의 것이어야 한다. 남의 옵션을 붙이는 조작을 여기서 끊는다.
         return goods.getOptions().stream()
                 .filter(option -> option.getId().equals(optionNo))
                 .findFirst()
-                .map(option -> new OrderGoodsSnapshot(
-                        goods.getId(),
-                        option.getId(),
-                        goods.getName(),
-                        option.getName(),
-                        goods.getSalePrice() + option.getAddPrice(),
-                        option.getStock()));
+                .map(option -> 스냅샷(goods, option));
+    }
+
+    private OrderGoodsSnapshot 스냅샷(Goods goods, GoodsOption option) {
+        return new OrderGoodsSnapshot(
+                goods.getId(),
+                option.getId(),
+                goods.getName(),
+                option.getName(),
+                goods.getSalePrice() + option.getAddPrice(),
+                option.getStock());
     }
 
     /**

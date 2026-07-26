@@ -183,6 +183,41 @@ class OrderCreateTest {
     }
 
     @Test
+    void 옵션을_지정하지_않아도_품절이면_409와_ORDER_OUT_OF_STOCK() throws Exception {
+        // 회귀 방어(Task 4-18). optionNo=null이면 스냅샷이 재고를 Integer.MAX_VALUE로 답해
+        // 재고 게이트가 통째로 우회됐다. 루틴 전체담기는 항상 optionNo=null을 보내므로,
+        // 유일 옵션이 품절인 상품(시드 goods 3)도 결제 완료까지 통과했다.
+        Long memberId = 회원_저장();
+        Long goodsId = 상품_저장("품절 세럼", 20000);
+        옵션_저장(goodsId, "180ml", 0, 0);
+
+        주문요청(memberId, List.of(Map.of("goodsNo", goodsId, "quantity", 1)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("ORDER_OUT_OF_STOCK"));
+    }
+
+    @Test
+    void 옵션을_지정하지_않으면_대표_옵션이_스냅샷에_박힌다() throws Exception {
+        // 출고 가능성 방어. 옵션 있는 상품인데 optionName이 null로 저장되면
+        // 주문 기록만으로 어떤 용량을 보낼지 알 수 없다(CLAUDE.md 스냅샷 규칙).
+        Long memberId = 회원_저장();
+        Long goodsId = 상품_저장("토너", 16000);
+        Long 대표 = 옵션_저장(goodsId, "200ml", 0, 50, 1);
+        옵션_저장(goodsId, "300ml", 3000, 50, 2);
+
+        주문요청(memberId, List.of(Map.of("goodsNo", goodsId, "quantity", 1)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.data.payableAmount").value(16000));
+
+        TestPersistence.DB_왕복_강제(entityManager);
+
+        OrderItem item = orderRepository.findAll().get(0).getItems().get(0);
+        assertThat(item.getOptionId()).isEqualTo(대표);
+        assertThat(item.getOptionName()).isEqualTo("200ml");
+        assertThat(item.getUnitPrice()).isEqualTo(16000);
+    }
+
+    @Test
     void 비로그인은_401이다() throws Exception {
         mockMvc.perform(post("/api/v1/orders")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -225,10 +260,14 @@ class OrderCreateTest {
     }
 
     private Long 옵션_저장(Long goodsId, String name, int addPrice, int stock) {
+        return 옵션_저장(goodsId, name, addPrice, stock, 0);
+    }
+
+    private Long 옵션_저장(Long goodsId, String name, int addPrice, int stock, int sortOrder) {
         Goods goods = goodsRepository.findById(goodsId).orElseThrow();
         // GoodsOption 실제 생성자는 sortOrder까지 5개 인자를 받는다(계획서 4개는 실 코드와 다름).
         com.beautyboy.catalog.GoodsOption option =
-                new com.beautyboy.catalog.GoodsOption(goods, name, addPrice, stock, 0);
+                new com.beautyboy.catalog.GoodsOption(goods, name, addPrice, stock, sortOrder);
         goods.getOptions().add(option);
         // goods가 이미 영속 상태라 save()는 merge()로 처리되고, transient 자식(option)은
         // cascade-merge로 "복사본"이 persist된다. 원래의 option 참조에는 id가 채워지지 않으므로
