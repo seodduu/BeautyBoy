@@ -4,10 +4,15 @@ import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { http, HttpResponse } from 'msw';
 import { server } from '../mocks/server';
-import type { GoodsListItem } from '../types/goods';
+import type { SearchResultItem } from '../types/search';
 import { Search } from './Search';
 
-const SAMPLE_ITEM: GoodsListItem = {
+/**
+ * 실서버 검색 결과 형태를 그대로 재현한다 — SearchResultItem.tags는 optional이고
+ * 서버는 tags 필드 자체를 내려주지 않는다. `tags: []`로 위장하면 GoodsCard가
+ * item.tags를 필수 배열로 접근해도 테스트가 녹색이 되어 실서버 크래시를 못 잡는다.
+ */
+const SAMPLE_ITEM: SearchResultItem = {
   goodsNo: 101,
   brandName: '어반메일',
   name: '수분 진정 토너',
@@ -20,7 +25,6 @@ const SAMPLE_ITEM: GoodsListItem = {
   reviewCount: 12,
   wished: false,
   todayDreamAvailable: false,
-  tags: [],
 };
 
 function emptyPage() {

@@ -1,11 +1,15 @@
-import type { GoodsListItem } from '../../types/goods';
+import type { SearchResultItem } from '../../types/search';
 import { EmptyState } from '../common/EmptyState';
 import { GoodsCard } from './GoodsCard';
 import { GoodsCardSkeleton } from './GoodsCardSkeleton';
 import './GoodsGrid.css';
 
 interface GoodsGridProps {
-  items: GoodsListItem[];
+  /**
+   * SearchResultItem(tags optional)을 받는다 — GoodsListItem(tags required)도 구조적으로
+   * 호환되므로 목록/랭킹/추천/루틴/위시리스트 등 tags가 항상 있는 화면도 그대로 넘길 수 있다.
+   */
+  items: SearchResultItem[];
   onWishToggle?: (goodsNo: number) => void;
   loading?: boolean;
   skeletonCount?: number;

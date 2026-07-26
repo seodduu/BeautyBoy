@@ -1,5 +1,6 @@
 import { api } from './client';
-import type { ApiEnvelope, GoodsListItem, PageResponse } from '../types/goods';
+import type { ApiEnvelope, PageResponse } from '../types/goods';
+import type { SearchResultItem } from '../types/search';
 
 /** GET /search — 검색 결과. sort 기본값은 서버에서 "accuracy"로 처리한다. */
 export interface FetchSearchParams {
@@ -11,8 +12,8 @@ export interface FetchSearchParams {
 export async function fetchSearch(
   q: string,
   params: FetchSearchParams = {},
-): Promise<PageResponse<GoodsListItem>> {
-  const response = await api.get<ApiEnvelope<PageResponse<GoodsListItem>>>('/search', {
+): Promise<PageResponse<SearchResultItem>> {
+  const response = await api.get<ApiEnvelope<PageResponse<SearchResultItem>>>('/search', {
     params: { q, ...params },
   });
   return response.data.data;

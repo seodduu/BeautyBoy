@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import type { GoodsListItem } from '../../types/goods';
+import type { SearchResultItem } from '../../types/search';
 import { Badge, TodayDreamBadge } from '../ui/Badge';
 import { Price } from '../ui/Price';
 import { Rating } from '../ui/Rating';
@@ -7,7 +7,11 @@ import { Tag } from '../ui/Tag';
 import './GoodsCard.css';
 
 interface GoodsCardProps {
-  item: GoodsListItem;
+  /**
+   * SearchResultItem(tags optional)을 받는다 — 실서버 검색 결과는 tags 필드 자체가 없을 수 있다.
+   * GoodsListItem(tags required)도 구조적으로 호환되므로 목록·랭킹·추천 등 다른 화면은 그대로 넘긴다.
+   */
+  item: SearchResultItem;
   onWishToggle: (goodsNo: number) => void;
   /**
    * 품절 신호. GoodsListItem에는 status 필드가 없어(Wave 1 범위 밖) 옵션 prop으로 둔다.
@@ -31,7 +35,8 @@ export function GoodsCard({ item, onWishToggle, soldOut = false }: GoodsCardProp
 
   // 표시 규칙(전역): 카드에는 효과(EFFECT) 태그만, 최대 2개 — 사용감(TEXTURE)은 상세에서만 보여준다.
   // 카드는 훑어보는 자리라 태그가 배지보다 눈에 띄면 안 되므로 개수를 badges보다 더 좁게 잡는다.
-  const effectTags = item.tags.filter((tag) => tag.kind === 'EFFECT').slice(0, 2);
+  // 실서버 검색 결과는 tags 필드 자체가 없을 수 있다(SearchResultItem.tags는 optional) — 방어적으로 처리.
+  const effectTags = (item.tags ?? []).filter((tag) => tag.kind === 'EFFECT').slice(0, 2);
 
   return (
     <div className="bb-goods-card">

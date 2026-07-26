@@ -117,4 +117,16 @@ describe('GoodsCard', () => {
     const { container } = renderCard(baseItem);
     expect(container.querySelector('.bb-goods-card__tags')).not.toBeInTheDocument();
   });
+
+  it('tags 필드 자체가 없어도(실서버 검색 결과 형태) 크래시 없이 렌더되고 태그 줄이 안 나온다', () => {
+    const { tags: _tags, ...itemWithoutTags } = baseItem;
+    const { container } = render(
+      <MemoryRouter>
+        <GoodsCard item={itemWithoutTags} onWishToggle={vi.fn()} />
+      </MemoryRouter>,
+    );
+
+    expect(container.querySelector('.bb-goods-card__tags')).not.toBeInTheDocument();
+    expect(screen.getByText('상품명')).toBeInTheDocument();
+  });
 });

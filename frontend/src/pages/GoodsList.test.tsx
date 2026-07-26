@@ -56,9 +56,9 @@ describe('GoodsList — 카테고리 목록', () => {
   });
 
   it('tag 쿼리로 진입하면 그 태그를 가진 상품만 보여준다', async () => {
-    renderList('?tag=uv-protect');
+    renderList('?tag=uv');
 
-    // fixture TAG_PLAN은 6개 패턴이 순환하고 'uv-protect'는 그중 인덱스 5 — goodsFixtures 40건 중
+    // fixture TAG_PLAN은 6개 패턴이 순환하고 'uv'는 그중 인덱스 5 — goodsFixtures 40건 중
     // goodsNo가 6의 배수인 6건(6·12·18·24·30·36)만 해당 태그를 갖는다.
     expect(await screen.findByRole('heading', { name: '태그 상품', level: 1 })).toBeInTheDocument();
     await waitFor(() => {

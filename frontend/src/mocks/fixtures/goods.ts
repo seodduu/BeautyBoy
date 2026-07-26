@@ -85,18 +85,23 @@ const DISCOUNT_PLAN = [0, 10, 15, 0, 20, 25, 0, 30, 40, 5];
  * 태그 샘플. 실 백엔드는 상품마다 최대 여러 개를 규칙 파생 + 수동 보정으로 채우지만(V71 시드),
  * mock은 목록/상세/카드 화면을 눈으로 확인할 수 있을 정도의 조합 몇 가지만 순환시킨다.
  * 빈 배열도 섞어 tags가 없는 상품에서 레이아웃이 무너지지 않는지 항상 검증되게 한다.
+ *
+ * slug·name·kind는 실제 V71 태그 마스터 13종과 정확히 맞춘다:
+ * EFFECT — cleanse(세정) exfoliate(각질 케어) sebum(피지 관리) soothe(진정) moisture(보습)
+ *          uv(자외선차단) bright(브라이트닝) firm(탄력) anti-aging(항노화) scalp(두피 케어)
+ * TEXTURE — fresh(산뜻함) dewy(촉촉함) matte(매트)
  */
 const TAG_PLAN: TagView[][] = [
   [],
-  [{ name: '진정', kind: 'EFFECT', slug: 'soothing' }, { name: '산뜻함', kind: 'TEXTURE', slug: 'fresh' }],
+  [{ name: '진정', kind: 'EFFECT', slug: 'soothe' }, { name: '산뜻함', kind: 'TEXTURE', slug: 'fresh' }],
   [{ name: '보습', kind: 'EFFECT', slug: 'moisture' }],
   [],
   [
     { name: '세정', kind: 'EFFECT', slug: 'cleanse' },
-    { name: '모공케어', kind: 'EFFECT', slug: 'pore-care' },
+    { name: '피지 관리', kind: 'EFFECT', slug: 'sebum' },
     { name: '산뜻함', kind: 'TEXTURE', slug: 'fresh' },
   ],
-  [{ name: '자외선차단', kind: 'EFFECT', slug: 'uv-protect' }, { name: '가벼운제형', kind: 'TEXTURE', slug: 'light' }],
+  [{ name: '자외선차단', kind: 'EFFECT', slug: 'uv' }, { name: '매트', kind: 'TEXTURE', slug: 'matte' }],
 ];
 
 function buildGoodsFixtures(): GoodsFixture[] {
