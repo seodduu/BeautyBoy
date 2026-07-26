@@ -9,6 +9,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.mockito.stubbing.Answer;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 import java.util.List;
@@ -70,8 +71,20 @@ abstract class AuthRefreshConcurrencyScenario {
 
         조회_횟수.set(0);
         조회_직후_만남 = new CyclicBarrier(2);
+
+        // 왜 invocation.callRealMethod()가 아니라 "원래 기본 응답"에 위임하는가 (Task 4-16a에서 수정):
+        // RefreshTokenRepository는 인터페이스이고, 실제 빈은 Spring Data가 만든 AOP 프록시다.
+        // @MockitoSpyBean은 이 경우 프록시를 감싸는 대신 인터페이스 목을 만들고 기본 응답을
+        // ForwardsInvocations(=원본 빈으로 위임)로 걸어둔다. 그래서 callRealMethod()는
+        // "Cannot call abstract real method on java object"로 즉시 터진다 —
+        // 이 상태에서는 refresh()가 조회조차 못 하므로 레이스가 재현되지 않는다.
+        // 목 생성 설정에 남아 있는 그 기본 응답을 직접 호출하면 프록시 형태와 무관하게 실조회가 된다.
+        @SuppressWarnings("unchecked")
+        Answer<Object> 원래_기본_응답 = (Answer<Object>) org.mockito.Mockito
+                .mockingDetails(refreshTokenRepository).getMockCreationSettings().getDefaultAnswer();
+
         doAnswer(invocation -> {
-            Object 조회_결과 = invocation.callRealMethod();
+            Object 조회_결과 = 원래_기본_응답.answer(invocation);
             // 레이스에 참가하는 처음 두 번의 조회만 서로를 기다린다.
             // (레이스 이후의 순차 검증 호출까지 기다리면 영원히 멈춘다.)
             if (조회_횟수.incrementAndGet() <= 2) {
