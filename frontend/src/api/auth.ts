@@ -1,5 +1,8 @@
-import { api } from './client';
+import { api, refreshSession } from './client';
+import type { RefreshSessionResult } from './client';
 import type { MemberInfo } from '../stores/authStore';
+
+export { refreshSession, type RefreshSessionResult };
 
 /** 피부타입 — 백엔드 계약(Task 4·5)과 동일한 4종. */
 export type SkinType = 'DRY' | 'OILY' | 'COMBINATION' | 'SENSITIVE';
@@ -62,15 +65,7 @@ export async function fetchMe(): Promise<MemberInfo> {
   return response.data.data;
 }
 
-export interface RefreshSessionResult {
-  accessToken: string;
-  member: MemberInfo;
-}
-
-// 진행 중인 부트스트랩 refresh — 동시 호출자는 모두 이 하나를 공유한다(아래 주석 참고).
-let inFlightRefresh: Promise<RefreshSessionResult> | null = null;
-
-/**
+/*
  * POST /auth/refresh — 앱 부트스트랩 시 세션 복구를 1회 시도한다.
  * 실패(401 등)는 호출부(App)가 조용히 로그아웃 상태로 진행하며,
  * client.ts의 401 인터셉터는 이 요청 자체를 refresh 요청으로 인식해 추가 refresh를 부르지 않는다.
@@ -82,20 +77,14 @@ let inFlightRefresh: Promise<RefreshSessionResult> | null = null;
  * 부트스트랩 이펙트를 두 번 실행하는데, 살아남는 쪽(두 번째)이 하필 패배자면 세션을 지우지
  * 않아도 `accessToken`이 null인 채 `isBootstrapping=false`가 되어 `RequireAuth`가 `/login`으로
  * 튕긴다. 애초에 서버에 요청을 하나만 보내면 승패 자체가 생기지 않는다.
- * `client.ts`의 `refreshPromise`(동결)와 같은 패턴이지만, 그쪽은 401 재시도 경로 전용이라
- * 부트스트랩 호출은 공유하지 못한다.
+ *
+ * **구현 위치 (Task 1):** in-flight 캐시는 예전에 이 파일(`inFlightRefresh`)과 client.ts의
+ * 401 인터셉터(`refreshPromise`)가 각각 한 벌씩 따로 가지고 있었다. 두 캐시가 따로 놀면
+ * 부트스트랩과 인터셉터가 동시에 refresh를 쏠 때 중복 요청이 나가고, 그 중복이 백엔드
+ * 409를 만드는 조건이 된다. 그래서 실제 구현은 `client.ts`의 `refreshSession()`으로 합치고
+ * 이 파일은 재수출만 한다 — client.ts가 `api` 인스턴스를 소유해 순환 import 없이 두 소비자를
+ * 한 곳에서 공유할 수 있는 쪽이기 때문이다.
  */
-export async function refreshSession(): Promise<RefreshSessionResult> {
-  if (!inFlightRefresh) {
-    inFlightRefresh = api
-      .post<ApiEnvelope<RefreshSessionResult>>('/auth/refresh')
-      .then((response) => response.data.data)
-      .finally(() => {
-        inFlightRefresh = null;
-      });
-  }
-  return inFlightRefresh;
-}
 
 /** POST /auth/logout — 서버의 리프레시 세션(쿠키)을 무효화한다. */
 export async function logout(): Promise<void> {

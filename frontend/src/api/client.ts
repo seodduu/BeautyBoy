@@ -1,5 +1,5 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios';
-import { useAuthStore } from '../stores/authStore';
+import { useAuthStore, type MemberInfo } from '../stores/authStore';
 
 /**
  * 공용 axios 인스턴스.
@@ -30,17 +30,30 @@ function isRefreshRequest(url: string | undefined): boolean {
   return !!url && url.includes('/auth/refresh');
 }
 
-// 동시에 여러 요청이 401을 받아도 refresh는 한 번만 나가도록 in-flight promise를 공유한다.
-let refreshPromise: Promise<string> | null = null;
+/**
+ * `/auth/refresh` 응답 데이터 — 부트스트랩(api/auth.ts)과 인터셉터(이 파일)가 공유한다.
+ * 리프레시 토큰은 한 번 쓰면 회전하므로, 두 소비자가 각자 요청을 쏘면 서버가 한쪽을
+ * 409(`AUTH_REFRESH_CONFLICT`)로 돌려보낸다. 그래서 in-flight promise를 한 벌로만 두고
+ * 두 소비자가 공유해야 한다(Task 1).
+ */
+export interface RefreshSessionResult {
+  accessToken: string;
+  member: MemberInfo;
+}
 
-async function refreshAccessToken(): Promise<string> {
+// 동시에 여러 요청/호출자가 리프레시를 원해도 서버로는 한 번만 나가도록 공유하는 in-flight promise.
+// client.ts(401 인터셉터)와 api/auth.ts(부트스트랩)가 이 하나만 사용한다 — 두 벌로 나누지 않는다.
+let refreshPromise: Promise<RefreshSessionResult> | null = null;
+
+/** POST /auth/refresh — 인터셉터 재시도와 부트스트랩 세션 복구가 공유하는 유일한 in-flight 창구. */
+export async function refreshSession(): Promise<RefreshSessionResult> {
   if (!refreshPromise) {
     refreshPromise = api
-      .post<{ code: string; data: { accessToken: string } }>('/auth/refresh')
+      .post<{ code: string; data: RefreshSessionResult }>('/auth/refresh')
       .then((response) => {
-        const { accessToken } = response.data.data;
-        useAuthStore.getState().setAuth(accessToken);
-        return accessToken;
+        const result = response.data.data;
+        useAuthStore.getState().setAuth(result.accessToken);
+        return result;
       })
       .finally(() => {
         refreshPromise = null;
@@ -75,11 +88,16 @@ api.interceptors.response.use(
     originalRequest._retried = true;
 
     try {
-      const newToken = await refreshAccessToken();
+      const { accessToken: newToken } = await refreshSession();
       originalRequest.headers.set('Authorization', `Bearer ${newToken}`);
       return api(originalRequest);
     } catch (refreshError) {
-      useAuthStore.getState().clear();
+      // 리프레시 실패 원인을 구분한다: 401(진짜 세션 없음)일 때만 세션을 지운다.
+      // 409(AUTH_REFRESH_CONFLICT)·5xx·네트워크 오류는 "지금 확인 못 했을 뿐"이므로
+      // 세션을 유지한다 — App.tsx의 isSessionGone()과 동일한 판단 기준(Task 1).
+      if (axios.isAxiosError(refreshError) && refreshError.response?.status === 401) {
+        useAuthStore.getState().clear();
+      }
       return Promise.reject(refreshError);
     }
   },
