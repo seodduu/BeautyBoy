@@ -37,13 +37,14 @@ public class GoodsController {
             @RequestParam(defaultValue = "popular") String sort,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String tag,
             @AuthenticationPrincipal Long memberId) {
 
         GoodsSort goodsSort = GoodsSort.fromParam(sort);
         int clampedSize = Math.min(size, MAX_PAGE_SIZE);
 
-        GoodsSearchCondition condition =
-                new GoodsSearchCondition(categoryCode, brandId, minPrice, maxPrice, goodsSort, page, clampedSize);
+        GoodsSearchCondition condition = new GoodsSearchCondition(
+                categoryCode, brandId, minPrice, maxPrice, goodsSort, page, clampedSize, tag);
 
         return ResponseEntity.ok(ApiResponse.ok(goodsService.list(condition, memberId)));
     }

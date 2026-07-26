@@ -272,6 +272,23 @@ class GoodsListApiTest {
                 .andExpect(jsonPath("$.data.content[0].tags.length()").value(0));
     }
 
+    @Test
+    void tag_슬러그로_목록을_거른다() throws Exception {
+        Brand brand = 브랜드_저장("브랜드1");
+        카테고리_저장("C001001001", 3);
+        Goods a = 상품_저장(brand, "C001001001", "자외선차단제", 10000, 10000);
+        Goods b = 상품_저장(brand, "C001001001", "토너", 10000, 10000);
+        Tag tag = tagRepository.save(new Tag("자외선차단", "EFFECT", "uv", 0));
+        goodsTagRepository.save(new GoodsTag(a.getId(), tag.getId(), null, 0));
+        Long aId = a.getId();
+        Long bId = b.getId();
+
+        mockMvc.perform(get("/api/v1/goods").param("tag", "uv"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.content[*].goodsNo", org.hamcrest.Matchers.hasItem(aId.intValue())))
+                .andExpect(jsonPath("$.data.content[*].goodsNo", org.hamcrest.Matchers.not(org.hamcrest.Matchers.hasItem(bId.intValue()))));
+    }
+
     // ---------- HIDDEN 제외 ----------
 
     @Test

@@ -15,5 +15,6 @@ public record GoodsSearchCondition(
         Integer maxPrice,
         GoodsSort sort,
         int page,
-        int size) {
+        int size,
+        String tagSlug) {
 }

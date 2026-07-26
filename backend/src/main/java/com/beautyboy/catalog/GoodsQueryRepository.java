@@ -176,6 +176,10 @@ public class GoodsQueryRepository {
         if (condition.maxPrice() != null) {
             jpql.append(" and g.salePrice <= :maxPrice");
         }
+        if (condition.tagSlug() != null && !condition.tagSlug().isBlank()) {
+            jpql.append(" and exists (select 1 from GoodsTag gt2, Tag t2 "
+                    + "where gt2.tagId = t2.id and gt2.goodsId = g.id and t2.slug = :tagSlug)");
+        }
     }
 
     private void bindParameters(TypedQuery<?> query, GoodsSearchCondition condition) {
@@ -191,6 +195,9 @@ public class GoodsQueryRepository {
         }
         if (condition.maxPrice() != null) {
             query.setParameter("maxPrice", condition.maxPrice());
+        }
+        if (condition.tagSlug() != null && !condition.tagSlug().isBlank()) {
+            query.setParameter("tagSlug", condition.tagSlug());
         }
     }
 
