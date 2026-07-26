@@ -225,14 +225,15 @@ describe('Detail — 상세 페이지', () => {
     expect(summary.compareDocumentPosition(price!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
-  it('태그 pill 줄이 한 줄 평 아래·별점 위에 최대 4개(효과 우선) 보인다', async () => {
+  it('태그 5개 이상도 전부 렌더된다 — EFFECT→PROPERTY→TEXTURE 순, 한 줄 평 아래에 보인다', async () => {
     registerDefaultHandlers({
       detail: {
         ...GOODS_DETAIL,
         tags: [
           { name: '산뜻함', kind: 'TEXTURE', slug: 'fresh' },
           { name: '가벼운제형', kind: 'TEXTURE', slug: 'light' },
-          { name: '진정', kind: 'EFFECT', slug: 'soothing' },
+          { name: '진정', kind: 'EFFECT', slug: 'soothe' },
+          { name: '저자극', kind: 'PROPERTY', slug: 'gentle' },
           { name: '보습', kind: 'EFFECT', slug: 'moisture' },
           { name: '세정', kind: 'EFFECT', slug: 'cleanse' },
         ],
@@ -245,12 +246,15 @@ describe('Detail — 상세 페이지', () => {
     const summary = await screen.findByText(GOODS_DETAIL.summary);
     const tags = container.querySelectorAll('.bb-tag');
 
-    expect(tags.length).toBe(4);
-    // 효과(EFFECT)가 먼저 나온다.
+    // 6개 전부 렌더 — 최대 4개 제한이 없다.
+    expect(tags.length).toBe(6);
+    // EFFECT(진정·보습·세정, 원래 순서 유지) → PROPERTY(저자극) → TEXTURE(산뜻함·가벼운제형) 순.
     expect(tags[0]).toHaveTextContent('진정');
     expect(tags[1]).toHaveTextContent('보습');
     expect(tags[2]).toHaveTextContent('세정');
-    expect(tags[3]).toHaveTextContent('산뜻함');
+    expect(tags[3]).toHaveTextContent('저자극');
+    expect(tags[4]).toHaveTextContent('산뜻함');
+    expect(tags[5]).toHaveTextContent('가벼운제형');
     expect(summary.compareDocumentPosition(tags[0]) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 

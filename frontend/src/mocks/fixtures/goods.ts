@@ -82,13 +82,15 @@ const BADGE_PLAN: BadgeType[][] = [
 const DISCOUNT_PLAN = [0, 10, 15, 0, 20, 25, 0, 30, 40, 5];
 
 /**
- * 태그 샘플. 실 백엔드는 상품마다 최대 여러 개를 규칙 파생 + 수동 보정으로 채우지만(V71 시드),
+ * 태그 샘플. 실 백엔드는 상품마다 최대 여러 개를 규칙 파생 + 수동 보정으로 채우지만(V72 시드),
  * mock은 목록/상세/카드 화면을 눈으로 확인할 수 있을 정도의 조합 몇 가지만 순환시킨다.
  * 빈 배열도 섞어 tags가 없는 상품에서 레이아웃이 무너지지 않는지 항상 검증되게 한다.
  *
- * slug·name·kind는 실제 V71 태그 마스터 13종과 정확히 맞춘다:
+ * slug·name·kind는 실제 V72 태그 마스터 18종과 정확히 맞춘다:
  * EFFECT — cleanse(세정) exfoliate(각질 케어) sebum(피지 관리) soothe(진정) moisture(보습)
- *          uv(자외선차단) bright(브라이트닝) firm(탄력) anti-aging(항노화) scalp(두피 케어)
+ *          uv(자외선차단) bright(브라이트닝) firm(탄력) anti-aging(안티에이징) scalp(두피 케어)
+ *          pore(모공 케어) trouble(트러블 케어) barrier(장벽 케어) antioxidant(항산화)
+ * PROPERTY — gentle(저자극)
  * TEXTURE — fresh(산뜻함) dewy(촉촉함) matte(매트)
  */
 const TAG_PLAN: TagView[][] = [
@@ -102,6 +104,19 @@ const TAG_PLAN: TagView[][] = [
     { name: '산뜻함', kind: 'TEXTURE', slug: 'fresh' },
   ],
   [{ name: '자외선차단', kind: 'EFFECT', slug: 'uv' }, { name: '매트', kind: 'TEXTURE', slug: 'matte' }],
+  // 태그확장(V72) 신규 slug 샘플 — 모공/트러블 케어 + 저자극(PROPERTY), 9개까지 쌓아
+  // 상세 화면 flex-wrap 줄바꿈을 눈으로 확인할 수 있게 한다.
+  [
+    { name: '모공 케어', kind: 'EFFECT', slug: 'pore' },
+    { name: '트러블 케어', kind: 'EFFECT', slug: 'trouble' },
+    { name: '피지 관리', kind: 'EFFECT', slug: 'sebum' },
+    { name: '각질 케어', kind: 'EFFECT', slug: 'exfoliate' },
+    { name: '진정', kind: 'EFFECT', slug: 'soothe' },
+    { name: '항산화', kind: 'EFFECT', slug: 'antioxidant' },
+    { name: '장벽 케어', kind: 'EFFECT', slug: 'barrier' },
+    { name: '저자극', kind: 'PROPERTY', slug: 'gentle' },
+    { name: '산뜻함', kind: 'TEXTURE', slug: 'fresh' },
+  ],
 ];
 
 function buildGoodsFixtures(): GoodsFixture[] {

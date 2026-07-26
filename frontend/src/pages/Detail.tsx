@@ -91,11 +91,12 @@ export function Detail() {
   // 표시 가격 규칙: salePrice + selectedOption.addPrice. 금액의 최종 진실은 여전히 서버(주문 시 재계산)이며
   // 이 값은 화면 안내용이다.
   const displaySalePrice = goods.salePrice + (selectedOption?.addPrice ?? 0);
-  // 표시 규칙(전역): 상품당 태그 최대 4개, 효과(EFFECT) 우선·사용감(TEXTURE) 후순위.
-  // 여기서 자른다 — 백엔드가 더 많이 내려줘도 화면은 4개까지만 노출한다.
-  const displayTags = [...goods.tags]
-    .sort((a, b) => (a.kind === b.kind ? 0 : a.kind === 'EFFECT' ? -1 : 1))
-    .slice(0, 4);
+  // 표시 규칙(태그확장): 상세는 전부 표시한다(최대 개수 제한 없음, flex-wrap으로 줄바꿈).
+  // 정렬만 EFFECT → PROPERTY → TEXTURE 순으로 하고, 동순위 안에서는 백엔드가 내려준 원래 순서를 지킨다.
+  const TAG_KIND_ORDER: Record<string, number> = { EFFECT: 0, PROPERTY: 1, TEXTURE: 2 };
+  const displayTags = [...goods.tags].sort(
+    (a, b) => TAG_KIND_ORDER[a.kind] - TAG_KIND_ORDER[b.kind],
+  );
 
   return (
     <div className="bb-detail">

@@ -388,6 +388,34 @@ The layout discipline is editorial: hairline dividers (`{colors.hairline}`), upp
 프로모션 배지 4종 중 **SALE만 색을 갖는다.** COUPON·GIFT·1+1은 `{badge-neutral}`(graphite 글자)로
 두어, 배지가 3개 이상 붙은 카드에서도 시선이 한 곳에만 모이게 한다.
 
+### 태그 컬러 (뷰티보이) — 무채색 규칙의 유일한 예외
+
+**이 절이 태그 pill 색의 유일한 출처다.** 아래 표 밖의 색을 태그에 임의로 만들지 않는다 —
+새 slug가 추가되면 이 표에 먼저 hex를 적고 나서 코드(`Tag.css`)로 옮긴다.
+
+원본 Runwai 시스템과 위 "Do's and Don'ts"의 "배경으로 칠하지 않는다·`signal-*` 5종 밖 액센트
+금지" 규칙은 **태그 pill에 한해 사용자 지시로 해제한다.** 상품 태그는 종류가 18종까지 늘고
+상세 화면에 한 상품당 여러 개가 동시에 나열되므로, 무채색 하나로는 모공·트러블·보습·항산화 같은
+서로 다른 효과가 시각적으로 구분되지 않는다. 태그 pill은 **틴트 배경 + 같은 계열의 진한 글자**로
+렌더한다(카드·배지·버튼 등 다른 모든 컴포넌트는 기존 무채색·배경-금지 규칙을 그대로 따른다).
+
+| slug | bg | text | | slug | bg | text |
+|---|---|---|---|---|---|---|
+| moisture | `#E0F2FE` | `#0369A1` | | anti-aging | `#FAE8FF` | `#86198F` |
+| soothe | `#DCFCE7` | `#15803D` | | firm | `#FFE4E6` | `#BE123C` |
+| cleanse | `#DBEAFE` | `#1D4ED8` | | antioxidant | `#FEF3C7` | `#B45309` |
+| exfoliate | `#FFEDD5` | `#C2410C` | | barrier | `#FEF9C3` | `#A16207` |
+| sebum | `#CCFBF1` | `#0F766E` | | scalp | `#F5F5F4` | `#57534E` |
+| uv | `#FEF08A` | `#854D0E` | | pore | `#CFFAFE` | `#0E7490` |
+| bright | `#EDE9FE` | `#6D28D9` | | trouble | `#FEE2E2` | `#B91C1C` |
+| gentle | `#FCE7F3` | `#BE185D` | | (TEXTURE) | 기존 회색 유지 | |
+
+- `gentle`(저자극)은 `kind: 'PROPERTY'`이지만 색 배정은 slug 기준이다 — kind가 아니라 slug로
+  클래스를 매핑하므로 PROPERTY도 여기 정의된 색을 그대로 받는다(무채색 폴백이 아니다).
+- **TEXTURE**(fresh·dewy·matte)는 이 팔레트 대상이 아니다 — 기존 `{colors.stone}` 무채색을 유지한다.
+- 표에 없는 slug(향후 추가된 태그가 아직 색이 배정되지 않은 경우)는 **무채색 폴백**
+  (`{colors.graphite}` 글자, 배경 없음)으로 렌더한다 — 팔레트가 없다고 렌더가 깨지면 안 된다.
+
 ## Typography
 
 ### Font Family

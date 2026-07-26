@@ -1,7 +1,11 @@
 export type BadgeType = 'SALE' | 'COUPON' | 'GIFT' | 'ONE_PLUS_ONE';
 
-/** 태그 종류. EFFECT(효과)가 표시 우선순위가 높고, TEXTURE(사용감)은 후순위다. */
-export type TagKind = 'EFFECT' | 'TEXTURE';
+/**
+ * 태그 종류. 표시 우선순위는 EFFECT(효과) → PROPERTY(속성, 예: 저자극) → TEXTURE(사용감) 순.
+ * PROPERTY는 태그확장(V72)에서 추가됐다 — 성분 매핑 유무가 아니라 "저자극"처럼 상품 속성 자체를
+ * 나타내는 파생 기준이 달라 EFFECT와 분리했다.
+ */
+export type TagKind = 'EFFECT' | 'PROPERTY' | 'TEXTURE';
 
 /**
  * 상품 태그 — 백엔드 TagView(backend/src/main/java/com/beautyboy/catalog/dto/TagView.java)와
