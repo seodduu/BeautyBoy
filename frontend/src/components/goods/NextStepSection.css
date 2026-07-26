@@ -1,0 +1,31 @@
+/* 다음 단계 섹션 — 추천 섹션과 같은 heading-sm 위계, 블록마다 이유 문장 + 상품 그리드. */
+.bb-next-step {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  padding-top: var(--space-lg);
+  border-top: 1px solid var(--color-hairline);
+}
+
+.bb-next-step__title {
+  margin: 0;
+  font-size: var(--fs-heading-sm);
+  font-weight: var(--fw-heading-sm);
+  line-height: var(--lh-heading-sm);
+  color: var(--color-ink);
+}
+
+.bb-next-step__block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.bb-next-step__reason {
+  margin: 0;
+  font-size: var(--fs-body);
+  font-weight: var(--fw-body);
+  line-height: var(--lh-body);
+  color: var(--color-ink);
+  word-break: keep-all;
+}

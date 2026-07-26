@@ -26,7 +26,7 @@
 책임이고, 규칙 테이블 이름도 메모 그대로 `routine_flow_rule`.
 
 ```sql
--- V72 (V70/V71 product-tags 뒤 대역)
+-- V74 (V70/V71 product-tags 뒤 대역)
 CREATE TABLE routine_flow_rule (
   id                 BIGINT AUTO_INCREMENT PRIMARY KEY,
   from_category_code VARCHAR(12) NOT NULL,   -- 중분류(C001001). goods.category_code(leaf)는 접두사 매칭
@@ -78,7 +78,7 @@ NextStepBlock(String edgeKind, String reason, List<GoodsListItem> items)  // 블
    compat 도메인에 배치 인터페이스를 신설해 경유한다(§7). 제거 후 재폴백은 하지 않는다
    (남은 후보만 노출; 0개면 블록 미노출).
 
-## 6. 시드 규칙 (V73)
+## 6. 시드 규칙 (V75)
 
 시드 상품이 실제로 덮는 (단계×태그) 조합만 수작업 작성 — 대략 8~12행.
 메모 §4 예시 4행이 출발점이고, 계획서 작성 시 V12·V71 시드를 대조해 확장한다:

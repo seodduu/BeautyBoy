@@ -1,7 +1,7 @@
 import { http, HttpResponse } from 'msw';
-import { goodsFixtures } from './fixtures/goods';
+import { goodsFixtures, nextStepFixtures } from './fixtures/goods';
 import type { GoodsFixture } from './fixtures/goods';
-import type { ApiEnvelope, PageResponse } from '../types/goods';
+import type { ApiEnvelope, NextStepBlock, PageResponse } from '../types/goods';
 import type { RankingItem } from '../types/ranking';
 import type {
   GoodsDescription,
@@ -495,6 +495,20 @@ export const handlers = [
     const recommended = goodsFixtures.filter((item) => item.goodsNo !== goodsNo).slice(0, 4);
 
     const body: ApiEnvelope<GoodsFixture[]> = { code: 'OK', message: 'success', data: recommended };
+    return HttpResponse.json(body);
+  }),
+
+  // 다음 단계 추천 — recommended와 같은 이유로 /goods/:goodsNo 보다 먼저 등록한다.
+  // 문구·블록 구성은 fixtures/goods.ts의 nextStepFixtures가 유일한 출처(Task 7 하드코딩 금지 원칙).
+  http.get('/api/v1/goods/:goodsNo/next-step', ({ params }) => {
+    const goodsNo = Number(params.goodsNo);
+    const blocks: NextStepBlock[] = nextStepFixtures[goodsNo] ?? [];
+
+    const body: ApiEnvelope<{ blocks: NextStepBlock[] }> = {
+      code: 'OK',
+      message: 'success',
+      data: { blocks },
+    };
     return HttpResponse.json(body);
   }),
 

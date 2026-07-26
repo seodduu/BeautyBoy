@@ -1,5 +1,5 @@
 import { api } from './client';
-import type { ApiEnvelope, GoodsListItem, PageResponse } from '../types/goods';
+import type { ApiEnvelope, GoodsListItem, NextStepBlock, PageResponse } from '../types/goods';
 import type { GoodsDescription, GoodsDetail } from '../types/detail';
 
 /** T1 설계의 정렬 규약 — mock(handlers.ts)과 실 API가 공유하는 값 집합. */
@@ -44,4 +44,15 @@ export async function fetchGoodsDescription(goodsNo: number): Promise<GoodsDescr
 export async function fetchRecommended(goodsNo: number): Promise<GoodsListItem[]> {
   const response = await api.get<ApiEnvelope<GoodsListItem[]>>(`/goods/${goodsNo}/recommended`);
   return response.data.data;
+}
+
+/**
+ * GET /goods/:goodsNo/next-step — "다음 단계" 슬롯. 서버가 전이 규칙 적용·폴백·궁합 게이트까지
+ * 끝낸 결과를 받는다. blocks가 비면 화면이 섹션 자체를 그리지 않는다(NextStepSection).
+ */
+export async function fetchNextStep(goodsNo: number): Promise<NextStepBlock[]> {
+  const response = await api.get<ApiEnvelope<{ blocks: NextStepBlock[] }>>(
+    `/goods/${goodsNo}/next-step`,
+  );
+  return response.data.data.blocks;
 }

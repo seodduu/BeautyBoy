@@ -14,6 +14,7 @@ import { AssessmentCard } from '../components/goods/AssessmentCard';
 import { CautionPanel } from '../components/goods/CautionPanel';
 import { DetailTabs } from '../components/goods/DetailTabs';
 import { OptionSelector } from '../components/goods/OptionSelector';
+import { NextStepSection } from '../components/goods/NextStepSection';
 import { QuantityStepper } from '../components/goods/QuantityStepper';
 import { RecommendedSection } from '../components/goods/RecommendedSection';
 import { useToast } from '../components/ui/useToast';
@@ -165,6 +166,8 @@ export function Detail() {
       </header>
 
       <DetailTabs goodsNo={goodsNo} />
+
+      <NextStepSection goodsNo={goodsNo} />
 
       <RecommendedSection goodsNo={goodsNo} />
 
