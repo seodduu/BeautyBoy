@@ -21,3 +21,10 @@ tools/ingredient_pipeline/.cache/
 # 분석용 원본 데이터셋(추적 안 함 — 파이프라인은 API에서 받는다)
 cosmetics.csv
 *.pdf
+
+# Claude Code 로컬 설정·작업용 worktree (스킬은 .claude/skills/ 만 추적)
+.claude/settings.local.json
+.claude/worktrees/
+
+# 개인 메모
+일어나서 다시 할 것.txt
