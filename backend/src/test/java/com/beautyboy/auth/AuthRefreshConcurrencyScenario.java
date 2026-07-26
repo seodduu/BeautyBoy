@@ -13,7 +13,6 @@ import org.mockito.stubbing.Answer;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CyclicBarrier;
@@ -182,11 +181,5 @@ abstract class AuthRefreshConcurrencyScenario {
                 .filter(Throwable.class::isInstance)
                 .map(Throwable.class::cast)
                 .toList();
-    }
-
-    /** spy 스텁이 Optional을 그대로 돌려주는지 컴파일 타임에 못 박아두기 위한 참조(사용처 없음). */
-    @SuppressWarnings("unused")
-    private Optional<RefreshToken> 반환형_문서화() {
-        return Optional.empty();
     }
 }

@@ -12,7 +12,8 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long
     Optional<RefreshToken> findByTokenHash(String tokenHash);
 
     /**
-     * 리프레시 토큰 한 행을 삭제하고 <b>실제로 지운 행 수</b>를 돌려준다.
+     * 리프레시 토큰 한 행을 삭제하고 <b>반환값으로 지워진 행의 개수</b>(0 또는 1)를 돌려준다.
+     * 지워진 엔티티를 돌려주는 것이 아니다.
      * 동시 refresh의 승자/패자는 오직 이 반환값으로 갈린다 — 1이면 내가 소유권을 얻었고,
      * 0이면 다른 요청이 먼저 가져갔다(Task 4-16a).
      *
@@ -25,5 +26,5 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long
      */
     @Modifying
     @Query("delete from RefreshToken t where t.id = :id")
-    int deleteByIdReturningAffected(@Param("id") Long id);
+    int deleteRowById(@Param("id") Long id);
 }

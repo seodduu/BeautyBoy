@@ -36,9 +36,23 @@ describe('App — 부트스트랩 세션 복원', () => {
     expect(useAuthStore.getState().isBootstrapping).toBe(false);
   });
 
-  it('/auth/refresh가 401이면 비로그인으로 남고, 콘솔 에러나 추가 재시도가 없다(재귀 방지 회귀)', async () => {
+  it('/auth/refresh가 401이면 세션을 비우고, 콘솔 에러나 추가 재시도가 없다(재귀 방지 회귀)', async () => {
     let refreshCalls = 0;
     const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    // 스토어를 미리 채운 뒤 시작한다. 비어 있는 상태로 시작하면 세션이 비워지지 않아도 단언이
+    // 통과해버려서 "401이면 세션이 사라진다"가 통째로 미검증으로 남는다.
+    //
+    // 다만 이 단언이 App.tsx의 isSessionGone() 분기를 '단독으로' 못 박지는 못한다:
+    // 동결 파일 client.ts의 응답 인터셉터가 refresh 요청의 401에 대해 이미 clear()를 부르기
+    // 때문에(client.ts:63-67), App.tsx 쪽 clear()를 없애도 결과는 같다(변이 테스트로 확인함).
+    // 즉 App.tsx의 401 clear()는 인터셉터와 중복인 방어층이다. 여기서 지키는 것은
+    // "401이면 세션이 사라진다"라는 사용자 관점 계약이고, 그 반대편(409·5xx에는 사라지지 않는다)은
+    // 아래 두 테스트가 덮는다 — 그쪽은 인터셉터가 관여하지 않으므로 App.tsx 분기를 단독으로 검증한다.
+    useAuthStore.setState({
+      accessToken: '낡은-토큰',
+      member: { id: 1, email: 'a@beautyboy.dev', nickname: '영희', grade: 'BRONZE' },
+    });
 
     server.use(
       http.post('/api/v1/auth/refresh', () => {
@@ -50,8 +64,8 @@ describe('App — 부트스트랩 세션 복원', () => {
     render(<App />);
 
     await waitFor(() => expect(useAuthStore.getState().isBootstrapping).toBe(false));
+    await waitFor(() => expect(useAuthStore.getState().accessToken).toBeNull());
     expect(useAuthStore.getState().member).toBeNull();
-    expect(useAuthStore.getState().accessToken).toBeNull();
     await waitFor(() => expect(refreshCalls).toBe(1));
 
     // 인터셉터가 refresh 실패에 반응해 추가로 refresh를 부르지 않는지 확인 — 시간을 조금 더 준다.

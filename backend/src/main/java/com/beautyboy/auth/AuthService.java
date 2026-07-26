@@ -71,7 +71,7 @@ public class AuthService {
         // 왜 낙관적 락 예외를 잡아 번역하지 않는가: 어느 예외가 오는지가 엔진에 따라 달라진다
         // (H2의 잠금 타임아웃 vs InnoDB의 행 잠금 대기). 영향 행 수는 어느 엔진에서도 같은 뜻이라
         // 실 MySQL에서 조용히 깨질 여지가 없다.
-        if (refreshTokenRepository.deleteByIdReturningAffected(saved.getId()) == 0) {
+        if (refreshTokenRepository.deleteRowById(saved.getId()) == 0) {
             throw new BusinessException(ErrorCode.AUTH_REFRESH_CONFLICT);
         }
 
