@@ -75,6 +75,13 @@
   min-height: calc(var(--fs-micro-caps) * var(--lh-micro-caps) + var(--space-xs));
 }
 
+/* 효과 태그 줄(최대 2개) — 배지 줄 바로 아래. gap은 부모 __link의 space-xs를 그대로 물려받는다. */
+.bb-goods-card__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xxs);
+}
+
 .bb-goods-card__brand {
   font-family: var(--font-body);
   font-size: var(--fs-meta);

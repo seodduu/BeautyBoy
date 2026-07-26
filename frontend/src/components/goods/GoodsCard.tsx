@@ -3,6 +3,7 @@ import type { GoodsListItem } from '../../types/goods';
 import { Badge, TodayDreamBadge } from '../ui/Badge';
 import { Price } from '../ui/Price';
 import { Rating } from '../ui/Rating';
+import { Tag } from '../ui/Tag';
 import './GoodsCard.css';
 
 interface GoodsCardProps {
@@ -27,6 +28,10 @@ export function GoodsCard({ item, onWishToggle, soldOut = false }: GoodsCardProp
     event.stopPropagation();
     onWishToggle(item.goodsNo);
   };
+
+  // 표시 규칙(전역): 카드에는 효과(EFFECT) 태그만, 최대 2개 — 사용감(TEXTURE)은 상세에서만 보여준다.
+  // 카드는 훑어보는 자리라 태그가 배지보다 눈에 띄면 안 되므로 개수를 badges보다 더 좁게 잡는다.
+  const effectTags = (item.tags ?? []).filter((tag) => tag.kind === 'EFFECT').slice(0, 2);
 
   return (
     <div className="bb-goods-card">
@@ -53,6 +58,14 @@ export function GoodsCard({ item, onWishToggle, soldOut = false }: GoodsCardProp
           ))}
           {item.todayDreamAvailable && <TodayDreamBadge />}
         </div>
+
+        {effectTags.length > 0 && (
+          <div className="bb-goods-card__tags">
+            {effectTags.map((tag) => (
+              <Tag key={tag.slug} view={tag} />
+            ))}
+          </div>
+        )}
 
         <span className="bb-goods-card__brand">{item.brandName}</span>
         <span className="bb-goods-card__name">{item.name}</span>

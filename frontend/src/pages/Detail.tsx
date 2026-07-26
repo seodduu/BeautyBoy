@@ -9,6 +9,7 @@ import { Rating } from '../components/ui/Rating';
 import { Badge, TodayDreamBadge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 import { Skeleton } from '../components/ui/Skeleton';
+import { Tag } from '../components/ui/Tag';
 import { AssessmentCard } from '../components/goods/AssessmentCard';
 import { CautionPanel } from '../components/goods/CautionPanel';
 import { DetailTabs } from '../components/goods/DetailTabs';
@@ -90,6 +91,11 @@ export function Detail() {
   // 표시 가격 규칙: salePrice + selectedOption.addPrice. 금액의 최종 진실은 여전히 서버(주문 시 재계산)이며
   // 이 값은 화면 안내용이다.
   const displaySalePrice = goods.salePrice + (selectedOption?.addPrice ?? 0);
+  // 표시 규칙(전역): 상품당 태그 최대 4개, 효과(EFFECT) 우선·사용감(TEXTURE) 후순위.
+  // 여기서 자른다 — 백엔드가 더 많이 내려줘도 화면은 4개까지만 노출한다.
+  const displayTags = [...(goods.tags ?? [])]
+    .sort((a, b) => (a.kind === b.kind ? 0 : a.kind === 'EFFECT' ? -1 : 1))
+    .slice(0, 4);
 
   return (
     <div className="bb-detail">
@@ -107,6 +113,13 @@ export function Detail() {
           <h1 className="bb-detail__name">{goods.name}</h1>
           {/* 한 줄 평 — 상품명 바로 아래, 가격보다 위. "이 제품을 쓰면 무엇이 좋은가"에 먼저 답한다. */}
           {goods.summary && <p className="bb-detail__summary">{goods.summary}</p>}
+          {displayTags.length > 0 && (
+            <div className="bb-detail__tags">
+              {displayTags.map((tag) => (
+                <Tag key={tag.slug} view={tag} />
+              ))}
+            </div>
+          )}
           <Rating rating={goods.rating} reviewCount={goods.reviewCount} />
           <div className="bb-detail__badges">
             {goods.badges.map((type) => (

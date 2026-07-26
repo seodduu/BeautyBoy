@@ -529,6 +529,7 @@ export const handlers = [
       reviewCount: found.reviewCount,
       wished: found.wished,
       todayDreamAvailable: found.todayDreamAvailable,
+      tags: found.tags,
     };
 
     const body: ApiEnvelope<GoodsDetail> = { code: 'OK', message: 'success', data: detail };

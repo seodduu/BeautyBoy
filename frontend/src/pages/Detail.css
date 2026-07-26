@@ -73,6 +73,13 @@
   color: var(--color-graphite);
 }
 
+/* 태그 pill 줄 — 한 줄 평 바로 아래, 별점 위. 최대 4개(효과 우선)는 Detail.tsx에서 자른다. */
+.bb-detail__tags {
+  display: flex;
+  gap: var(--space-xxs);
+  flex-wrap: wrap;
+}
+
 .bb-detail__badges {
   display: flex;
   gap: var(--space-xs);

@@ -1,4 +1,4 @@
-import type { BadgeType, GoodsListItem } from '../../types/goods';
+import type { BadgeType, GoodsListItem, TagView } from '../../types/goods';
 
 /**
  * T1 시드와 성격을 맞춘 상품 fixture. `GoodsListItem` 계약은 그대로 지키되,
@@ -81,6 +81,24 @@ const BADGE_PLAN: BadgeType[][] = [
 
 const DISCOUNT_PLAN = [0, 10, 15, 0, 20, 25, 0, 30, 40, 5];
 
+/**
+ * 태그 샘플. 실 백엔드는 상품마다 최대 여러 개를 규칙 파생 + 수동 보정으로 채우지만(V71 시드),
+ * mock은 목록/상세/카드 화면을 눈으로 확인할 수 있을 정도의 조합 몇 가지만 순환시킨다.
+ * 빈 배열도 섞어 tags가 없는 상품에서 레이아웃이 무너지지 않는지 항상 검증되게 한다.
+ */
+const TAG_PLAN: TagView[][] = [
+  [],
+  [{ name: '진정', kind: 'EFFECT', slug: 'soothing' }, { name: '산뜻함', kind: 'TEXTURE', slug: 'fresh' }],
+  [{ name: '보습', kind: 'EFFECT', slug: 'moisture' }],
+  [],
+  [
+    { name: '세정', kind: 'EFFECT', slug: 'cleanse' },
+    { name: '모공케어', kind: 'EFFECT', slug: 'pore-care' },
+    { name: '산뜻함', kind: 'TEXTURE', slug: 'fresh' },
+  ],
+  [{ name: '자외선차단', kind: 'EFFECT', slug: 'uv-protect' }, { name: '가벼운제형', kind: 'TEXTURE', slug: 'light' }],
+];
+
 function buildGoodsFixtures(): GoodsFixture[] {
   const items: GoodsFixture[] = [];
   let goodsNo = 1;
@@ -107,6 +125,7 @@ function buildGoodsFixtures(): GoodsFixture[] {
         reviewCount: 0,
         wished: false,
         todayDreamAvailable: goodsNo % 4 === 0,
+        tags: TAG_PLAN[(goodsNo - 1) % TAG_PLAN.length],
         categoryCode: code,
         createdAt: Date.now() - goodsNo * 86_400_000,
         salesCount: (goodsNo * 37) % 500,

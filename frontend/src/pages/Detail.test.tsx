@@ -29,6 +29,11 @@ const GOODS_DETAIL: GoodsDetail = {
   reviewCount: 12,
   wished: false,
   todayDreamAvailable: true,
+  tags: [
+    { name: '진정', kind: 'EFFECT', slug: 'soothing' },
+    { name: '보습', kind: 'EFFECT', slug: 'moisture' },
+    { name: '산뜻함', kind: 'TEXTURE', slug: 'fresh' },
+  ],
 };
 
 function envelope<T>(data: T): ApiEnvelope<T> {
@@ -217,6 +222,45 @@ describe('Detail — 상세 페이지', () => {
     expect(heading.compareDocumentPosition(summary) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(price).not.toBeNull();
     expect(summary.compareDocumentPosition(price!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it('태그 pill 줄이 한 줄 평 아래·별점 위에 최대 4개(효과 우선) 보인다', async () => {
+    registerDefaultHandlers({
+      detail: {
+        ...GOODS_DETAIL,
+        tags: [
+          { name: '산뜻함', kind: 'TEXTURE', slug: 'fresh' },
+          { name: '가벼운제형', kind: 'TEXTURE', slug: 'light' },
+          { name: '진정', kind: 'EFFECT', slug: 'soothing' },
+          { name: '보습', kind: 'EFFECT', slug: 'moisture' },
+          { name: '세정', kind: 'EFFECT', slug: 'cleanse' },
+        ],
+      },
+    });
+    server.use(http.post('/api/v1/cart/items', () => new HttpResponse(null, { status: 201 })));
+
+    const { container } = renderDetail();
+
+    const summary = await screen.findByText(GOODS_DETAIL.summary);
+    const tags = container.querySelectorAll('.bb-tag');
+
+    expect(tags.length).toBe(4);
+    // 효과(EFFECT)가 먼저 나온다.
+    expect(tags[0]).toHaveTextContent('진정');
+    expect(tags[1]).toHaveTextContent('보습');
+    expect(tags[2]).toHaveTextContent('세정');
+    expect(tags[3]).toHaveTextContent('산뜻함');
+    expect(summary.compareDocumentPosition(tags[0]) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it('태그가 없는 상품은 태그 줄을 렌더하지 않고 나머지 화면은 그대로 뜬다', async () => {
+    registerDefaultHandlers({ detail: { ...GOODS_DETAIL, tags: [] } });
+    server.use(http.post('/api/v1/cart/items', () => new HttpResponse(null, { status: 201 })));
+
+    const { container } = renderDetail();
+
+    expect(await screen.findByRole('heading', { name: '테스트 세럼' })).toBeInTheDocument();
+    expect(container.querySelectorAll('.bb-tag').length).toBe(0);
   });
 
   it('설명 탭은 summary가 아니라 /description 본문을 지연 로딩해 보여준다', async () => {

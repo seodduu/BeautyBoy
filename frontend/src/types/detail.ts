@@ -1,4 +1,4 @@
-import type { BadgeType } from './goods';
+import type { BadgeType, TagView } from './goods';
 
 /**
  * 백엔드 GoodsOptionResponse와 필드를 1:1로 맞춘 옵션 타입.
@@ -35,6 +35,8 @@ export interface GoodsDetail {
   reviewCount: number;
   wished: boolean;
   todayDreamAvailable: boolean;
+  /** 옵션 필드 — GoodsListItem.tags와 동일한 이유로 옵션이다. 없으면 빈 배열로 취급한다. */
+  tags?: TagView[];
 }
 
 /**

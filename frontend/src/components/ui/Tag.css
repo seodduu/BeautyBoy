@@ -1,0 +1,31 @@
+/*
+  DESIGN.md 대응:
+  bb-tag           → 신규 컴포넌트(태그 pill). goods-card/badge 계열과 마찬가지로 배경 채움 금지 —
+                     텍스트 색 + 1px hairline 테두리로만 종류를 구분한다(rounded.sm: "Tag chips").
+  bb-tag--effect   → colors.graphite 글자 + colors.hairline 테두리 (효과 태그, 표시 우선)
+  bb-tag--texture  → colors.stone 글자 + colors.hairline 테두리 (사용감 태그, 표시 후순위)
+*/
+.bb-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-xxs) var(--space-xs);
+  border-radius: var(--rounded-sm);
+  border: 1px solid var(--color-hairline);
+  background: transparent;
+  font-family: var(--font-body);
+  font-size: var(--fs-meta);
+  font-weight: var(--fw-meta);
+  line-height: var(--lh-meta);
+  letter-spacing: var(--ls-meta);
+  text-decoration: none;
+  word-break: keep-all;
+  white-space: nowrap;
+}
+
+.bb-tag--effect {
+  color: var(--color-graphite);
+}
+
+.bb-tag--texture {
+  color: var(--color-stone);
+}
