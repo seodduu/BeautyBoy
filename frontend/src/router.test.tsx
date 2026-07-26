@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { createMemoryRouter, RouterProvider } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -137,6 +137,12 @@ describe('router — 상세·검색·랭킹 라우팅', () => {
 });
 
 describe('router — /order/fail은 비로그인 상태에서도 렌더된다', () => {
+  // 이 describe에서 setState로 비로그인 상태를 흉내내므로, 뒤에 오는 테스트가 앞선
+  // beforeEach의 로그인 상태를 전제하지 않도록 원상 복구한다(App.test.tsx의 기존 패턴).
+  afterEach(() => {
+    useAuthStore.setState({ accessToken: null, member: null, isBootstrapping: true });
+  });
+
   it('부트스트랩이 끝난 비로그인 상태여도 /login으로 튕기지 않고 실패 사유를 보여준다', async () => {
     useAuthStore.setState({ accessToken: null, isBootstrapping: false });
 

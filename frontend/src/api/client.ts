@@ -52,7 +52,7 @@ export async function refreshSession(): Promise<RefreshSessionResult> {
       .post<{ code: string; data: RefreshSessionResult }>('/auth/refresh')
       .then((response) => {
         const result = response.data.data;
-        useAuthStore.getState().setAuth(result.accessToken);
+        useAuthStore.getState().setAuth(result.accessToken, result.member);
         return result;
       })
       .finally(() => {

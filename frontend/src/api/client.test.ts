@@ -95,6 +95,29 @@ describe('api 클라이언트 — 401 리프레시 인터셉터', () => {
     expect(useAuthStore.getState().accessToken).toBe('살아있는-토큰');
   });
 
+  it('리프레시가 500(서버 오류)으로 실패해도 스토어를 비우지 않는다', async () => {
+    useAuthStore.setState({
+      accessToken: '살아있는-토큰',
+      member: { id: 1, email: 'a@beautyboy.dev', nickname: '영희', grade: 'BRONZE' },
+    });
+    let refreshCalls = 0;
+
+    server.use(
+      http.get('/api/v1/members/me', () => new HttpResponse(null, { status: 401 })),
+      http.post('/api/v1/auth/refresh', () => {
+        refreshCalls++;
+        return new HttpResponse(null, { status: 500 });
+      }),
+    );
+
+    await expect(api.get('/members/me')).rejects.toBeTruthy();
+
+    expect(refreshCalls).toBe(1);
+    // 세션을 지우는 조건은 "리프레시가 401일 때"뿐인 화이트리스트다 — 5xx는 "지금 확인 못
+    // 했을 뿐"이므로 살아있는 세션을 유지한다.
+    expect(useAuthStore.getState().accessToken).toBe('살아있는-토큰');
+  });
+
   it('인터셉터 리프레시와 부트스트랩 refreshSession이 동시에 일어나도 서버 요청은 1회만 나간다', async () => {
     let refreshCalls = 0;
 
