@@ -29,16 +29,27 @@ public class CartService {
         }
         // 담는 시점에 존재·판매 가능 여부를 확인한다. 없는 상품이 장바구니에 남으면
         // 주문 단계에서야 실패해 손님이 결제 직전에 막힌다.
-        goodsQueryService.findOrderSnapshot(request.goodsNo(), request.optionNo())
-                .orElseThrow(() -> new BusinessException(ErrorCode.GOODS_NOT_FOUND));
+        GoodsQueryService.OrderGoodsSnapshot snapshot =
+                goodsQueryService.findOrderSnapshot(request.goodsNo(), request.optionNo())
+                        .orElseThrow(() -> new BusinessException(ErrorCode.GOODS_NOT_FOUND));
+
+        // 요청의 optionNo가 아니라 catalog가 해석해 준 optionId를 저장한다.
+        // 루틴 전체담기처럼 optionNo=null로 오는 경로는 catalog가 대표 옵션을 골라주는데,
+        // 그것을 null로 저장해 두면 읽을 때마다 다시 해석하게 되고 옵션의 sortOrder가 바뀌거나
+        // 옵션이 삭제되는 순간 장바구니 내용이 조용히 달라진다. 담긴 순간에 확정하는 것이
+        // 스냅샷 원칙과도 맞는다. (옵션이 하나도 없는 상품이면 그대로 null이다.)
+        Long optionId = snapshot.optionId();
 
         cartItemRepository
-                .findByMemberIdAndGoodsIdAndOptionId(memberId, request.goodsNo(), request.optionNo())
+                .findByMemberIdAndGoodsIdAndOptionId(memberId, request.goodsNo(), optionId)
                 .ifPresentOrElse(
                         // 이미 있으면 더한다. 유니크 제약에 부딪히기 전에 애플리케이션이 먼저 처리한다.
+                        // 해석된 optionId로 찾으므로, 같은 상품을 루틴(optionNo=null)과 상세(optionNo 지정)에서
+                        // 각각 담아도 같은 옵션이면 한 행으로 합쳐진다 — 예전에는 (goodsId, null)과
+                        // (goodsId, optionId) 두 행으로 갈라져 같은 옵션이 두 줄로 보였다.
                         existing -> existing.addQuantity(request.quantity()),
                         () -> cartItemRepository.save(new CartItem(
-                                memberId, request.goodsNo(), request.optionNo(), request.quantity())));
+                                memberId, request.goodsNo(), optionId, request.quantity())));
     }
 
     @Transactional
