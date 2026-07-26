@@ -12,6 +12,11 @@ import org.springframework.http.HttpStatus;
 import org.mockito.stubbing.Answer;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.time.LocalDateTime;
+import java.util.HexFormat;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Callable;
@@ -60,13 +65,14 @@ abstract class AuthRefreshConcurrencyScenario {
     private final AtomicInteger 조회_횟수 = new AtomicInteger();
     private CyclicBarrier 조회_직후_만남;
     private String 이메일;
+    private Long 회원_id;
 
     @BeforeEach
     void 회원가입하고_동시_조회_인터리빙을_강제한다() throws Exception {
         // 이 테스트는 @Transactional이 아니다(스레드마다 진짜 커밋이 필요하다) — 데이터가 남으므로
         // 매 테스트가 자기 회원을 쓴다. 실 MySQL 실행에서는 Flyway 시드 회원과도 겹치지 않아야 한다.
         이메일 = "race-" + UUID.randomUUID().toString().substring(0, 8) + "@b.com";
-        memberService.signup(new SignupRequest(이메일, "pw123456", "레이스맨", null, null, null));
+        회원_id = memberService.signup(new SignupRequest(이메일, "pw123456", "레이스맨", null, null, null)).id();
 
         조회_횟수.set(0);
         조회_직후_만남 = new CyclicBarrier(2);
@@ -140,6 +146,68 @@ abstract class AuthRefreshConcurrencyScenario {
                 .isInstanceOf(BusinessException.class)
                 .extracting(e -> ((BusinessException) e).getErrorCode())
                 .isEqualTo(ErrorCode.UNAUTHORIZED);
+    }
+
+    @Test
+    void 만료된_토큰으로_동시에_리프레시하면_양쪽_다_401이고_아무도_409를_받지_않는다() throws Exception {
+        // 불변식 (iv)를 동시 상황에서 못 박는다: 만료는 언제나 UNAUTHORIZED이고, 동시 호출이라는
+        // 사정이 그것을 AUTH_REFRESH_CONFLICT로 바꿔서는 안 된다. 만료 토큰은 애초에 아무도
+        // 새 토큰을 받아서는 안 되므로 승자도 없다.
+        // 만료 검사를 없애는 변이를 넣으면 한쪽이 실제로 성공해 이 단언이 깨진다(확인함).
+        //
+        // <p>이 테스트가 방어하지 <b>못하는</b> 것도 적어둔다 — 만료 검사와 조건부 삭제의 <b>순서</b>다.
+        // 순서를 뒤집어도(= 삭제 먼저) 결과는 같다. 삭제를 먼저 한 쪽이 곧이어 UNAUTHORIZED를 던져
+        // 트랜잭션이 롤백되고, 그러면 그 삭제가 되돌려져 행이 되살아나므로, 뒤이어 잠금을 얻은 쪽의
+        // 삭제도 0이 아니라 1행을 지운다 — 즉 양쪽 다 401이고 409는 나오지 않는다.
+        // (프로브로 확인: 순서를 뒤집은 상태에서 두 결과 모두 UNAUTHORIZED, 만료 행은 DB에 잔존.)
+        // 순서를 앞에 둔 것은 여전히 옳지만(의도를 코드로 드러내고, 롤백 동작에 기대지 않는다),
+        // 그것은 테스트로 강제되는 성질이 아니라 설계 선택이다.
+        //
+        // 조회 횟수: 두 스레드가 각각 findByTokenHash를 한 번씩 = 정확히 2회.
+        // 만료 행은 save()로 심으므로 조회를 늘리지 않는다 — @BeforeEach의 CyclicBarrier(2)와 맞는다.
+        String 만료된_리프레시_토큰 = 만료된_리프레시_토큰을_심는다();
+
+        List<Object> 결과 = 동시에_두_번_리프레시한다(만료된_리프레시_토큰);
+
+        assertThat(성공만(결과))
+                .as("만료 토큰으로는 어느 쪽도 새 토큰을 받지 못한다")
+                .isEmpty();
+
+        List<Throwable> 실패 = 실패만(결과);
+        assertThat(실패).hasSize(2);
+        assertThat(실패).allSatisfy(예외 -> {
+            assertThat(예외)
+                    .as("만료는 미분류 예외(→500)가 아니라 도메인 예외여야 한다. 실제: %s", 예외)
+                    .isInstanceOf(BusinessException.class);
+            assertThat(((BusinessException) 예외).getErrorCode())
+                    .as("만료가 동시성 때문에 409로 둔갑하면 안 된다. 실제: %s",
+                            ((BusinessException) 예외).getErrorCode())
+                    .isEqualTo(ErrorCode.UNAUTHORIZED);
+        });
+    }
+
+    /**
+     * 이미 만료된 리프레시 토큰 행을 직접 심고 raw 토큰을 돌려준다.
+     *
+     * <p>로그인으로는 만료 토큰을 만들 수 없다(발급 시각 기준으로 항상 미래다). 이 클래스는
+     * {@code @Transactional}이 아니므로 {@code save()}가 그 자리에서 커밋되고, 뒤이어 두 스레드가
+     * 각자의 트랜잭션에서 이 행을 실제로 보게 된다 — {@code AuthApiTest}의 같은 기법이지만
+     * 그쪽은 테스트 트랜잭션 안에서만 보이면 충분했다는 점이 다르다.
+     */
+    private String 만료된_리프레시_토큰을_심는다() {
+        String raw = UUID.randomUUID().toString();
+        refreshTokenRepository.save(new RefreshToken(회원_id, sha256Hex(raw), LocalDateTime.now().minusDays(1)));
+        return raw;
+    }
+
+    /** AuthService가 토큰을 저장하는 방식과 같은 해시(SHA-256 hex). */
+    private String sha256Hex(String rawToken) {
+        try {
+            byte[] hashed = MessageDigest.getInstance("SHA-256").digest(rawToken.getBytes(StandardCharsets.UTF_8));
+            return HexFormat.of().formatHex(hashed);
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 알고리즘을 사용할 수 없습니다", e);
+        }
     }
 
     private String 로그인해서_리프레시_토큰을_받는다() {
