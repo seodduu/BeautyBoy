@@ -19,6 +19,9 @@ import { RecommendedSection } from '../components/goods/RecommendedSection';
 import { useToast } from '../components/ui/useToast';
 import './Detail.css';
 
+// 태그 표시 정렬 순서(태그확장) — 렌더마다 새로 만들 필요가 없는 고정 상수라 모듈 스코프로 뺀다.
+const TAG_KIND_ORDER: Record<string, number> = { EFFECT: 0, PROPERTY: 1, TEXTURE: 2 };
+
 /**
  * 상세 페이지 `/goods/:goodsNo` — 읽기 전용 + "장바구니 담기" 한 버튼만 실동작.
  * 설계 6장 상세 화면: 기본 정보 헤더 → 성분 배지 → 설명/리뷰/Q&A 탭.
@@ -93,7 +96,6 @@ export function Detail() {
   const displaySalePrice = goods.salePrice + (selectedOption?.addPrice ?? 0);
   // 표시 규칙(태그확장): 상세는 전부 표시한다(최대 개수 제한 없음, flex-wrap으로 줄바꿈).
   // 정렬만 EFFECT → PROPERTY → TEXTURE 순으로 하고, 동순위 안에서는 백엔드가 내려준 원래 순서를 지킨다.
-  const TAG_KIND_ORDER: Record<string, number> = { EFFECT: 0, PROPERTY: 1, TEXTURE: 2 };
   const displayTags = [...goods.tags].sort(
     (a, b) => TAG_KIND_ORDER[a.kind] - TAG_KIND_ORDER[b.kind],
   );

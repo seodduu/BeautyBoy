@@ -51,6 +51,18 @@ describe('Tag', () => {
     expect(el).toHaveClass('bb-tag--unknown-slug');
   });
 
+  // jsdom은 실제 CSS 값(getComputedStyle)을 계산하지 않으므로(vitest css 처리 미적용),
+  // 여기서는 "폴백 kind 클래스가 붙어 있다/slug 클래스가 그 뒤에 덮어쓴다"는 구조만 검증한다.
+  // 실제로 폴백이 1px hairline 테두리 pill로, 팔레트 색이 테두리 없는 틴트 pill로 렌더되는지는
+  // Tag.css의 규칙(kind 클래스 = border 1px hairline, slug 클래스 = border-color transparent)과
+  // Task 3의 스크린샷 육안 확인으로 담보한다.
+  it('폴백 kind 클래스(bb-tag--effect)는 팔레트 미정의 slug에서 유일한 스타일 담당 클래스다', () => {
+    const { container } = render(<Tag view={{ name: '미정의', kind: 'EFFECT', slug: 'unknown-slug' }} />);
+    const el = container.querySelector('.bb-tag')!;
+    // unknown-slug 클래스는 Tag.css에 규칙이 없다 — bb-tag--effect가 유일하게 배경/테두리를 정의한다.
+    expect(el.className.trim().split(/\s+/)).toEqual(['bb-tag', 'bb-tag--effect', 'bb-tag--unknown-slug']);
+  });
+
   it('TEXTURE는 slug와 무관하게 항상 무채색 폴백이다', () => {
     const { container } = render(<Tag view={{ name: '산뜻함', kind: 'TEXTURE', slug: 'fresh' }} />);
     const el = container.querySelector('.bb-tag')!;
