@@ -1,6 +1,7 @@
 package com.beautyboy.auth;
 
 import com.beautyboy.auth.dto.LoginRequest;
+import com.beautyboy.auth.dto.RefreshResponse;
 import com.beautyboy.auth.dto.TokenResponse;
 import com.beautyboy.common.ApiResponse;
 import com.beautyboy.common.BusinessException;
@@ -42,16 +43,16 @@ public class AuthController {
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<ApiResponse<TokenResponse>> refresh(
+    public ResponseEntity<ApiResponse<RefreshResponse>> refresh(
             @CookieValue(value = REFRESH_COOKIE_NAME, required = false) String refreshToken) {
         if (refreshToken == null) {
             throw new BusinessException(ErrorCode.UNAUTHORIZED);
         }
 
-        AuthService.LoginResult result = authService.refresh(refreshToken);
+        AuthService.RefreshResult result = authService.refresh(refreshToken);
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, refreshCookie(result.refreshToken()).toString())
-                .body(ApiResponse.ok(new TokenResponse(result.accessToken())));
+                .body(ApiResponse.ok(new RefreshResponse(result.accessToken(), result.member())));
     }
 
     @PostMapping("/logout")

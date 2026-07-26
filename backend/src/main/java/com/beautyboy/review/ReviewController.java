@@ -2,6 +2,7 @@ package com.beautyboy.review;
 
 import com.beautyboy.common.ApiResponse;
 import com.beautyboy.common.PageResponse;
+import com.beautyboy.review.dto.MyReviewItem;
 import com.beautyboy.review.dto.ReviewCreateRequest;
 import com.beautyboy.review.dto.ReviewResponse;
 import com.beautyboy.review.dto.ReviewStatResponse;
@@ -40,6 +41,14 @@ public class ReviewController {
             @RequestParam Long goodsNo,
             @RequestParam(defaultValue = "0") int page) {
         return ResponseEntity.ok(ApiResponse.ok(reviewService.list(goodsNo, page)));
+    }
+
+    @GetMapping("/api/v1/reviews/me")
+    public ResponseEntity<ApiResponse<PageResponse<MyReviewItem>>> myReviews(
+            @AuthenticationPrincipal Long memberId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(ApiResponse.ok(reviewService.myReviews(memberId, page, size)));
     }
 
     @GetMapping("/api/v1/reviews/stats")

@@ -1,0 +1,122 @@
+.bb-my-profile {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-section);
+}
+
+.bb-my-profile__error {
+  padding: var(--space-lg) 0;
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  color: var(--color-signal-danger);
+}
+
+.bb-my-profile__section-title {
+  margin: 0 0 var(--space-lg);
+  font-size: var(--fs-heading-sm);
+  font-weight: var(--fw-heading-sm);
+  line-height: var(--lh-heading-sm);
+  color: var(--color-ink);
+}
+
+/* 피부타입/고민/연령대 카드·칩 스타일은 SkinProfileFields.css(공용 컴포넌트)에 있다. */
+
+.bb-my-profile__save {
+  margin-top: var(--space-xl);
+  width: 100%;
+  max-width: 320px;
+}
+
+.bb-my-profile__empty {
+  margin: 0 0 var(--space-md);
+  font-size: var(--fs-body);
+  color: var(--color-stone);
+}
+
+.bb-address-manager__list {
+  list-style: none;
+  margin: 0 0 var(--space-lg);
+  padding: 0;
+  border-top: 1px solid var(--color-hairline);
+}
+
+.bb-address-manager__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding: var(--space-md) 0;
+  border-bottom: 1px solid var(--color-hairline);
+}
+
+.bb-address-manager__info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xxs);
+  min-width: 0;
+  font-size: var(--fs-body);
+  color: var(--color-ink);
+}
+
+.bb-address-manager__meta {
+  font-size: var(--fs-meta);
+  color: var(--color-stone);
+}
+
+.bb-address-manager__actions {
+  display: flex;
+  gap: var(--space-sm);
+  flex-shrink: 0;
+}
+
+.bb-address-manager__action {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: var(--fs-link-sm);
+  font-weight: var(--fw-link-sm);
+  color: var(--color-graphite);
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.bb-address-manager__form {
+  /* .bb-address-manager__item은 flex-row 컨테이너다(수정 폼일 때는 이 폼이 그 행의 유일한
+     자식이 된다). flex:1이 없으면 stretch되지 않는 flex 아이템이라 콘텐츠 고유 폭으로
+     쪼그라들어 데스크톱에서 입력 필드가 좁게 잘린다 — 리뷰에서 잡힌 회귀. min-width:0으로
+     flex 기본값(auto)이 내용 폭 이하로 못 줄어드는 것도 함께 막는다. */
+  flex: 1 1 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding-top: var(--space-md);
+}
+
+.bb-address-manager__form-actions {
+  display: flex;
+  gap: var(--space-sm);
+  justify-content: flex-end;
+}
+
+@media (max-width: 900px) {
+  .bb-my-profile {
+    gap: var(--space-xl);
+  }
+
+  .bb-address-manager__item {
+    /* MyPageLayout.css의 .bb-mypage__body와 같은 계열의 위험: column으로 바뀌면 교차축이
+       수평이 되므로 align-items:flex-start를 그대로 두면 자식(수정 폼일 때는 .bb-address-manager__form
+       하나)이 stretch되지 않고 콘텐츠 폭으로 packed된다. stretch로 바꿔 폭을 항상 채운다. */
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-xs);
+  }
+
+  /* 사이드바 레이아웃이 탭 상단바로 접히는 기준선(MyPageLayout.css와 동일)에 맞춰
+     피부타입 카드도 1열로 접는다 — 가입 2스텝의 480px 기준선과는 다르다(근거는
+     SkinProfileFields.tsx의 className prop 주석 참고). */
+  .bb-skin-fields--mypage .bb-skin-fields__type-grid {
+    grid-template-columns: 1fr;
+  }
+}

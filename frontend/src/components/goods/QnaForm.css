@@ -1,0 +1,67 @@
+/* 문의 작성 폼 — ReviewForm.css와 같은 톤(hairline 구분선, 배경 채움 없음). */
+.bb-qna-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding-bottom: var(--space-lg);
+  border-bottom: 1px solid var(--color-hairline);
+  margin-bottom: var(--space-lg);
+}
+
+.bb-qna-form--guest {
+  align-items: flex-start;
+  gap: var(--space-xs);
+}
+
+.bb-qna-form__guest-text {
+  margin: 0;
+  color: var(--color-graphite);
+}
+
+.bb-qna-form__login-link {
+  font-size: var(--fs-link-sm);
+  font-weight: var(--fw-link-sm);
+  color: var(--color-ink);
+  text-decoration: underline;
+}
+
+.bb-qna-form__label {
+  font-size: var(--fs-meta);
+  color: var(--color-stone);
+}
+
+.bb-qna-form__textarea {
+  min-height: 96px;
+  padding: var(--space-sm) 0;
+  border: none;
+  border-bottom: 1px solid var(--color-hairline-soft);
+  background: none;
+  font: var(--fs-body)/var(--lh-body) var(--font-body);
+  color: var(--color-ink);
+  resize: vertical;
+}
+
+.bb-qna-form__textarea:focus-visible {
+  outline: none;
+  border-bottom-color: var(--color-ink);
+}
+
+.bb-qna-form__secret {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xxs);
+  font-size: var(--fs-meta);
+  color: var(--color-graphite);
+  cursor: pointer;
+}
+
+.bb-qna-form__error {
+  margin: 0;
+  font-size: var(--fs-meta);
+  color: var(--color-signal-danger);
+}
+
+.bb-qna-form__submit {
+  align-self: flex-start;
+  min-width: 96px;
+}

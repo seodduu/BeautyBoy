@@ -1,10 +1,12 @@
 package com.beautyboy.review;
 
 import com.beautyboy.catalog.GoodsQueryService;
+import com.beautyboy.catalog.dto.GoodsListItem;
 import com.beautyboy.common.BusinessException;
 import com.beautyboy.common.ErrorCode;
 import com.beautyboy.common.PageResponse;
 import com.beautyboy.order.OrderQueryService;
+import com.beautyboy.review.dto.MyReviewItem;
 import com.beautyboy.review.dto.ReviewCreateRequest;
 import com.beautyboy.review.dto.ReviewResponse;
 import com.beautyboy.review.dto.ReviewStatResponse;
@@ -14,6 +16,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 
 /**
  * 리뷰 작성·조회 + 평점 통계 재집계.
@@ -78,6 +82,33 @@ public class ReviewService {
         long total = reviewRepository.countByGoodsId(goodsNo);
         List<ReviewResponse> items = reviews.stream().map(this::toResponse).toList();
         return PageResponse.of(items, page, DEFAULT_PAGE_SIZE, total);
+    }
+
+    /**
+     * 마이페이지 "내 리뷰". 상품명·썸네일은 goods 테이블을 직접 읽지 않고
+     * GoodsQueryService.findListItems로 가져온다(경계 규칙). 페이지의 goodsNo를 모아 한 번만 부른다.
+     */
+    @Transactional(readOnly = true)
+    public PageResponse<MyReviewItem> myReviews(Long memberId, int page, int size) {
+        List<Review> reviews = reviewRepository.findByMemberIdOrderByIdDesc(
+                memberId, PageRequest.of(page, size));
+        long total = reviewRepository.countByMemberId(memberId);
+
+        List<Long> goodsNos = reviews.stream().map(Review::getGoodsId).distinct().toList();
+        Map<Long, GoodsListItem> goodsByNo = goodsQueryService.findListItems(goodsNos, null).stream()
+                .collect(java.util.stream.Collectors.toMap(GoodsListItem::goodsNo, Function.identity()));
+
+        List<MyReviewItem> items = reviews.stream()
+                .map(r -> toMyReviewItem(r, goodsByNo.get(r.getGoodsId())))
+                .toList();
+        return PageResponse.of(items, page, size, total);
+    }
+
+    private MyReviewItem toMyReviewItem(Review r, GoodsListItem goods) {
+        String goodsName = goods != null ? goods.name() : null;
+        String thumbnailUrl = goods != null ? goods.thumbnailUrl() : null;
+        return new MyReviewItem(r.getId(), r.getGoodsId(), goodsName, thumbnailUrl,
+                r.getRating(), r.getContent(), r.getHelpfulCount(), r.getCreatedAt());
     }
 
     @Transactional(readOnly = true)

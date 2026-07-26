@@ -7,7 +7,7 @@ import { server } from '../mocks/server';
 import { ToastProvider } from '../components/ui/ToastProvider';
 import { Detail } from './Detail';
 import type { GoodsDescription, GoodsDetail, GoodsIngredientResponse } from '../types/detail';
-import type { ApiEnvelope, PageResponse } from '../types/goods';
+import type { ApiEnvelope, GoodsListItem, PageResponse } from '../types/goods';
 import type { ReviewItem, ReviewStats, QnaItem } from '../types/review';
 
 const GOODS_DETAIL: GoodsDetail = {
@@ -67,11 +67,31 @@ const QNA_ITEMS: QnaItem[] = [
   { qnaId: 1, question: '유통기한이 어떻게 되나요?', isSecret: false, status: 'ANSWERED', createdAt: '2025-02-01T00:00:00Z' },
 ];
 
-function registerDefaultHandlers() {
+const RECOMMENDED_ITEM: GoodsListItem = {
+  goodsNo: 2,
+  brandName: '포맨랩',
+  name: '추천 토너',
+  thumbnailUrl: '',
+  listPrice: 18000,
+  salePrice: 15000,
+  discountRate: 17,
+  badges: [],
+  rating: 4.2,
+  reviewCount: 5,
+  wished: false,
+  todayDreamAvailable: false,
+};
+
+function registerDefaultHandlers(overrides: { detail?: GoodsDetail; recommended?: GoodsListItem[] } = {}) {
   server.use(
-    http.get('/api/v1/goods/:goodsNo', () => HttpResponse.json(envelope(GOODS_DETAIL))),
+    http.get('/api/v1/goods/:goodsNo', () =>
+      HttpResponse.json(envelope(overrides.detail ?? GOODS_DETAIL)),
+    ),
     http.get('/api/v1/goods/:goodsNo/ingredients', () => HttpResponse.json(envelope(INGREDIENTS))),
     http.get('/api/v1/goods/:goodsNo/description', () => HttpResponse.json(envelope(DESCRIPTION))),
+    http.get('/api/v1/goods/:goodsNo/recommended', () =>
+      HttpResponse.json(envelope(overrides.recommended ?? [RECOMMENDED_ITEM])),
+    ),
     http.get('/api/v1/reviews/stats', () => HttpResponse.json(envelope(REVIEW_STATS))),
     http.get('/api/v1/reviews', () => HttpResponse.json(envelope(pageOf(REVIEWS)))),
     http.get('/api/v1/qna', () => HttpResponse.json(envelope(pageOf(QNA_ITEMS)))),
@@ -135,8 +155,25 @@ describe('Detail — 상세 페이지', () => {
     fireEvent.click(button);
 
     await waitFor(() => expect(received).toEqual({ goodsNo: 1, optionNo: 11, quantity: 1 }));
-    expect(await screen.findByText('장바구니에 담았어요')).toBeInTheDocument();
-    expect(screen.getByRole('status')).toHaveTextContent('장바구니에 담았어요');
+    // QuantityStepper의 수량 값도 role="status"라 여러 개가 매칭될 수 있어 토스트 리전으로 좁힌다.
+    const toastMessage = await screen.findByText('장바구니에 담았어요');
+    expect(toastMessage.closest('[role="status"]')).toHaveTextContent('장바구니에 담았어요');
+  });
+
+  it('장바구니 담기 성공 시 cart 쿼리를 무효화해 헤더 배지가 갱신되게 한다', async () => {
+    registerDefaultHandlers();
+    server.use(http.post('/api/v1/cart/items', () => new HttpResponse(null, { status: 201 })));
+    const invalidateSpy = vi.spyOn(QueryClient.prototype, 'invalidateQueries');
+
+    renderDetail();
+
+    const button = await screen.findByRole('button', { name: '장바구니 담기' });
+    fireEvent.click(button);
+
+    await screen.findByText('장바구니에 담았어요');
+    expect(invalidateSpy).toHaveBeenCalledWith(expect.objectContaining({ queryKey: ['cart'] }));
+
+    invalidateSpy.mockRestore();
   });
 
   it('옵션이 없는 상품도 장바구니 담기가 optionNo: null로 나가고 성공 토스트가 뜬다(크래시 없음)', async () => {
@@ -283,5 +320,104 @@ describe('Detail — 상세 페이지', () => {
     fireEvent.keyDown(summaryTab, { key: 'ArrowRight' });
 
     await waitFor(() => expect(reviewTab).toHaveAttribute('aria-selected', 'true'));
+  });
+});
+
+describe('Detail — 옵션 선택', () => {
+  const MULTI_OPTION_DETAIL: GoodsDetail = {
+    ...GOODS_DETAIL,
+    salePrice: 20000,
+    options: [
+      { optionNo: 1, name: '200ml', addPrice: 0, stock: 50, soldOut: false },
+      { optionNo: 2, name: '300ml', addPrice: 3000, stock: 80, soldOut: false },
+    ],
+  };
+
+  const SOLD_OUT_OPTION_DETAIL: GoodsDetail = {
+    ...GOODS_DETAIL,
+    options: [
+      { optionNo: 1, name: '200ml', addPrice: 0, stock: 10, soldOut: false },
+      { optionNo: 2, name: '500ml', addPrice: 5000, stock: 0, soldOut: false },
+    ],
+  };
+
+  it('옵션이 2개 이상이면 선택 UI를 보여주고, 처음에는 아무것도 선택되지 않는다', async () => {
+    registerDefaultHandlers({ detail: MULTI_OPTION_DETAIL });
+
+    renderDetail();
+
+    expect(await screen.findByRole('radiogroup', { name: /옵션/ })).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: /300ml/ })).not.toBeChecked();
+    expect(screen.getByRole('button', { name: '장바구니 담기' })).toBeDisabled();
+  });
+
+  it('옵션을 고르면 표시 가격에 addPrice가 더해진다', async () => {
+    registerDefaultHandlers({ detail: MULTI_OPTION_DETAIL });
+
+    renderDetail();
+
+    fireEvent.click(await screen.findByRole('radio', { name: /300ml/ }));
+
+    expect(screen.getByTestId('detail-price')).toHaveTextContent('23,000');
+  });
+
+  it('품절 옵션은 선택할 수 없다', async () => {
+    registerDefaultHandlers({ detail: SOLD_OUT_OPTION_DETAIL });
+
+    renderDetail();
+
+    expect(await screen.findByRole('radio', { name: /품절/ })).toBeDisabled();
+  });
+
+  it('옵션이 하나뿐이면 자동 선택하고 선택 UI를 그리지 않는다', async () => {
+    registerDefaultHandlers();
+
+    renderDetail();
+
+    expect(await screen.findByRole('button', { name: '장바구니 담기' })).toBeEnabled();
+    expect(screen.queryByRole('radiogroup')).not.toBeInTheDocument();
+  });
+
+  it('선택한 옵션과 수량으로 담는다', async () => {
+    registerDefaultHandlers({ detail: MULTI_OPTION_DETAIL });
+    let received: unknown = null;
+    server.use(
+      http.post('/api/v1/cart/items', async ({ request }) => {
+        received = await request.json();
+        return new HttpResponse(null, { status: 201 });
+      }),
+    );
+
+    renderDetail();
+
+    fireEvent.click(await screen.findByRole('radio', { name: /300ml/ }));
+    fireEvent.click(screen.getByRole('button', { name: '수량 늘리기' }));
+    fireEvent.click(screen.getByRole('button', { name: '장바구니 담기' }));
+
+    await waitFor(() => expect(received).toEqual({ goodsNo: 1, optionNo: 2, quantity: 2 }));
+  });
+});
+
+describe('Detail — 추천 상품', () => {
+  it('추천 상품이 있으면 "함께 보면 좋은 상품" 섹션과 카드를 렌더한다', async () => {
+    registerDefaultHandlers({ recommended: [RECOMMENDED_ITEM] });
+    server.use(http.post('/api/v1/cart/items', () => new HttpResponse(null, { status: 201 })));
+
+    renderDetail();
+
+    expect(await screen.findByRole('heading', { name: '함께 보면 좋은 상품' })).toBeInTheDocument();
+    expect(await screen.findByText('추천 토너')).toBeInTheDocument();
+  });
+
+  it('추천 상품이 없으면 섹션 자체를 렌더하지 않는다', async () => {
+    registerDefaultHandlers({ recommended: [] });
+    server.use(http.post('/api/v1/cart/items', () => new HttpResponse(null, { status: 201 })));
+
+    renderDetail();
+
+    await screen.findByRole('heading', { name: '테스트 세럼' });
+    await waitFor(() =>
+      expect(screen.queryByRole('heading', { name: '함께 보면 좋은 상품' })).not.toBeInTheDocument(),
+    );
   });
 });

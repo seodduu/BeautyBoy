@@ -33,7 +33,7 @@ public class RoutineService implements RoutineQueryService {
 
     @Override
     @Transactional(readOnly = true)
-    public RoutineResponse find(String skinType, String time) {
+    public RoutineResponse find(String skinType, String time, Long viewerId) {
         String resolvedSkinType = (skinType == null || skinType.isBlank())
                 ? DEFAULT_SKIN_TYPE : skinType.toUpperCase();
         String resolvedTime = (time == null || time.isBlank()) ? DEFAULT_TIME : time;
@@ -50,7 +50,7 @@ public class RoutineService implements RoutineQueryService {
                 .map(RoutineStepGoods::getGoodsNo)
                 .distinct()
                 .toList();
-        Map<Long, GoodsListItem> cardByGoodsNo = goodsQueryService.findListItems(allGoodsNos).stream()
+        Map<Long, GoodsListItem> cardByGoodsNo = goodsQueryService.findListItems(allGoodsNos, viewerId).stream()
                 .collect(Collectors.toMap(GoodsListItem::goodsNo, Function.identity()));
 
         List<RoutineStepResponse> stepResponses = steps.stream()

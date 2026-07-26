@@ -1,5 +1,7 @@
 package com.beautyboy.ranking;
 
+import com.beautyboy.catalog.GoodsRatingProvider;
+import com.beautyboy.catalog.WishedGoodsProvider;
 import com.beautyboy.ranking.dto.RankingItem;
 import jakarta.persistence.EntityManager;
 import org.springframework.stereotype.Service;
@@ -9,6 +11,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * 랭킹 조회. 스냅샷만 읽고 점수를 다시 계산하지 않는다(설계 5장).
@@ -16,20 +19,29 @@ import java.util.Map;
  * <p>상품 정보를 붙이는 방식: 스냅샷에서 goods_id 목록을 뽑아 <b>1쿼리로 일괄 조회</b>한 뒤
  * 메모리에서 합친다. 순위마다 상품을 조회하면 50번 왕복하는 N+1이 된다.
  * catalog 리포지토리를 import하지 않기 위해 필요한 컬럼만 네이티브로 읽는다.
+ *
+ * <p>별점·찜은 catalog가 정의한 {@link GoodsRatingProvider}/{@link WishedGoodsProvider}를 통해서만
+ * 채운다 — ranking은 review/wishlist 테이블을 직접 알 수 없다(패키지 = 서비스 경계). 이 둘도 goods_id
+ * 목록을 모아 각각 한 번씩만 부른다.
  */
 @Service
 public class RankingService {
 
     private final RankingSnapshotRepository rankingSnapshotRepository;
     private final EntityManager em;
+    private final GoodsRatingProvider goodsRatingProvider;
+    private final WishedGoodsProvider wishedGoodsProvider;
 
-    public RankingService(RankingSnapshotRepository rankingSnapshotRepository, EntityManager em) {
+    public RankingService(RankingSnapshotRepository rankingSnapshotRepository, EntityManager em,
+                           GoodsRatingProvider goodsRatingProvider, WishedGoodsProvider wishedGoodsProvider) {
         this.rankingSnapshotRepository = rankingSnapshotRepository;
         this.em = em;
+        this.goodsRatingProvider = goodsRatingProvider;
+        this.wishedGoodsProvider = wishedGoodsProvider;
     }
 
     @Transactional(readOnly = true)
-    public List<RankingItem> rankings(String categoryCode) {
+    public List<RankingItem> rankings(String categoryCode, Long viewerId) {
         String category = (categoryCode == null || categoryCode.isBlank())
                 ? RankingSnapshot.CATEGORY_ALL
                 : categoryCode;
@@ -40,8 +52,10 @@ public class RankingService {
             return List.of();
         }
 
-        Map<Long, Object[]> goodsById = 상품_일괄_조회(
-                snapshots.stream().map(RankingSnapshot::getGoodsId).toList());
+        List<Long> goodsIds = snapshots.stream().map(RankingSnapshot::getGoodsId).toList();
+        Map<Long, Object[]> goodsById = 상품_일괄_조회(goodsIds);
+        Map<Long, GoodsRatingProvider.RatingStat> ratingsByGoodsId = goodsRatingProvider.ratingsByGoods(goodsIds);
+        Set<Long> wishedGoodsIds = wishedGoodsProvider.wishedGoodsIds(viewerId, goodsIds);
 
         List<RankingItem> items = new ArrayList<>();
         for (RankingSnapshot snapshot : snapshots) {
@@ -53,6 +67,7 @@ public class RankingService {
             }
             int listPrice = ((Number) goods[3]).intValue();
             int salePrice = ((Number) goods[4]).intValue();
+            GoodsRatingProvider.RatingStat ratingStat = ratingsByGoodsId.get(snapshot.getGoodsId());
             items.add(new RankingItem(
                     snapshot.getRankNo(),
                     snapshot.getGoodsId(),
@@ -62,6 +77,9 @@ public class RankingService {
                     listPrice,
                     salePrice,
                     discountRate(listPrice, salePrice),
+                    ratingStat == null ? 0.0 : ratingStat.rating(),
+                    ratingStat == null ? 0 : ratingStat.reviewCount(),
+                    wishedGoodsIds.contains(snapshot.getGoodsId()),
                     snapshot.getScore()));
         }
         return items;

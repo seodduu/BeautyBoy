@@ -8,11 +8,13 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "test": "vitest run",
+    "test": "vitest run --exclude 'e2e/**'",
+    "test:e2e": "playwright test",
     "msw:init": "msw init public/ --save"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.101.4",
+    "@tosspayments/tosspayments-sdk": "^2.7.1",
     "axios": "^1.18.1",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
@@ -20,6 +22,7 @@
     "zustand": "^5.0.14"
   },
   "devDependencies": {
+    "@playwright/test": "^1.49.1",
     "@testing-library/jest-dom": "^7.0.0",
     "@testing-library/react": "^16.3.2",
     "@types/node": "^24.13.2",

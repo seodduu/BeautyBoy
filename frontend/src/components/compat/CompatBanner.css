@@ -1,0 +1,92 @@
+/* 궁합 경고 배너 — DESIGN.md: 배경 채움 금지, 좌측 보더 4px + 아이콘 + 텍스트로만 톤을 표현한다. */
+.bb-compat-banner {
+  display: flex;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  margin-bottom: var(--space-lg);
+  background: var(--color-canvas);
+  border: 1px solid var(--color-hairline-soft);
+  border-left: 4px solid var(--color-signal-muted);
+  border-radius: var(--rounded-md);
+}
+
+.bb-compat-banner--danger {
+  border-left-color: var(--color-signal-danger);
+}
+
+.bb-compat-banner--caution {
+  border-left-color: var(--color-signal-caution);
+}
+
+.bb-compat-banner--success {
+  border-left-color: var(--color-signal-success);
+}
+
+.bb-compat-banner__icon {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--rounded-full);
+  border: 1px solid currentColor;
+  font-size: var(--fs-meta);
+  font-weight: var(--fw-body-strong);
+  color: var(--color-signal-muted);
+}
+
+.bb-compat-banner--danger .bb-compat-banner__icon {
+  color: var(--color-signal-danger);
+}
+
+.bb-compat-banner--caution .bb-compat-banner__icon {
+  color: var(--color-signal-caution);
+}
+
+.bb-compat-banner--success .bb-compat-banner__icon {
+  color: var(--color-signal-success);
+}
+
+.bb-compat-banner__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  min-width: 0;
+}
+
+.bb-compat-banner__heading {
+  margin: 0;
+  font-size: var(--fs-body-strong);
+  font-weight: var(--fw-body-strong);
+  color: var(--color-ink);
+  word-break: keep-all;
+}
+
+.bb-compat-banner__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xxs);
+}
+
+.bb-compat-banner__item {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  font-size: var(--fs-body-tight);
+}
+
+.bb-compat-banner__categories {
+  color: var(--color-graphite);
+  font-weight: var(--fw-body-strong);
+  word-break: keep-all;
+}
+
+.bb-compat-banner__reason {
+  color: var(--color-ink);
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}

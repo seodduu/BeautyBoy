@@ -110,6 +110,18 @@ public class Goods {
         this.status = STATUS_HIDDEN;
     }
 
+    /** 관리자 수정 — 이름·요약·가격·상태·카테고리·썸네일을 통째로 덮어쓴다. */
+    public void updateInfo(String categoryCode, String name, String summary, String thumbnailUrl,
+                            int listPrice, int salePrice, String status) {
+        this.categoryCode = categoryCode;
+        this.name = name;
+        this.summary = summary;
+        this.thumbnailUrl = thumbnailUrl;
+        this.listPrice = listPrice;
+        this.salePrice = salePrice;
+        this.status = status;
+    }
+
     public Long getId() {
         return id;
     }

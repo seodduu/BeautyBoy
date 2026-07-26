@@ -48,6 +48,8 @@ class CartApiTest {
     BrandRepository brandRepository;
     @Autowired
     GoodsRepository goodsRepository;
+    @Autowired
+    CartItemRepository cartItemRepository;
 
     @Test
     void 담기와_조회가_동작한다() throws Exception {
@@ -157,14 +159,82 @@ class CartApiTest {
     }
 
     @Test
+    void 옵션을_지정하지_않고_담으면_해석된_대표_옵션이_저장된다() throws Exception {
+        // 담긴 순간에 확정한다(Task 4-18). null로 저장하고 읽을 때마다 다시 해석하면
+        // sortOrder가 바뀌거나 옵션이 삭제될 때 장바구니 내용이 조용히 달라진다.
+        Long goodsId = 상품_저장("토너", 16000);
+        Long 옵션_200ml = 옵션_저장(goodsId, "200ml", 0, 150, 1);
+        옵션_저장(goodsId, "300ml", 3000, 40, 2);
+
+        담기(회원, goodsId, 1).andExpect(status().isCreated());
+
+        mockMvc.perform(get("/api/v1/cart/items").with(로그인(회원)))
+                .andExpect(jsonPath("$.data.length()").value(1))
+                .andExpect(jsonPath("$.data[0].optionNo").value(옵션_200ml))
+                .andExpect(jsonPath("$.data[0].optionName").value("200ml"))
+                .andExpect(jsonPath("$.data[0].unitPrice").value(16000));
+    }
+
+    @Test
+    void 루틴과_상세에서_같은_옵션을_담으면_한_행으로_합쳐진다() throws Exception {
+        // 루틴 전체담기는 optionNo=null, 상세는 optionNo를 실어 보낸다. 해석된 optionId로
+        // 중복을 판정하므로 같은 옵션이면 한 줄이 된다 — 예전에는 (goodsId, null)과
+        // (goodsId, optionId)로 갈라져 같은 옵션이 두 줄로 보였다.
+        Long goodsId = 상품_저장("토너", 16000);
+        Long 옵션_200ml = 옵션_저장(goodsId, "200ml", 0, 150, 1);
+
+        담기(회원, goodsId, 1).andExpect(status().isCreated());              // 루틴 경로(optionNo 없음)
+        담기(회원, goodsId, 옵션_200ml, 2).andExpect(status().isCreated());   // 상세 경로(optionNo 지정)
+
+        mockMvc.perform(get("/api/v1/cart/items").with(로그인(회원)))
+                .andExpect(jsonPath("$.data.length()").value(1))
+                .andExpect(jsonPath("$.data[0].optionNo").value(옵션_200ml))
+                .andExpect(jsonPath("$.data[0].quantity").value(3));
+    }
+
+    @Test
+    void 옵션이_없는_상품은_optionId가_null로_남는다() throws Exception {
+        // 회귀 방어: 해석 결과가 없는 경우(옵션 자체가 없는 상품)는 예전 동작 그대로다.
+        Long goodsId = 상품_저장("옵션 없는 토너", 16000);
+
+        담기(회원, goodsId, 1).andExpect(status().isCreated());
+
+        mockMvc.perform(get("/api/v1/cart/items").with(로그인(회원)))
+                .andExpect(jsonPath("$.data[0].optionNo").value(org.hamcrest.Matchers.nullValue()))
+                .andExpect(jsonPath("$.data[0].optionName").value(org.hamcrest.Matchers.nullValue()));
+    }
+
+    @Test
+    void 레거시_NULL_option_id_행은_대표_옵션으로_자기모순_없이_응답한다() throws Exception {
+        // Task 4-18 이전에 담긴 행을 흉내낸다: 옵션이 있는 상품인데 option_id가 NULL로 저장된
+        // 레거시 행. CartService.add()를 거치지 않고 리포지토리로 직접 그 상태를 만든다.
+        // 고치기 전에는 optionNo=null인데 optionName="200ml"이 나오는 자기모순 응답이었다.
+        Long goodsId = 상품_저장("토너", 16000);
+        Long 옵션_200ml = 옵션_저장(goodsId, "200ml", 0, 150, 1);
+        옵션_저장(goodsId, "300ml", 3000, 40, 2);
+        cartItemRepository.save(new CartItem(회원, goodsId, null, 1));
+
+        mockMvc.perform(get("/api/v1/cart/items").with(로그인(회원)))
+                .andExpect(jsonPath("$.data.length()").value(1))
+                .andExpect(jsonPath("$.data[0].optionNo").value(옵션_200ml))
+                .andExpect(jsonPath("$.data[0].optionName").value("200ml"));
+    }
+
+    @Test
     void 비로그인은_401이다() throws Exception {
         mockMvc.perform(get("/api/v1/cart/items")).andExpect(status().isUnauthorized());
     }
 
     private org.springframework.test.web.servlet.ResultActions 담기(Long memberId, Long goodsNo, int quantity)
             throws Exception {
+        return 담기(memberId, goodsNo, null, quantity);
+    }
+
+    private org.springframework.test.web.servlet.ResultActions 담기(
+            Long memberId, Long goodsNo, Long optionNo, int quantity) throws Exception {
         java.util.Map<String, Object> body = new java.util.HashMap<>();
         body.put("goodsNo", goodsNo);
+        body.put("optionNo", optionNo);
         body.put("quantity", quantity);
         return mockMvc.perform(post("/api/v1/cart/items")
                 .with(로그인(memberId))
@@ -188,5 +258,18 @@ class CartApiTest {
         Brand brand = brandRepository.save(new Brand("브랜드" + System.nanoTime(), null));
         return goodsRepository.save(
                 new Goods(brand, "C001001001", name, null, "https://img/x.jpg", salePrice, salePrice)).getId();
+    }
+
+    private Long 옵션_저장(Long goodsId, String name, int addPrice, int stock, int sortOrder) {
+        Goods goods = goodsRepository.findById(goodsId).orElseThrow();
+        goods.getOptions().add(new com.beautyboy.catalog.GoodsOption(goods, name, addPrice, stock, sortOrder));
+        // goods가 이미 영속 상태라 save()는 merge를 타고, 새 옵션은 복사본으로 persist된다 —
+        // 넘긴 인스턴스가 아니라 저장 결과의 컬렉션에서 id를 읽어야 한다.
+        Goods saved = goodsRepository.saveAndFlush(goods);
+        return saved.getOptions().stream()
+                .filter(o -> o.getName().equals(name))
+                .map(com.beautyboy.catalog.GoodsOption::getId)
+                .findFirst()
+                .orElseThrow();
     }
 }

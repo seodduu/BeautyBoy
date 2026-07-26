@@ -1,0 +1,135 @@
+.bb-admin-qna {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  min-width: 0;
+}
+
+.bb-admin-qna__title {
+  margin: 0;
+  font-size: var(--fs-heading-sm);
+  font-weight: var(--fw-heading-sm);
+  line-height: var(--lh-heading-sm);
+  color: var(--color-ink);
+}
+
+.bb-admin-qna__hint {
+  color: var(--color-stone);
+}
+
+.bb-admin-qna__error {
+  color: var(--color-signal-danger);
+}
+
+.bb-admin-qna__table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.bb-admin-qna__table {
+  width: 100%;
+  min-width: 480px;
+  border-collapse: collapse;
+}
+
+.bb-admin-qna__table th,
+.bb-admin-qna__table td {
+  padding: var(--space-sm) var(--space-md);
+  text-align: left;
+  border-bottom: 1px solid var(--color-hairline);
+  font-size: var(--fs-body);
+  color: var(--color-ink);
+}
+
+.bb-admin-qna__table th {
+  font-size: var(--fs-meta);
+  font-weight: var(--fw-body-strong);
+  color: var(--color-stone);
+}
+
+.bb-admin-qna__question-cell {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-xs);
+}
+
+/* DESIGN.md {badge-neutral}(291-296행) — canvas 배경 + graphite 글자 + micro-caps,
+   테두리 없음. 비밀글은 경고·오류가 아니라 "누가 볼 수 있는가"를 알리는 중립 표시라
+   signal-*(경고·성공 등 커머스 시그널) 대신 이 톤을 쓴다. 리뷰 반영: 테두리는 스펙에
+   없어 제거했다 — `.bb-admin-goods__hidden-badge`/`soldout-badge`가 테두리를 쓰는 건
+   DESIGN.md 376행("signal-caution … 배경 채움 금지, 글자·아이콘·1px 테두리로만")이 signal-*
+   색에만 준 명시적 예외라서고, badge-neutral은 그 예외 대상이 아니다(Badge.tsx의
+   `.bb-badge--neutral`도 테두리 없이 색만 다르다 — 같은 패턴). */
+.bb-admin-qna__secret-badge {
+  flex-shrink: 0;
+  padding: 4px;
+  border-radius: var(--rounded-none);
+  font-size: var(--fs-micro-caps);
+  font-weight: var(--fw-micro-caps);
+  line-height: var(--lh-micro-caps);
+  letter-spacing: var(--ls-micro-caps);
+  color: var(--color-graphite);
+  text-transform: uppercase;
+}
+
+.bb-admin-qna__action {
+  appearance: none;
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: var(--fs-link-sm);
+  font-weight: var(--fw-link-sm);
+  color: var(--color-graphite);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.bb-admin-qna__done {
+  font-size: var(--fs-meta);
+  color: var(--color-signal-success);
+}
+
+.bb-admin-qna__answer-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.bb-admin-qna__answer-textarea {
+  min-height: 64px;
+  padding: var(--space-xs) 0;
+  border: none;
+  border-bottom: 1px solid var(--color-hairline-soft);
+  background: none;
+  font: var(--fs-body)/var(--lh-body) var(--font-body);
+  color: var(--color-ink);
+  resize: vertical;
+}
+
+.bb-admin-qna__answer-textarea:focus-visible {
+  outline: none;
+  border-bottom-color: var(--color-ink);
+}
+
+.bb-admin-qna__answer-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.bb-admin-qna__pagination {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.bb-admin-qna__pagination-status {
+  font-size: var(--fs-meta);
+  color: var(--color-stone);
+}
+
+.bb-admin-qna__pagination .bb-admin-qna__action:disabled {
+  color: var(--color-hairline);
+  cursor: default;
+  text-decoration: none;
+}

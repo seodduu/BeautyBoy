@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { fetchQna } from '../../api/qna';
 import { EmptyState } from '../common/EmptyState';
 import { Skeleton } from '../ui/Skeleton';
+import { QnaForm } from './QnaForm';
 import './QnaList.css';
 
 interface QnaListProps {
@@ -10,9 +11,10 @@ interface QnaListProps {
   active: boolean;
 }
 
+/** 실제 백엔드 값은 WAITING이다(backend/.../qna/Qna.java:45,62) — PENDING이 아니다. */
 const STATUS_LABEL: Record<string, string> = {
   ANSWERED: '답변완료',
-  PENDING: '답변대기',
+  WAITING: '답변대기',
 };
 
 /** YYYY.MM.DD 포맷 — ReviewList와 동일 규약. */
@@ -38,35 +40,51 @@ export function QnaList({ goodsNo, active }: QnaListProps) {
 
   if (query.isLoading) {
     return (
-      <div className="bb-qna-list" aria-hidden="true">
-        <Skeleton ratio="6 / 1" />
-        <Skeleton ratio="6 / 1" />
+      <div className="bb-qna-list">
+        <QnaForm goodsNo={goodsNo} />
+        <div aria-hidden="true">
+          <Skeleton ratio="6 / 1" />
+          <Skeleton ratio="6 / 1" />
+        </div>
       </div>
     );
   }
 
   if (query.isError) {
-    return <p className="bb-qna-list__error">문의를 불러오지 못했어요.</p>;
+    return (
+      <div className="bb-qna-list">
+        <QnaForm goodsNo={goodsNo} />
+        <p className="bb-qna-list__error">문의를 불러오지 못했어요.</p>
+      </div>
+    );
   }
 
   const items = query.data?.content ?? [];
 
   if (items.length === 0) {
-    return <EmptyState title="아직 등록된 문의가 없어요" />;
+    return (
+      <div className="bb-qna-list">
+        <QnaForm goodsNo={goodsNo} />
+        <EmptyState title="아직 등록된 문의가 없어요" />
+      </div>
+    );
   }
 
   return (
-    <ul className="bb-qna-list__items">
-      {items.map((item) => (
-        <li key={item.qnaId} className="bb-qna-list__item">
-          <div className="bb-qna-list__meta">
-            {item.isSecret && <span className="bb-qna-list__secret">비밀글</span>}
-            <span className="bb-qna-list__status">{STATUS_LABEL[item.status] ?? item.status}</span>
-            <span className="bb-qna-list__date">{formatDate(item.createdAt)}</span>
-          </div>
-          <p className="bb-qna-list__question">{item.isSecret ? '비밀글입니다.' : item.question}</p>
-        </li>
-      ))}
-    </ul>
+    <div className="bb-qna-list">
+      <QnaForm goodsNo={goodsNo} />
+      <ul className="bb-qna-list__items">
+        {items.map((item) => (
+          <li key={item.qnaId} className="bb-qna-list__item">
+            <div className="bb-qna-list__meta">
+              {item.isSecret && <span className="bb-qna-list__secret">비밀글</span>}
+              <span className="bb-qna-list__status">{STATUS_LABEL[item.status] ?? item.status}</span>
+              <span className="bb-qna-list__date">{formatDate(item.createdAt)}</span>
+            </div>
+            <p className="bb-qna-list__question">{item.isSecret ? '비밀글입니다.' : item.question}</p>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }

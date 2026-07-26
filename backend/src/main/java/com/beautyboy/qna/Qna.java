@@ -97,4 +97,11 @@ public class Qna {
     public LocalDateTime getAnsweredAt() {
         return answeredAt;
     }
+
+    /** 관리자 답변 등록. 이미 답변된 문의인지(QNA_ALREADY_ANSWERED)는 호출자(서비스)가 먼저 판정한다. */
+    public void answer(String answer) {
+        this.answer = answer;
+        this.status = "ANSWERED";
+        this.answeredAt = LocalDateTime.now();
+    }
 }

@@ -1,0 +1,66 @@
+.bb-routine-step {
+  padding: var(--space-xl) 0;
+  border-top: 1px solid var(--color-hairline-soft);
+}
+
+.bb-routine-step__header {
+  margin-bottom: var(--space-lg);
+}
+
+.bb-routine-step__order {
+  display: block;
+  margin-bottom: var(--space-xxs);
+  font-family: var(--font-body);
+  font-size: var(--fs-micro-caps);
+  font-weight: var(--fw-micro-caps);
+  letter-spacing: var(--ls-micro-caps);
+  text-transform: uppercase;
+  color: var(--color-stone);
+}
+
+.bb-routine-step__name {
+  margin: 0 0 var(--space-xs);
+  font-size: var(--fs-heading-sm);
+  font-weight: var(--fw-heading-sm);
+  line-height: var(--lh-heading-sm);
+  color: var(--color-ink);
+  word-break: keep-all;
+}
+
+.bb-routine-step__tip {
+  margin: 0;
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  color: var(--color-graphite);
+  word-break: keep-all;
+}
+
+/* 고정 3열(GoodsGrid.css와 같은 방식: repeat(N, 1fr), auto-fill 미사용).
+   추천은 단계당 2~3개로 상한(설계 8장)이라 auto-fill(minmax(180px,1fr))을 쓰면
+   1440/1920처럼 넓은 컨테이너에서 실제 카드 수보다 많은 트랙이 계산돼(예: 6트랙) 남는
+   트랙이 1fr 지분을 계속 차지 → 카드 행이 컨테이너 좌측 절반에서 끝나고 우측이 빈다.
+   고정 3열은 트랙 수가 컨테이너 폭과 무관하게 항상 3이라 이 간극이 생기지 않는다. */
+.bb-routine-step__options {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-lg);
+}
+
+.bb-routine-step__option {
+  position: relative;
+}
+
+.bb-routine-step__input {
+  position: absolute;
+  top: var(--space-xs);
+  left: var(--space-xs);
+  z-index: 1;
+  accent-color: var(--color-ink);
+}
+
+@media (max-width: 640px) {
+  .bb-routine-step__options {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-md);
+  }
+}

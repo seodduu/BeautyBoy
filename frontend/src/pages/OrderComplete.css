@@ -1,0 +1,117 @@
+/* 결제 완료 화면. 토큰은 DESIGN.md(= src/index.css 변수)를 이름으로 참조한다 — hex 직접 기입 없음.
+   한글 본문이므로 제목·본문 전부 word-break: keep-all. */
+.bb-order-complete {
+  max-width: var(--landing-column);
+  margin: 0 auto;
+  padding: var(--space-section) var(--space-lg);
+}
+
+.bb-order-complete__title {
+  margin: 0 0 var(--space-md);
+  font-size: var(--fs-heading-md);
+  font-weight: var(--fw-heading-md);
+  line-height: var(--lh-heading-md);
+  letter-spacing: var(--ls-heading-md);
+  color: var(--color-ink);
+  word-break: keep-all;
+}
+
+.bb-order-complete__lead {
+  margin: 0 0 var(--space-xl);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  color: var(--color-graphite);
+  word-break: keep-all;
+}
+
+/* 승인 진행 중·"이미 처리된 결제" 안내. 시그널색은 좌측 보더 액센트로만 쓴다(배경으로 칠하지 않는다). */
+.bb-order-complete__status {
+  margin: 0 0 var(--space-xl);
+  padding: var(--space-md);
+  border: 1px solid var(--color-hairline-soft);
+  border-left: 4px solid var(--color-signal-caution);
+  border-radius: var(--rounded-lg);
+  background: var(--color-canvas);
+  font-size: var(--fs-body-tight);
+  line-height: var(--lh-body-tight);
+  color: var(--color-ink);
+  word-break: keep-all;
+}
+
+.bb-order-complete__alert {
+  margin: 0 0 var(--space-xl);
+  padding: var(--space-md);
+  border: 1px solid var(--color-hairline-soft);
+  border-left: 4px solid var(--color-signal-danger);
+  border-radius: var(--rounded-lg);
+  background: var(--color-canvas);
+  font-size: var(--fs-body-tight);
+  line-height: var(--lh-body-tight);
+  color: var(--color-ink);
+  word-break: keep-all;
+}
+
+.bb-order-complete__facts {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--space-sm) var(--space-lg);
+  margin: 0 0 var(--space-xl);
+  padding: var(--space-lg) 0;
+  border-top: 1px solid var(--color-hairline-soft);
+  border-bottom: 1px solid var(--color-hairline-soft);
+}
+
+.bb-order-complete__facts dt {
+  font-size: var(--fs-body);
+  color: var(--color-graphite);
+  word-break: keep-all;
+}
+
+.bb-order-complete__facts dd {
+  margin: 0;
+  font-size: var(--fs-body-strong);
+  font-weight: var(--fw-body-strong);
+  color: var(--color-ink);
+  min-width: 0;
+}
+
+.bb-order-complete__amount {
+  font-size: var(--fs-heading-sm);
+  font-weight: var(--fw-heading-sm);
+  line-height: var(--lh-heading-sm);
+}
+
+.bb-order-complete__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+/* DESIGN.md button-text-link과 같은 문법(밑줄 텍스트 링크). Button 컴포넌트는 라우팅을 못 하므로
+   Link에 같은 타이포를 적용한다. */
+.bb-order-complete__link {
+  font-size: var(--fs-link-sm);
+  font-weight: var(--fw-link-sm);
+  line-height: var(--lh-link-sm);
+  color: var(--color-ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  word-break: keep-all;
+}
+
+@media (max-width: 900px) {
+  .bb-order-complete {
+    padding: var(--space-xl) var(--space-md);
+  }
+
+  .bb-order-complete__title {
+    font-size: var(--fs-heading-sm);
+    line-height: var(--lh-heading-sm);
+    letter-spacing: var(--ls-heading-sm);
+  }
+
+  .bb-order-complete__facts {
+    grid-template-columns: 1fr;
+    gap: var(--space-xxs);
+  }
+}

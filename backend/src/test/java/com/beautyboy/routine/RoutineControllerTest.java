@@ -39,7 +39,7 @@ class RoutineControllerTest {
 
     @Test
     void 인증없이_루틴을_조회하면_200과_5단계를_반환한다() throws Exception {
-        given(routineQueryService.find(any(), any())).willReturn(다섯단계_응답());
+        given(routineQueryService.find(any(), any(), any())).willReturn(다섯단계_응답());
 
         mockMvc.perform(get("/api/v1/routines").param("skinType", "DRY").param("time", "BASIC"))
                 .andExpect(status().isOk())

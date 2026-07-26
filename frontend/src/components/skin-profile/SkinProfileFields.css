@@ -1,0 +1,96 @@
+.bb-skin-fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.bb-skin-fields__group {
+  border: none;
+  margin: 0;
+  padding: 0;
+}
+
+.bb-skin-fields__legend {
+  font-family: var(--font-body);
+  font-size: var(--fs-eyebrow);
+  font-weight: var(--fw-eyebrow);
+  letter-spacing: var(--ls-eyebrow);
+  text-transform: uppercase;
+  color: var(--color-slate);
+  margin-bottom: var(--space-sm);
+  padding: 0;
+}
+
+.bb-skin-fields__type-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-sm);
+}
+
+.bb-skin-type-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xxs);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--rounded-sm);
+  background: var(--color-canvas);
+  border: 1px solid var(--color-hairline);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.bb-skin-type-card input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.bb-skin-type-card:hover {
+  border-color: var(--color-hairline-soft);
+}
+
+/* 선택 상태 배경으로 쓰는 --color-hairline은 무채색 사다리 톤이라 DESIGN.md의
+   signal-* 배경 금지 규칙과 무관하다(project law로 확인됨). */
+.bb-skin-type-card--active {
+  border-color: var(--color-ink);
+  background: var(--color-hairline);
+}
+
+.bb-skin-type-card__label {
+  font-size: var(--fs-body-strong);
+  font-weight: var(--fw-body-strong);
+  color: var(--color-ink);
+}
+
+.bb-skin-type-card__desc {
+  font-size: var(--fs-meta);
+  color: var(--color-stone);
+}
+
+.bb-skin-fields__chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+}
+
+.bb-chip {
+  padding: var(--space-xs) var(--space-md);
+  border-radius: var(--rounded-full);
+  background: var(--color-canvas);
+  border: 1px solid var(--color-hairline);
+  color: var(--color-graphite);
+  font-size: var(--fs-meta);
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+
+.bb-chip:hover {
+  border-color: var(--color-hairline-soft);
+}
+
+.bb-chip--active {
+  border-color: var(--color-ink);
+  background: var(--color-hairline);
+  color: var(--color-ink);
+}

@@ -15,6 +15,19 @@ services:
       retries: 20
       start_period: 30s
 
+  # 조회수 INCR 버퍼 전용. 선택 의존이다 — 백엔드는 이게 없어도 뜨고(기본 VIEW_COUNT_REDIS=false),
+  # 그때는 조회수를 DB에서 즉시 증가시킨다.
+  redis:
+    image: redis:7-alpine
+    container_name: beautyboy-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
   backend:
     build: ./backend
     environment:

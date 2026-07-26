@@ -1,5 +1,7 @@
 package com.beautyboy.qna;
 
+import com.beautyboy.common.BusinessException;
+import com.beautyboy.common.ErrorCode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +14,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -33,6 +38,10 @@ class QnaApiTest {
     MockMvc mockMvc;
     @Autowired
     ObjectMapper objectMapper;
+    @Autowired
+    QnaService qnaService;
+    @Autowired
+    QnaRepository qnaRepository;
 
     @Test
     void 질문을_등록하고_목록에서_본다() throws Exception {
@@ -88,6 +97,32 @@ class QnaApiTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body));
     }
+
+    @Test
+    void 답변을_등록하면_상태가_ANSWERED로_바뀐다() throws Exception {
+        Qna qna = qnaRepository.save(new Qna(작성자, 상품, "재고 있나요?", false));
+
+        qnaService.answer(qna.getId(), "네, 재고 있습니다.");
+
+        com.beautyboy.support.TestPersistence.DB_왕복_강제(entityManager);
+        Qna 다시_읽음 = qnaRepository.findById(qna.getId()).orElseThrow();
+        assertThat(다시_읽음.getAnswer()).isEqualTo("네, 재고 있습니다.");
+        assertThat(다시_읽음.getStatus()).isEqualTo("ANSWERED");
+        assertThat(다시_읽음.getAnsweredAt()).isNotNull();
+    }
+
+    @Test
+    void 이미_답변된_문의에_다시_답변하면_QNA_ALREADY_ANSWERED다() throws Exception {
+        Qna qna = qnaRepository.save(new Qna(작성자, 상품, "재고 있나요?", false));
+        qnaService.answer(qna.getId(), "첫 답변");
+
+        assertThatThrownBy(() -> qnaService.answer(qna.getId(), "두번째 답변"))
+                .isInstanceOf(BusinessException.class)
+                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.QNA_ALREADY_ANSWERED);
+    }
+
+    @jakarta.persistence.PersistenceContext
+    jakarta.persistence.EntityManager entityManager;
 
     private static org.springframework.test.web.servlet.request.RequestPostProcessor 로그인(Long memberId) {
         return authentication(new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(

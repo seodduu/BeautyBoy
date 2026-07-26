@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { fetchReviewStats, fetchReviews } from '../../api/review';
 import { EmptyState } from '../common/EmptyState';
 import { Skeleton } from '../ui/Skeleton';
+import { ReviewForm } from './ReviewForm';
 import './ReviewList.css';
 
 interface ReviewListProps {
@@ -41,26 +42,40 @@ export function ReviewList({ goodsNo, active }: ReviewListProps) {
 
   if (statsQuery.isLoading || listQuery.isLoading) {
     return (
-      <div className="bb-review-list" aria-hidden="true">
-        <Skeleton ratio="6 / 1" />
-        <Skeleton ratio="6 / 1" />
+      <div className="bb-review-list">
+        <ReviewForm goodsNo={goodsNo} />
+        <div aria-hidden="true">
+          <Skeleton ratio="6 / 1" />
+          <Skeleton ratio="6 / 1" />
+        </div>
       </div>
     );
   }
 
   if (statsQuery.isError || listQuery.isError) {
-    return <p className="bb-review-list__error">리뷰를 불러오지 못했어요.</p>;
+    return (
+      <div className="bb-review-list">
+        <ReviewForm goodsNo={goodsNo} />
+        <p className="bb-review-list__error">리뷰를 불러오지 못했어요.</p>
+      </div>
+    );
   }
 
   const stats = statsQuery.data;
   const reviews = listQuery.data?.content ?? [];
 
   if (reviews.length === 0) {
-    return <EmptyState title="아직 등록된 리뷰가 없어요" />;
+    return (
+      <div className="bb-review-list">
+        <ReviewForm goodsNo={goodsNo} />
+        <EmptyState title="아직 등록된 리뷰가 없어요" />
+      </div>
+    );
   }
 
   return (
     <div className="bb-review-list">
+      <ReviewForm goodsNo={goodsNo} />
       {stats && (
         <p className="bb-review-list__stats">
           평균 {stats.averageRating.toFixed(1)} · 리뷰 {stats.reviewCount.toLocaleString('ko-KR')}개

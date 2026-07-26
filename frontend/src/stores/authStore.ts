@@ -12,6 +12,12 @@ export interface MemberInfo {
   skinType?: string;
   concerns?: string[];
   ageBand?: string;
+  /**
+   * 권한(USER/ADMIN) — `grade`(등급: BABY 등)와 다른 축이다. 출처는 오직
+   * `GET /members/me` 응답이다. JWT를 프론트에서 디코드해 꺼내지 않는다 —
+   * 토큰 파싱을 클라이언트가 시작하면 신뢰 경계가 흐려진다(RequireAdmin 참고).
+   */
+  role?: string;
 }
 
 interface AuthState {

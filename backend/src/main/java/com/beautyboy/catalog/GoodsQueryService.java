@@ -36,20 +36,26 @@ public interface GoodsQueryService {
      * 호출자(주문)가 "여러 건 중 어느 것이 문제인지"를 모아서 판단해야 하기 때문이다.
      *
      * @param goodsNo  상품 번호
-     * @param optionNo 옵션 번호. 옵션 없는 상품이면 null.
+     * @param optionNo 옵션 번호. <b>null은 "옵션을 특정하지 않았다"는 뜻이며 "옵션이 없다"는 뜻이 아니다</b>
+     *                 (루틴 전체담기처럼 화면에 옵션 정보가 없는 경로가 null을 보낸다).
+     *                 상품에 옵션이 있으면 서버가 <b>대표 옵션</b>(sortOrder 최소, 동률이면 id 최소)을
+     *                 골라 스냅샷의 모든 필드를 그 옵션으로 채운다. 옵션이 하나도 없는 상품이면
+     *                 optionId·optionName이 null이 된다.
      * @return 주문 가능한 상품이면 스냅샷, 아니면 빈 값
      */
     Optional<OrderGoodsSnapshot> findOrderSnapshot(Long goodsNo, Long optionNo);
 
-    /** goods_no 목록 → 카드 아이템. HIDDEN 상품은 제외한다(목록·상세와 같은 노출 기준).
-     *  입력 순서를 보존하지 않는다 — 호출자가 필요하면 자기 순서로 재정렬한다. */
-    List<GoodsListItem> findListItems(Collection<Long> goodsNos);
+    /** goods_no 목록 → 카드 아이템. HIDDEN 제외. 입력 순서를 보존하지 않는다.
+     *  viewerId는 wished 판정에만 쓰이며 비로그인이면 null이다. */
+    List<GoodsListItem> findListItems(Collection<Long> goodsNos, Long viewerId);
 
     /**
      * 주문 시점에 복사해 둘 상품 정보.
      *
      * @param unitPrice 1개 가격. 옵션 추가금이 이미 더해진 값이다 — 호출자가 다시 더하면 중복 계산이 된다.
-     * @param stock     옵션 재고. 옵션이 없으면 {@link Integer#MAX_VALUE}(재고 관리 대상 아님).
+     * @param stock     옵션 재고. <b>상품에 옵션이 하나도 없는 경우에만</b> {@link Integer#MAX_VALUE}
+     *                  (재고 관리 단위가 옵션이므로 관리 대상이 아니라는 뜻). 옵션이 있으면 조회한
+     *                  옵션(또는 대표 옵션)의 실제 재고이며, 품절이면 0이 실려 재고 게이트에 막힌다.
      *                  이 웨이브는 재고를 <b>검증만</b> 하고 차감하지 않는다(차감은 Wave 3).
      */
     record OrderGoodsSnapshot(

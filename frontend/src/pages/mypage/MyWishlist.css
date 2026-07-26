@@ -1,0 +1,6 @@
+.bb-my-wishlist__error {
+  padding: var(--space-lg) 0;
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  color: var(--color-signal-danger);
+}

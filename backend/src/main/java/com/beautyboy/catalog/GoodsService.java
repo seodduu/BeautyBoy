@@ -25,26 +25,27 @@ public class GoodsService implements GoodsQueryService {
     private final GoodsRepository goodsRepository;
     private final GoodsQueryRepository goodsQueryRepository;
     private final CategoryRepository categoryRepository;
+    private final GoodsRatingProvider goodsRatingProvider;
+    private final WishedGoodsProvider wishedGoodsProvider;
 
     public GoodsService(GoodsRepository goodsRepository,
                          GoodsQueryRepository goodsQueryRepository,
-                         CategoryRepository categoryRepository) {
+                         CategoryRepository categoryRepository,
+                         GoodsRatingProvider goodsRatingProvider,
+                         WishedGoodsProvider wishedGoodsProvider) {
         this.goodsRepository = goodsRepository;
         this.goodsQueryRepository = goodsQueryRepository;
         this.categoryRepository = categoryRepository;
+        this.goodsRatingProvider = goodsRatingProvider;
+        this.wishedGoodsProvider = wishedGoodsProvider;
     }
 
     @Transactional(readOnly = true)
-    public PageResponse<GoodsListItem> list(GoodsSearchCondition condition) {
+    public PageResponse<GoodsListItem> list(GoodsSearchCondition condition, Long viewerId) {
         List<GoodsQueryRepository.GoodsRow> rows = goodsQueryRepository.findList(condition);
         long totalElements = goodsQueryRepository.count(condition);
 
-        List<Long> goodsIds = rows.stream().map(GoodsQueryRepository.GoodsRow::goodsId).toList();
-        Map<Long, List<String>> badgesByGoodsId = goodsQueryRepository.findValidBadges(goodsIds, LocalDateTime.now());
-
-        List<GoodsListItem> items = rows.stream()
-                .map(row -> toItem(row, badgesByGoodsId.getOrDefault(row.goodsId(), List.of())))
-                .toList();
+        List<GoodsListItem> items = toItems(rows, viewerId);
 
         return PageResponse.of(items, condition.page(), condition.size(), totalElements);
     }
@@ -55,7 +56,7 @@ public class GoodsService implements GoodsQueryService {
      * 엔티티 로딩 자체를 막을 수는 없어도 응답 페이로드에는 절대 실리지 않는다).
      */
     @Transactional(readOnly = true)
-    public GoodsDetailResponse detail(Long goodsNo) {
+    public GoodsDetailResponse detail(Long goodsNo, Long viewerId) {
         Goods goods = goodsRepository.findDetailById(goodsNo, Goods.STATUS_HIDDEN)
                 .orElseThrow(() -> new BusinessException(ErrorCode.GOODS_NOT_FOUND));
 
@@ -64,6 +65,10 @@ public class GoodsService implements GoodsQueryService {
                 .findValidBadges(List.of(goodsNo), LocalDateTime.now())
                 .getOrDefault(goodsNo, List.of());
         List<String> categoryPath = categoryPath(goods.getCategoryCode());
+
+        GoodsRatingProvider.RatingStat ratingStat = goodsRatingProvider.ratingsByGoods(List.of(goodsNo))
+                .get(goodsNo);
+        boolean wished = wishedGoodsProvider.wishedGoodsIds(viewerId, List.of(goodsNo)).contains(goodsNo);
 
         return new GoodsDetailResponse(
                 goods.getId(),
@@ -80,9 +85,9 @@ public class GoodsService implements GoodsQueryService {
                 badges,
                 goods.getStatus(),
                 optionRows.stream().map(this::toOptionResponse).toList(),
-                0.0,
-                0,
-                false,
+                ratingStat == null ? 0.0 : ratingStat.rating(),
+                ratingStat == null ? 0 : ratingStat.reviewCount(),
+                wished,
                 false);
     }
 
@@ -96,7 +101,7 @@ public class GoodsService implements GoodsQueryService {
 
     /** 같은 leaf 카테고리 내 view_count DESC 상위 8건, 자기 자신 제외. 목록 매핑을 그대로 재사용한다. */
     @Transactional(readOnly = true)
-    public List<GoodsListItem> recommended(Long goodsNo) {
+    public List<GoodsListItem> recommended(Long goodsNo, Long viewerId) {
         Goods goods = goodsRepository.findDetailById(goodsNo, Goods.STATUS_HIDDEN)
                 .orElseThrow(() -> new BusinessException(ErrorCode.GOODS_NOT_FOUND));
 
@@ -113,12 +118,7 @@ public class GoodsService implements GoodsQueryService {
                         (Integer) row[5]))
                 .toList();
 
-        List<Long> goodsIds = goodsRows.stream().map(GoodsQueryRepository.GoodsRow::goodsId).toList();
-        Map<Long, List<String>> badgesByGoodsId = goodsQueryRepository.findValidBadges(goodsIds, LocalDateTime.now());
-
-        return goodsRows.stream()
-                .map(row -> toItem(row, badgesByGoodsId.getOrDefault(row.goodsId(), List.of())))
-                .toList();
+        return toItems(goodsRows, viewerId);
     }
 
     /**
@@ -138,8 +138,40 @@ public class GoodsService implements GoodsQueryService {
     }
 
     /**
+     * 대표 옵션 선택 순서: {@code sortOrder} 오름차순, 동률이면 {@code id} 오름차순.
+     *
+     * <p>왜 sortOrder인가: 상세 화면의 옵션 목록도 sortOrder 순으로 내려가므로, 손님이 화면에서
+     * 처음 보는 옵션과 서버가 고르는 대표 옵션이 같아진다. 그래서 담긴 옵션·가격이 화면과 어긋나지 않는다.
+     *
+     * <p>왜 "재고 있는 옵션 우선"이 아닌가: 그러면 손님이 본 것과 다른 옵션·다른 가격이 조용히 담긴다.
+     * 대표 옵션이 품절이면 숨기지 않고 {@code ORDER_OUT_OF_STOCK}으로 정직하게 막는 것이 옳다.
+     *
+     * <p>왜 id를 2차 키로 두는가: 결정적이어야 한다. sortOrder가 동률인데 순서가 컬렉션 로딩 순서에
+     * 좌우되면 같은 입력에 다른 답이 나오고 테스트가 흔들린다.
+     *
+     * <p><b>NPE 함정</b>: {@code thenComparing(GoodsOption::getId)}는 컬렉션 안에 {@code id}가
+     * null인 옵션이 있으면(같은 트랜잭션에서 flush되기 전에 추가된 옵션 — {@code new GoodsOption(...)}
+     * 직후 아직 persist/flush 안 된 상태) NPE를 던진다. 지금은 프로덕션 코드 어디서도 이 컴퍼레이터가
+     * 평가되는 시점에 미저장 {@code GoodsOption}을 컬렉션에 넣는 호출부가 없어(옵션은 Flyway 시드로만
+     * 들어오고, admin에 옵션 생성 API가 아직 없다) 도달 불가능하지만, admin에 옵션 생성 기능이 추가되고
+     * 그 트랜잭션 안에서 곧바로 이 비교자를 타는 경로(예: 생성 직후 재조회 없이 재계산)가 생기면
+     * 되살아나는 함정이다. 옵션을 추가한 뒤에는 반드시 flush/재조회로 id를 확정한 컬렉션을 넘겨라.
+     */
+    private static final java.util.Comparator<GoodsOption> 대표_옵션_순서 =
+            java.util.Comparator.comparingInt(GoodsOption::getSortOrder)
+                    .thenComparing(GoodsOption::getId);
+
+    /**
      * 주문·장바구니용 상품 스냅샷. 숨김 상품과 상품-옵션 불일치는 빈 값으로 답한다
      * (예외를 던지지 않는 이유는 인터페이스 문서 참고).
+     *
+     * <p><b>장바구니에 담긴 옵션이 나중에 삭제되면</b>: {@code CartItem}은 해석된 {@code option_id}를
+     * 확정해 저장하므로(Task 4-18), 그 옵션이 삭제되면 여기서 "상품-옵션 불일치"로 빈 값을 반환하고
+     * {@code CartService#itemsOf}가 그 행을 목록에서 조용히 제외한다. 예외를 던지거나 행을 강제로
+     * 지우지 않는 이유는 숨김 상품과 같은 정책이다 — 손님이 장바구니를 열 때마다 "옵션이
+     * 사라졌습니다" 에러로 막기보다, 있던 자리에서 자연스럽게 빠지는 편을 택했다. 다시 판매되는
+     * 상품이 살아나는 것과 대칭이지만, 옵션은 삭제되면 되살아나지 않으므로 이 행은 사실상 영구히
+     * 사라진다 — 의도된 트레이드오프다(옵션 삭제 자체가 드문 admin 조작이라 손님에게 노출되는 폭이 작다).
      */
     @Override
     @Transactional(readOnly = true)
@@ -152,22 +184,35 @@ public class GoodsService implements GoodsQueryService {
         Goods goods = found.get();
 
         if (optionNo == null) {
-            // 옵션이 없는 상품. 재고 관리 단위가 옵션이므로 상품 단위 재고는 무제한으로 본다.
-            return Optional.of(new OrderGoodsSnapshot(
-                    goods.getId(), null, goods.getName(), null, goods.getSalePrice(), Integer.MAX_VALUE));
+            // optionNo가 null인 것은 "옵션을 특정하지 않았다"는 뜻일 뿐 "상품에 옵션이 없다"는 뜻이 아니다.
+            // 예전에는 이 둘을 같게 보고 무조건 재고 MAX_VALUE로 답했고, 그래서 루틴 전체담기
+            // (항상 optionNo=null을 보낸다)로 담은 품절 상품이 재고 게이트를 통째로 통과했다.
+            // 옵션이 있으면 서버가 대표 옵션을 골라 재고·추가금·옵션명을 모두 그 옵션으로 채운다.
+            return goods.getOptions().stream()
+                    .min(대표_옵션_순서)
+                    .map(option -> 스냅샷(goods, option))
+                    // 옵션이 진짜 하나도 없는 상품만 여기로 온다. 재고 관리 단위가 옵션이므로
+                    // 이 경우에만 상품 단위 재고를 무제한으로 본다.
+                    .or(() -> Optional.of(new OrderGoodsSnapshot(
+                            goods.getId(), null, goods.getName(), null,
+                            goods.getSalePrice(), Integer.MAX_VALUE)));
         }
 
         // 옵션은 반드시 그 상품의 것이어야 한다. 남의 옵션을 붙이는 조작을 여기서 끊는다.
         return goods.getOptions().stream()
                 .filter(option -> option.getId().equals(optionNo))
                 .findFirst()
-                .map(option -> new OrderGoodsSnapshot(
-                        goods.getId(),
-                        option.getId(),
-                        goods.getName(),
-                        option.getName(),
-                        goods.getSalePrice() + option.getAddPrice(),
-                        option.getStock()));
+                .map(option -> 스냅샷(goods, option));
+    }
+
+    private OrderGoodsSnapshot 스냅샷(Goods goods, GoodsOption option) {
+        return new OrderGoodsSnapshot(
+                goods.getId(),
+                option.getId(),
+                goods.getName(),
+                option.getName(),
+                goods.getSalePrice() + option.getAddPrice(),
+                option.getStock());
     }
 
     /**
@@ -177,18 +222,13 @@ public class GoodsService implements GoodsQueryService {
      */
     @Override
     @Transactional(readOnly = true)
-    public List<GoodsListItem> findListItems(java.util.Collection<Long> goodsNos) {
+    public List<GoodsListItem> findListItems(java.util.Collection<Long> goodsNos, Long viewerId) {
         if (goodsNos.isEmpty()) {
             return List.of();
         }
         List<GoodsQueryRepository.GoodsRow> rows = goodsQueryRepository.findByIds(goodsNos);
 
-        List<Long> goodsIds = rows.stream().map(GoodsQueryRepository.GoodsRow::goodsId).toList();
-        Map<Long, List<String>> badgesByGoodsId = goodsQueryRepository.findValidBadges(goodsIds, LocalDateTime.now());
-
-        return rows.stream()
-                .map(row -> toItem(row, badgesByGoodsId.getOrDefault(row.goodsId(), List.of())))
-                .toList();
+        return toItems(rows, viewerId);
     }
 
     /** 코드 접두사(C001, C001001, C001001001)를 한 번에 IN 조회해 depth 1→3 순서 이름 배열로 만든다. */
@@ -212,7 +252,32 @@ public class GoodsService implements GoodsQueryService {
         return new GoodsOptionResponse(optionNo, name, addPrice, stock, stock == 0);
     }
 
-    private GoodsListItem toItem(GoodsQueryRepository.GoodsRow row, List<String> badges) {
+    /**
+     * 행 목록 → 카드 목록. 배지·별점·찜을 각각 <b>한 번씩만</b> 배치 조회한 뒤 메모리에서 합친다
+     * (N+1 금지 — 상품별로 반복 조회하지 않는다).
+     *
+     * <p>패키지 접근(default)인 이유: 같은 catalog 패키지 소속인 {@code AdminGoodsService}가
+     * 관리자 목록(HIDDEN 포함)을 만들 때 이 매핑을 그대로 재사용한다 — 배지/별점/찜 조립 로직을
+     * 두 곳에 중복시키지 않는다.
+     */
+    List<GoodsListItem> toItems(List<GoodsQueryRepository.GoodsRow> rows, Long viewerId) {
+        List<Long> goodsIds = rows.stream().map(GoodsQueryRepository.GoodsRow::goodsId).toList();
+
+        Map<Long, List<String>> badgesByGoodsId = goodsQueryRepository.findValidBadges(goodsIds, LocalDateTime.now());
+        Map<Long, GoodsRatingProvider.RatingStat> ratingsByGoodsId = goodsRatingProvider.ratingsByGoods(goodsIds);
+        java.util.Set<Long> wishedGoodsIds = wishedGoodsProvider.wishedGoodsIds(viewerId, goodsIds);
+
+        return rows.stream()
+                .map(row -> toItem(
+                        row,
+                        badgesByGoodsId.getOrDefault(row.goodsId(), List.of()),
+                        ratingsByGoodsId.get(row.goodsId()),
+                        wishedGoodsIds.contains(row.goodsId())))
+                .toList();
+    }
+
+    private GoodsListItem toItem(GoodsQueryRepository.GoodsRow row, List<String> badges,
+                                  GoodsRatingProvider.RatingStat ratingStat, boolean wished) {
         return new GoodsListItem(
                 row.goodsId(),
                 row.brandName(),
@@ -222,9 +287,9 @@ public class GoodsService implements GoodsQueryService {
                 row.salePrice(),
                 discountRate(row.listPrice(), row.salePrice()),
                 badges,
-                0.0,
-                0,
-                false,
+                ratingStat == null ? 0.0 : ratingStat.rating(),
+                ratingStat == null ? 0 : ratingStat.reviewCount(),
+                wished,
                 false);
     }
 
