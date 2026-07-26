@@ -12,6 +12,6 @@
 # 평문 문자열을 그대로 넣으면 DecodingException으로 컨텍스트 로딩이 실패한다.
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/beautyboy
+    url: jdbc:mysql://localhost:13306/beautyboy
     username: root
     password: local1234

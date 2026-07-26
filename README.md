@@ -16,24 +16,52 @@
 |---|---|
 | 백엔드 | Spring Boot 3.5.0, Java 21, Spring Security, Spring Data JPA, Flyway, JJWT 0.12.6, MySQL(운영) / H2(테스트) |
 | 프론트엔드 | React 19, TypeScript, Vite 8, React Router 7, TanStack Query 5, Zustand 5, Axios, Vitest + Testing Library + MSW |
-| 인프라 | MySQL 8.4 (Docker Compose), (선택) Redis — 이후 웨이브에서 도입 |
+| 인프라 | Docker Compose(MySQL 8.4 + 백엔드 + 프론트 nginx), (선택) Redis — 이후 웨이브에서 도입 |
 
 ## 실행 방법
 
-### 1. MySQL 기동
+실행 경로는 둘이다. **전체 스택을 컨테이너로 한 번에 띄우는 방법(A)**과,
+코드를 고쳐가며 개발할 때 쓰는 **로컬 실행(B)**.
+
+### A. 전체 스택 한 번에 (Docker Compose)
 
 ```bash
-docker compose up -d
+cp .env.example .env
+# .env의 JWT_SECRET을 채운다 — TokenProvider가 Base64.decode()를 하므로 반드시 Base64여야 한다.
+# 비워두면 compose가 기동 전에 에러로 막는다.
+openssl rand -base64 48   # 출력값을 .env의 JWT_SECRET= 뒤에 붙여넣는다
+
+docker compose up -d --build
+```
+
+| 서비스 | 주소 | 비고 |
+|---|---|---|
+| 프론트엔드 | http://localhost:3000 | nginx가 정적 산출물 서빙 + `/api` → backend 프록시 |
+| 백엔드 | http://localhost:8080 | 프론트를 거치지 않고 직접 호출할 때 |
+| MySQL | localhost:13306 | 컨테이너끼리는 `mysql:3306` |
+
+기동 순서는 헬스체크로 묶여 있다: MySQL이 healthy → 백엔드 기동(Flyway 마이그레이션 적용) →
+백엔드가 healthy → 프론트 기동. 코드를 고쳤으면 `--build`를 다시 붙여야 반영된다.
+
+```bash
+docker compose logs -f backend   # 로그
+docker compose down              # 정지 (데이터 유지)
+docker compose down -v           # 정지 + DB 볼륨 삭제 (시드/마이그레이션 초기화)
 ```
 
 > **알려진 함정**: 호스트에 이미 로컬 MySQL(예: `brew services`로 띄운 mysqld)이 3306 포트를
-> 점유하고 있으면 `docker compose up -d`가 포트 바인딩 실패로 죽는다. 이 프로젝트 세팅 중 실제로
-> 겪은 문제다. 해결책:
-> - 기존 mysqld를 내린다 (`brew services stop mysql` 등), 또는
-> - `docker-compose.yml`의 `ports`를 `"3307:3306"`처럼 바꾸고 `application-local.yml`의
->   `datasource.url` 포트도 함께 맞춘다.
+> 점유하고 있으면 포트 바인딩 실패로 죽는다. 이 프로젝트 세팅 중 실제로 겪은 문제라
+> 호스트 쪽 포트를 **13306**으로 빼뒀다. 컨테이너 내부 통신은 여전히 3306이다.
 
-### 2. 백엔드 로컬 설정
+### B. 로컬 실행 (개발용)
+
+DB만 컨테이너로 띄우고 백엔드/프론트는 호스트에서 돌린다.
+
+```bash
+docker compose up -d mysql
+```
+
+#### B-1. 백엔드 로컬 설정
 
 ```bash
 cp backend/src/main/resources/application-local.yml.example backend/src/main/resources/application-local.yml
@@ -41,6 +69,7 @@ cp backend/src/main/resources/application-local.yml.example backend/src/main/res
 
 `application-local.yml`은 `.gitignore` 대상이라 커밋되지 않는다. 안의 DB 비밀번호(`local1234`)는
 `docker-compose.yml`의 로컬 전용 MySQL 컨테이너 값과 짝을 이루는 예시이므로 그대로 써도 된다.
+접속 포트는 컨테이너가 호스트로 노출하는 **13306**이다.
 
 JWT 시크릿은 코드/설정 파일에 넣지 않고 환경변수로 주입한다. `TokenProvider`가 HMAC 키를
 `Base64.decode(secret)`로 만들기 때문에 **반드시 Base64로 인코딩된 값**이어야 한다 — 임의의
@@ -50,7 +79,7 @@ JWT 시크릿은 코드/설정 파일에 넣지 않고 환경변수로 주입한
 export JWT_SECRET="$(openssl rand -base64 48)"
 ```
 
-### 3. 백엔드 실행
+#### B-2. 백엔드 실행
 
 ```bash
 cd backend
@@ -60,7 +89,7 @@ cd backend
 기동 시 Flyway가 마이그레이션(`db/migration/V1__member.sql`)을 적용한다.
 헬스체크: `curl http://localhost:8080/api/v1/health`
 
-### 4. 프론트엔드 실행
+#### B-3. 프론트엔드 실행
 
 ```bash
 cd frontend
@@ -71,7 +100,7 @@ npm run dev
 Vite 개발 서버가 `/api` 요청을 `http://localhost:8080`으로 프록시한다(`vite.config.ts`).
 기본 주소: `http://localhost:5173`
 
-### 5. 테스트
+### 테스트
 
 ```bash
 # 백엔드 — H2(MySQL 모드)로 동작, 별도 DB 기동 불필요
@@ -129,7 +158,10 @@ cd frontend && npm test
 ## 프로젝트 구조
 
 ```
+docker-compose.yml   # mysql + backend + frontend 한 번에
+.env.example         # JWT_SECRET 등 compose가 읽는 시크릿 템플릿
 backend/
+  Dockerfile         # gradle bootJar -> JRE 런타임 (멀티스테이지)
   src/main/java/com/beautyboy/
     common/        # ApiResponse, ErrorCode, BusinessException, GlobalExceptionHandler
     config/        # SecurityConfig, JwtProperties
@@ -139,6 +171,8 @@ backend/
     application.yml, application-local.yml.example
     db/migration/  # Flyway (V1__member.sql)
 frontend/
+  Dockerfile         # vite build -> nginx
+  nginx.conf         # SPA fallback + /api -> backend 프록시
   src/
     api/           # axios 클라이언트, auth API
     stores/        # authStore (Zustand)
