@@ -81,6 +81,8 @@ function OrderListView() {
               <span className="bb-my-orders__row-name">
                 {buildOrderLabel(order.representativeGoodsName, order.itemCount)}
               </span>
+              {/* 재주문 등으로 날짜·상품명·금액이 같은 건이 쌓여도 구분할 수 있도록 주문번호를 보조 정보로 노출 */}
+              <span className="bb-my-orders__row-order-no">주문번호 {order.orderNo}</span>
             </div>
             <span className="bb-my-orders__row-amount">{formatWon(order.payableAmount)}</span>
           </button>

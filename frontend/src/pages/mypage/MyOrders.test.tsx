@@ -120,6 +120,8 @@ describe('MyOrders — 마이페이지 주문내역', () => {
     );
 
     expect(await screen.findByText('그린티 토너 외 2건')).toBeInTheDocument();
+    // 재주문 등으로 날짜·상품명·금액이 같은 건이 쌓여도 주문번호로 구분할 수 있어야 한다.
+    expect(await screen.findByText(/ORD-1/)).toBeInTheDocument();
   });
 
   it('주문이 없으면 EmptyState를 보여준다', async () => {

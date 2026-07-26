@@ -48,6 +48,11 @@
   color: var(--color-ink);
 }
 
+.bb-my-orders__row-order-no {
+  font-size: var(--fs-meta);
+  color: var(--color-stone);
+}
+
 .bb-my-orders__row-amount {
   flex-shrink: 0;
   font-size: var(--fs-body-strong);
