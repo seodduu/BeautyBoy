@@ -31,7 +31,7 @@ export function GoodsCard({ item, onWishToggle, soldOut = false }: GoodsCardProp
 
   // 표시 규칙(전역): 카드에는 효과(EFFECT) 태그만, 최대 2개 — 사용감(TEXTURE)은 상세에서만 보여준다.
   // 카드는 훑어보는 자리라 태그가 배지보다 눈에 띄면 안 되므로 개수를 badges보다 더 좁게 잡는다.
-  const effectTags = (item.tags ?? []).filter((tag) => tag.kind === 'EFFECT').slice(0, 2);
+  const effectTags = item.tags.filter((tag) => tag.kind === 'EFFECT').slice(0, 2);
 
   return (
     <div className="bb-goods-card">

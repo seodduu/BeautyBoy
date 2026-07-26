@@ -35,8 +35,8 @@ export interface GoodsDetail {
   reviewCount: number;
   wished: boolean;
   todayDreamAvailable: boolean;
-  /** 옵션 필드 — GoodsListItem.tags와 동일한 이유로 옵션이다. 없으면 빈 배열로 취급한다. */
-  tags?: TagView[];
+  /** 백엔드가 항상 배열(빈 배열 포함)로 싣는다 — GoodsListItem.tags와 동일한 이유로 required. */
+  tags: TagView[];
 }
 
 /**

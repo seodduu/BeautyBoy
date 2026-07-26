@@ -93,7 +93,7 @@ export function Detail() {
   const displaySalePrice = goods.salePrice + (selectedOption?.addPrice ?? 0);
   // 표시 규칙(전역): 상품당 태그 최대 4개, 효과(EFFECT) 우선·사용감(TEXTURE) 후순위.
   // 여기서 자른다 — 백엔드가 더 많이 내려줘도 화면은 4개까지만 노출한다.
-  const displayTags = [...(goods.tags ?? [])]
+  const displayTags = [...goods.tags]
     .sort((a, b) => (a.kind === b.kind ? 0 : a.kind === 'EFFECT' ? -1 : 1))
     .slice(0, 4);
 

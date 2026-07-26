@@ -17,6 +17,7 @@ const baseItem: GoodsListItem = {
   reviewCount: 12,
   wished: false,
   todayDreamAvailable: false,
+  tags: [],
 };
 
 function renderCard(item: GoodsListItem, onWishToggle = vi.fn()) {
@@ -93,5 +94,27 @@ describe('GoodsCard', () => {
     renderCard(baseItem);
     const link = screen.getByRole('link');
     expect(link).toHaveAttribute('href', '/goods/1');
+  });
+
+  it('효과(EFFECT) 태그는 최대 2개까지만 보이고 사용감(TEXTURE) 태그는 카드에 노출하지 않는다', () => {
+    const { container } = renderCard({
+      ...baseItem,
+      tags: [
+        { name: '진정', kind: 'EFFECT', slug: 'soothing' },
+        { name: '보습', kind: 'EFFECT', slug: 'moisture' },
+        { name: '세정', kind: 'EFFECT', slug: 'cleanse' },
+        { name: '산뜻함', kind: 'TEXTURE', slug: 'fresh' },
+      ],
+    });
+
+    const tags = container.querySelectorAll('.bb-tag');
+    expect(tags.length).toBe(2);
+    expect(tags[0]).toHaveTextContent('진정');
+    expect(tags[1]).toHaveTextContent('보습');
+  });
+
+  it('tags가 빈 배열이면 태그 줄을 렌더하지 않는다', () => {
+    const { container } = renderCard(baseItem);
+    expect(container.querySelector('.bb-goods-card__tags')).not.toBeInTheDocument();
   });
 });

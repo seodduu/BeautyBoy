@@ -36,6 +36,7 @@ function goodsItem(goodsNo: number, name: string): GoodsListItem {
     reviewCount: 0,
     wished: false,
     todayDreamAvailable: false,
+    tags: [],
   };
 }
 

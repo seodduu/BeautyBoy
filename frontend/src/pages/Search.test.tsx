@@ -20,6 +20,7 @@ const SAMPLE_ITEM: GoodsListItem = {
   reviewCount: 12,
   wished: false,
   todayDreamAvailable: false,
+  tags: [],
 };
 
 function emptyPage() {

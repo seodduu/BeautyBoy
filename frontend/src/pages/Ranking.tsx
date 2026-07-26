@@ -29,6 +29,8 @@ function toGoodsListItem(item: RankingItem): GoodsListItem {
     reviewCount: 0,
     wished: false,
     todayDreamAvailable: false,
+    // 랭킹 API(RankingItem)는 태그를 내려주지 않는다 — 위 나머지 필드와 같은 이유로 중립값(빈 배열).
+    tags: [],
   };
 }
 

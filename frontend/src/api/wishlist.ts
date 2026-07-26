@@ -29,6 +29,7 @@ function toGoodsListItem(detail: GoodsDetail): GoodsListItem {
     reviewCount: detail.reviewCount,
     wished: true,
     todayDreamAvailable: detail.todayDreamAvailable,
+    tags: detail.tags,
   };
 }
 

@@ -17,6 +17,7 @@ const sampleItem: GoodsListItem = {
   reviewCount: 12,
   wished: false,
   todayDreamAvailable: true,
+  tags: [],
 };
 
 describe('fetchSearch — msw 목 서버 대상', () => {

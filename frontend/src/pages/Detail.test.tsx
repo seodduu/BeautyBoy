@@ -85,6 +85,7 @@ const RECOMMENDED_ITEM: GoodsListItem = {
   reviewCount: 5,
   wished: false,
   todayDreamAvailable: false,
+  tags: [],
 };
 
 function registerDefaultHandlers(overrides: { detail?: GoodsDetail; recommended?: GoodsListItem[] } = {}) {

@@ -67,6 +67,7 @@ const SAMPLE_ITEM_WITH_REVIEW: GoodsListItem = {
   reviewCount: 128,
   wished: false,
   todayDreamAvailable: false,
+  tags: [],
 };
 
 export function Showcase() {

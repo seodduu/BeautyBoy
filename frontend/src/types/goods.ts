@@ -26,11 +26,8 @@ export interface GoodsListItem {
   reviewCount: number;
   wished: boolean;
   todayDreamAvailable: boolean;
-  /**
-   * 옵션 필드 — Wave 태그 기능 이전 화면(랭킹·검색·마이위시리스트 등)의 기존 리터럴은
-   * 이 필드 없이도 계속 컴파일된다. 없으면 빈 배열로 취급한다.
-   */
-  tags?: TagView[];
+  /** 백엔드가 목록/상세/추천 응답 맨 뒤에 항상 배열(빈 배열 포함)로 싣는다 — optional이 아니다. */
+  tags: TagView[];
 }
 
 export interface PageResponse<T> {

@@ -32,6 +32,7 @@ const GOODS_DETAIL_1: GoodsDetail = {
   reviewCount: 12,
   wished: true,
   todayDreamAvailable: false,
+  tags: [],
 };
 
 function registerHandlers(options: { wishlistGoodsNos?: number[] } = {}) {
