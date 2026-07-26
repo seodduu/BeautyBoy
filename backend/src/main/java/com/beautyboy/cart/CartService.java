@@ -72,7 +72,13 @@ public class CartService {
                     .ifPresent(snapshot -> responses.add(new CartItemResponse(
                             item.getId(),
                             item.getGoodsId(),
-                            item.getOptionId(),
+                            // item.getOptionId()가 아니라 snapshot.optionId()를 내려준다. 4-18 이전에
+                            // 담긴 레거시 행(옵션 있는 상품인데 option_id=NULL로 저장된 행)은
+                            // item.getOptionId()가 여전히 null이라, 그걸 그대로 내리면 optionNo=null인데
+                            // optionName은 대표 옵션 이름이 나오는 자기모순 응답이 된다.
+                            // snapshot은 optionNo=null이었던 경우에도 catalog가 해석한 대표 옵션의
+                            // id를 담고 있으므로 그것을 내리면 optionNo·optionName이 항상 같은 옵션을 가리킨다.
+                            snapshot.optionId(),
                             snapshot.goodsName(),
                             snapshot.optionName(),
                             snapshot.unitPrice(),

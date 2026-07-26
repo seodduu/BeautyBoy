@@ -148,6 +148,14 @@ public class GoodsService implements GoodsQueryService {
      *
      * <p>왜 id를 2차 키로 두는가: 결정적이어야 한다. sortOrder가 동률인데 순서가 컬렉션 로딩 순서에
      * 좌우되면 같은 입력에 다른 답이 나오고 테스트가 흔들린다.
+     *
+     * <p><b>NPE 함정</b>: {@code thenComparing(GoodsOption::getId)}는 컬렉션 안에 {@code id}가
+     * null인 옵션이 있으면(같은 트랜잭션에서 flush되기 전에 추가된 옵션 — {@code new GoodsOption(...)}
+     * 직후 아직 persist/flush 안 된 상태) NPE를 던진다. 지금은 프로덕션 코드 어디서도 이 컴퍼레이터가
+     * 평가되는 시점에 미저장 {@code GoodsOption}을 컬렉션에 넣는 호출부가 없어(옵션은 Flyway 시드로만
+     * 들어오고, admin에 옵션 생성 API가 아직 없다) 도달 불가능하지만, admin에 옵션 생성 기능이 추가되고
+     * 그 트랜잭션 안에서 곧바로 이 비교자를 타는 경로(예: 생성 직후 재조회 없이 재계산)가 생기면
+     * 되살아나는 함정이다. 옵션을 추가한 뒤에는 반드시 flush/재조회로 id를 확정한 컬렉션을 넘겨라.
      */
     private static final java.util.Comparator<GoodsOption> 대표_옵션_순서 =
             java.util.Comparator.comparingInt(GoodsOption::getSortOrder)
@@ -156,6 +164,14 @@ public class GoodsService implements GoodsQueryService {
     /**
      * 주문·장바구니용 상품 스냅샷. 숨김 상품과 상품-옵션 불일치는 빈 값으로 답한다
      * (예외를 던지지 않는 이유는 인터페이스 문서 참고).
+     *
+     * <p><b>장바구니에 담긴 옵션이 나중에 삭제되면</b>: {@code CartItem}은 해석된 {@code option_id}를
+     * 확정해 저장하므로(Task 4-18), 그 옵션이 삭제되면 여기서 "상품-옵션 불일치"로 빈 값을 반환하고
+     * {@code CartService#itemsOf}가 그 행을 목록에서 조용히 제외한다. 예외를 던지거나 행을 강제로
+     * 지우지 않는 이유는 숨김 상품과 같은 정책이다 — 손님이 장바구니를 열 때마다 "옵션이
+     * 사라졌습니다" 에러로 막기보다, 있던 자리에서 자연스럽게 빠지는 편을 택했다. 다시 판매되는
+     * 상품이 살아나는 것과 대칭이지만, 옵션은 삭제되면 되살아나지 않으므로 이 행은 사실상 영구히
+     * 사라진다 — 의도된 트레이드오프다(옵션 삭제 자체가 드문 admin 조작이라 손님에게 노출되는 폭이 작다).
      */
     @Override
     @Transactional(readOnly = true)

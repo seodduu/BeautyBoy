@@ -82,6 +82,31 @@ class GoodsDetailApiTest {
     }
 
     @Test
+    void sortOrder가_동률이면_id_오름차순으로_2차_정렬된다() throws Exception {
+        // 대표 옵션 선택(GoodsService.대표_옵션_순서)이 sortOrder → id 순인데, 이 쿼리에
+        // id 2차 정렬이 빠져 있으면 sortOrder 동률일 때 화면 순서와 대표 옵션이 어긋날 수 있었다.
+        Brand brand = 브랜드_저장("브랜드1");
+        카테고리3계층_저장();
+        Goods goods = 상품_저장(brand, "C001001001", "토너", "요약", 10000, 10000);
+        goods.getOptions().add(new GoodsOption(goods, "먼저추가", 0, 5, 0));
+        goods.getOptions().add(new GoodsOption(goods, "나중추가", 0, 5, 0));
+        Goods saved = goodsRepository.saveAndFlush(goods);
+
+        List<GoodsOption> idAscending = saved.getOptions().stream()
+                .sorted(java.util.Comparator.comparing(GoodsOption::getId))
+                .toList();
+
+        MvcResult result = mockMvc.perform(get("/api/v1/goods/" + goods.getId()))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        JsonNode options = objectMapper.readTree(result.getResponse().getContentAsString())
+                .path("data").path("options");
+        assertThat(options.get(0).get("name").asText()).isEqualTo(idAscending.get(0).getName());
+        assertThat(options.get(1).get("name").asText()).isEqualTo(idAscending.get(1).getName());
+    }
+
+    @Test
     void categoryPath는_depth_1부터_3까지_순서대로_3개다() throws Exception {
         Brand brand = 브랜드_저장("브랜드1");
         categoryRepository.save(new Category("C001", null, "스킨케어", 1, 0));

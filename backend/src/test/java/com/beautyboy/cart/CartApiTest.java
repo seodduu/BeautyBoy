@@ -48,6 +48,8 @@ class CartApiTest {
     BrandRepository brandRepository;
     @Autowired
     GoodsRepository goodsRepository;
+    @Autowired
+    CartItemRepository cartItemRepository;
 
     @Test
     void 담기와_조회가_동작한다() throws Exception {
@@ -200,6 +202,22 @@ class CartApiTest {
         mockMvc.perform(get("/api/v1/cart/items").with(로그인(회원)))
                 .andExpect(jsonPath("$.data[0].optionNo").value(org.hamcrest.Matchers.nullValue()))
                 .andExpect(jsonPath("$.data[0].optionName").value(org.hamcrest.Matchers.nullValue()));
+    }
+
+    @Test
+    void 레거시_NULL_option_id_행은_대표_옵션으로_자기모순_없이_응답한다() throws Exception {
+        // Task 4-18 이전에 담긴 행을 흉내낸다: 옵션이 있는 상품인데 option_id가 NULL로 저장된
+        // 레거시 행. CartService.add()를 거치지 않고 리포지토리로 직접 그 상태를 만든다.
+        // 고치기 전에는 optionNo=null인데 optionName="200ml"이 나오는 자기모순 응답이었다.
+        Long goodsId = 상품_저장("토너", 16000);
+        Long 옵션_200ml = 옵션_저장(goodsId, "200ml", 0, 150, 1);
+        옵션_저장(goodsId, "300ml", 3000, 40, 2);
+        cartItemRepository.save(new CartItem(회원, goodsId, null, 1));
+
+        mockMvc.perform(get("/api/v1/cart/items").with(로그인(회원)))
+                .andExpect(jsonPath("$.data.length()").value(1))
+                .andExpect(jsonPath("$.data[0].optionNo").value(옵션_200ml))
+                .andExpect(jsonPath("$.data[0].optionName").value("200ml"));
     }
 
     @Test

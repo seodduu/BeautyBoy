@@ -6,6 +6,7 @@ import com.beautyboy.common.ErrorCode;
 import com.beautyboy.common.PageResponse;
 import com.beautyboy.config.MethodSecurityConfig;
 import com.beautyboy.config.SecurityConfig;
+import com.beautyboy.qna.dto.AdminQnaResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +18,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -97,5 +99,20 @@ class AdminQnaControllerTest {
 
         mockMvc.perform(get("/api/v1/admin/qna"))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void 문의_목록_응답의_isSecret_JSON_키가_고정된다() throws Exception {
+        // record + Jackson의 is-접두 boolean 컴포넌트는 버전에 따라 "secret"으로 직렬화된 이력이
+        // 있다(POJO getter 관례와 record 컴포넌트 관례가 다르다). 프론트가 item.isSecret을 읽으므로
+        // 이 키가 흔들리면 목은 통과해도 실 서버 응답에서만 깨지는 사각지대가 생긴다.
+        AdminQnaResponse 비밀글 = new AdminQnaResponse(
+                1L, 10L, "재고 있나요?", true, "WAITING", LocalDateTime.now());
+        given(qnaService.adminList(0)).willReturn(PageResponse.of(List.of(비밀글), 0, 20, 1));
+
+        mockMvc.perform(get("/api/v1/admin/qna"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.content[0].isSecret").value(true));
     }
 }

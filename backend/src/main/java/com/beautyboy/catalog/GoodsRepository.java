@@ -27,8 +27,16 @@ public interface GoodsRepository extends JpaRepository<Goods, Long> {
      * "DTO 프로젝션 요청"으로 오인해 {@code new GoodsOption(*)} 생성자 표현식을 시도하다 JPQL 문법
      * 오류를 낸다. 컬럼만 뽑으면 이 문제를 피한다.
      */
+    /**
+     * {@code id asc}를 2차 정렬 키로 더한 이유: 대표 옵션 선택({@link GoodsService}의
+     * {@code 대표_옵션_순서})이 {@code sortOrder} → {@code id} 순으로 결정적이다. 이 쿼리에
+     * 2차 키가 없으면 {@code sortOrder}가 동률인 옵션에서 화면 첫 옵션과 서버가 고르는 대표
+     * 옵션이 엔진 순서(정렬 안정성 미보장)에 따라 어긋날 수 있다 — 그러면
+     * {@link GoodsService#findOrderSnapshot}의 Javadoc이 말하는 "화면 첫 옵션 = 서버 대표 옵션"
+     * 전제가 깨진다.
+     */
     @Query("select o.id, o.name, o.addPrice, o.stock, o.sortOrder "
-            + "from GoodsOption o where o.goods.id = :goodsId order by o.sortOrder asc")
+            + "from GoodsOption o where o.goods.id = :goodsId order by o.sortOrder asc, o.id asc")
     List<Object[]> findOptionRowsByGoodsId(@Param("goodsId") Long goodsId);
 
     @Query("select g.id, b.name, g.name, g.thumbnailUrl, g.listPrice, g.salePrice "
