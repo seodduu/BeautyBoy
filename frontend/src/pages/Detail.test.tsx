@@ -160,6 +160,22 @@ describe('Detail — 상세 페이지', () => {
     expect(toastMessage.closest('[role="status"]')).toHaveTextContent('장바구니에 담았어요');
   });
 
+  it('장바구니 담기 성공 시 cart 쿼리를 무효화해 헤더 배지가 갱신되게 한다', async () => {
+    registerDefaultHandlers();
+    server.use(http.post('/api/v1/cart/items', () => new HttpResponse(null, { status: 201 })));
+    const invalidateSpy = vi.spyOn(QueryClient.prototype, 'invalidateQueries');
+
+    renderDetail();
+
+    const button = await screen.findByRole('button', { name: '장바구니 담기' });
+    fireEvent.click(button);
+
+    await screen.findByText('장바구니에 담았어요');
+    expect(invalidateSpy).toHaveBeenCalledWith(expect.objectContaining({ queryKey: ['cart'] }));
+
+    invalidateSpy.mockRestore();
+  });
+
   it('옵션이 없는 상품도 장바구니 담기가 optionNo: null로 나가고 성공 토스트가 뜬다(크래시 없음)', async () => {
     const detailWithoutOptions: GoodsDetail = { ...GOODS_DETAIL, options: [] };
     server.use(
