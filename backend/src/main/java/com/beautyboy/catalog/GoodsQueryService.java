@@ -5,6 +5,7 @@ import com.beautyboy.catalog.dto.GoodsListItem;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * 타 도메인이 catalog를 경유할 때 쓰는 진입점. 도메인 패키지는 서로의 엔티티/리포지토리를
@@ -48,6 +49,30 @@ public interface GoodsQueryService {
     /** goods_no 목록 → 카드 아이템. HIDDEN 제외. 입력 순서를 보존하지 않는다.
      *  viewerId는 wished 판정에만 쓰이며 비로그인이면 null이다. */
     List<GoodsListItem> findListItems(Collection<Long> goodsNos, Long viewerId);
+
+    /**
+     * "다음 단계" 추천(routine)이 쓰는 후보 조회. 같은 leaf 카테고리 접두사(예: "C001002")
+     * 안에서 조회수 내림차순으로 상위 {@code limit}건을 뽑는다. HIDDEN과 {@code excludeGoodsNo}
+     * 자기 자신은 제외한다.
+     *
+     * <p>왜 접두사(prefix)인가: routine 판정 엔진은 "이 상품과 같은 소분류"가 아니라 "이 상품이
+     * 속한 카테고리 트리 아래"를 후보로 삼는다 — 예를 들어 세럼(C001002001·C001002002) 전체가
+     * 하나의 다음 단계 후보군이다. {@code categoryCode like concat(prefix, '%')}로 구현한다.
+     *
+     * @param categoryCodePrefix 후보를 뽑을 카테고리 코드 접두사
+     * @param tagSlug            지정하면 이 슬러그 태그가 달린 상품만, {@code null}이면 태그 무관
+     * @param excludeGoodsNo     후보에서 제외할 상품(보통 지금 보고 있는 상품 자신)
+     * @param limit              최대 반환 건수
+     * @return 조회수 내림차순 goods_no 목록. 입력 순서를 별도로 보존하지 않는다(호출자가
+     *         이 순서를 그대로 인기순으로 쓴다).
+     */
+    List<Long> findCandidateGoodsNos(String categoryCodePrefix, String tagSlug, Long excludeGoodsNo, int limit);
+
+    /**
+     * 상품에 달린 태그 슬러그 집합. kind(EFFECT/TEXTURE/PROPERTY) 불문 전 슬러그를 모은다.
+     * 태그가 하나도 없으면 빈 집합(예외 아님).
+     */
+    Set<String> tagSlugs(Long goodsNo);
 
     /**
      * 주문 시점에 복사해 둘 상품 정보.

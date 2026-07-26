@@ -238,6 +238,31 @@ public class GoodsService implements GoodsQueryService {
         return toItems(rows, viewerId);
     }
 
+    /**
+     * routine의 "다음 단계" 후보 조회. tagSlug 유무로 태그 무관/태그 조건부 쿼리 중 하나를 고른다.
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public List<Long> findCandidateGoodsNos(String categoryCodePrefix, String tagSlug, Long excludeGoodsNo, int limit) {
+        PageRequest pageRequest = PageRequest.of(0, limit);
+        if (tagSlug == null) {
+            return goodsRepository.findCandidateIds(categoryCodePrefix, Goods.STATUS_HIDDEN, excludeGoodsNo, pageRequest);
+        }
+        return goodsRepository.findCandidateIdsByTag(
+                categoryCodePrefix, tagSlug, Goods.STATUS_HIDDEN, excludeGoodsNo, pageRequest);
+    }
+
+    /** 상품의 태그 슬러그 집합. kind 불문 전 슬러그를 모은다. 태그가 없으면 빈 집합. */
+    @Override
+    @Transactional(readOnly = true)
+    public java.util.Set<String> tagSlugs(Long goodsNo) {
+        return goodsTagRepository.findTagsByGoodsIds(List.of(goodsNo))
+                .getOrDefault(goodsNo, List.of())
+                .stream()
+                .map(TagView::slug)
+                .collect(java.util.stream.Collectors.toSet());
+    }
+
     /** 코드 접두사(C001, C001001, C001001001)를 한 번에 IN 조회해 depth 1→3 순서 이름 배열로 만든다. */
     private List<String> categoryPath(String leafCode) {
         List<String> prefixes = List.of(

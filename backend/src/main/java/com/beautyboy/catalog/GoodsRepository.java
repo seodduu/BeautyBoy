@@ -59,4 +59,28 @@ public interface GoodsRepository extends JpaRepository<Goods, Long> {
     @Modifying
     @Query("update Goods g set g.viewCount = g.viewCount + :delta where g.id = :id")
     void addViewCount(@Param("id") Long id, @Param("delta") int delta);
+
+    /**
+     * "다음 단계" 추천(routine)의 태그 무관 후보 조회. 같은 카테고리 코드 접두사 아래에서
+     * 조회수 내림차순, 자기 자신·HIDDEN은 제외한다. {@code id desc}를 2차 정렬 키로 두는
+     * 이유는 {@link #findRecommendedRows}와 같다 — 조회수가 동률일 때도 결정적이어야 한다.
+     */
+    @Query("select g.id from Goods g "
+            + "where g.categoryCode like concat(:prefix, '%') and g.status <> :hidden and g.id <> :excludeId "
+            + "order by g.viewCount desc, g.id desc")
+    List<Long> findCandidateIds(@Param("prefix") String prefix, @Param("hidden") String hidden,
+                                @Param("excludeId") Long excludeId, Pageable pageable);
+
+    /**
+     * 위와 같은 후보 조회에 태그 슬러그 조건을 더한 버전. goods_tag·tag를 세타 조인해
+     * 지정한 슬러그가 달린 상품만 남긴다(패키지 경계상 GoodsTag/Tag 엔티티는 이 catalog
+     * 패키지 안에서만 다루므로 여기서 직접 조인해도 규칙 위반이 아니다).
+     */
+    @Query("select g.id from Goods g "
+            + "where g.categoryCode like concat(:prefix, '%') and g.status <> :hidden and g.id <> :excludeId "
+            + "and exists (select 1 from GoodsTag gt, Tag t where gt.tagId = t.id and gt.goodsId = g.id and t.slug = :tagSlug) "
+            + "order by g.viewCount desc, g.id desc")
+    List<Long> findCandidateIdsByTag(@Param("prefix") String prefix, @Param("tagSlug") String tagSlug,
+                                     @Param("hidden") String hidden, @Param("excludeId") Long excludeId,
+                                     Pageable pageable);
 }
