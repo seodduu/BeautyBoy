@@ -1,4 +1,4 @@
-/* 다음 단계 섹션 — 추천 섹션과 같은 heading-md 위계, 블록마다 이유 문장 + 상품 그리드. */
+/* 다음 단계 섹션 — 추천 섹션과 같은 heading-sm 위계, 블록마다 이유 문장 + 상품 그리드. */
 .bb-next-step {
   display: flex;
   flex-direction: column;

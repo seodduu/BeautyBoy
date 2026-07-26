@@ -125,10 +125,10 @@ class NextStepServiceTest {
 
     @Test
     void 규칙이_없는_상품은_빈_blocks() {
-        Long 헤어왁스 = 상품_저장("C005001001", 100);
+        Long 면도날카트리지 = 상품_저장("C005001001", 100);
         규칙_저장("C001001", "exfoliate", "C001002", "soothe", "BUFFER", "각질 케어 다음엔 진정으로 완충", 10);
 
-        assertThat(nextStepService.find(헤어왁스, null).blocks()).isEmpty();
+        assertThat(nextStepService.find(면도날카트리지, null).blocks()).isEmpty();
     }
 
     @Test
