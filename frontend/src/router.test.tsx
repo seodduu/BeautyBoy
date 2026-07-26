@@ -11,6 +11,7 @@ import { GoodsList } from './pages/GoodsList';
 import { Detail } from './pages/Detail';
 import { Search } from './pages/Search';
 import { Ranking } from './pages/Ranking';
+import { OrderFail } from './pages/OrderFail';
 import { RequireAuth } from './components/auth/RequireAuth';
 import { ToastProvider } from './components/ui/ToastProvider';
 import { useAuthStore } from './stores/authStore';
@@ -69,6 +70,9 @@ function buildRoutes() {
             </RequireAuth>
           ),
         },
+        // 토스 실패 리다이렉트 착지점 — API/인증 의존이 없으므로 RequireAuth로 감싸지 않는다.
+        // (감쌌던 시절엔 리프레시 실패 상태로 돌아오면 실패 사유 대신 /login으로 튕겼다.)
+        { path: 'order/fail', element: <OrderFail /> },
       ],
     },
   ];
@@ -129,5 +133,16 @@ describe('router — 상세·검색·랭킹 라우팅', () => {
     renderAt('/goods');
 
     expect(await screen.findAllByRole('link', { name: /No\./ })).not.toHaveLength(0);
+  });
+});
+
+describe('router — /order/fail은 비로그인 상태에서도 렌더된다', () => {
+  it('부트스트랩이 끝난 비로그인 상태여도 /login으로 튕기지 않고 실패 사유를 보여준다', async () => {
+    useAuthStore.setState({ accessToken: null, isBootstrapping: false });
+
+    renderAt('/order/fail?code=PAY_PROCESS_CANCELED&message=사용자가+결제를+취소했습니다');
+
+    expect(await screen.findByText('사용자가 결제를 취소했습니다')).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: '로그인', level: 1 })).not.toBeInTheDocument();
   });
 });

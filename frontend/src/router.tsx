@@ -104,14 +104,9 @@ export const router = createBrowserRouter([
           </RequireAuth>
         ),
       },
-      {
-        path: 'order/fail',
-        element: (
-          <RequireAuth>
-            <OrderFail />
-          </RequireAuth>
-        ),
-      },
+      // 토스 실패 리다이렉트 착지점. API 호출도 인증도 필요 없는 화면이라 RequireAuth로 감싸지
+      // 않는다 — 감싸면 리프레시가 실패한 상태로 돌아온 사용자가 실패 사유 대신 /login으로 튕긴다.
+      { path: 'order/fail', element: <OrderFail /> },
       {
         path: 'mypage',
         element: (
