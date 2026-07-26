@@ -1,4 +1,4 @@
-import type { BadgeType, GoodsListItem, TagView } from '../../types/goods';
+import type { BadgeType, GoodsListItem, NextStepBlock, TagView } from '../../types/goods';
 
 /**
  * T1 시드와 성격을 맞춘 상품 fixture. `GoodsListItem` 계약은 그대로 지키되,
@@ -160,3 +160,34 @@ function buildGoodsFixtures(): GoodsFixture[] {
 }
 
 export const goodsFixtures: GoodsFixture[] = buildGoodsFixtures();
+
+/**
+ * "다음 단계" 슬롯 mock 픽스처(GET /goods/:goodsNo/next-step, Task 6).
+ * 실 서버는 routine_flow_rule.reason을 그대로 실어 나른다 — mock도 문구를 여기 한 곳에서만 관리하고
+ * 컴포넌트(Task 7)는 이 문구를 하드코딩하지 않는다.
+ * - goods 2(클렌징폼) → BUFFER 1블록. 설계 §6 시드 예시("각질 케어 다음엔 진정으로 완충")를
+ *   화면 톤에 맞춰 문구만 다듬었다.
+ * - goods 21(데일리로션) → NEXT_STEP(수분 마무리) + PAIRED_REMOVAL(선케어 클렌징) 2블록.
+ * - 그 외 goodsNo → 빈 blocks(섹션 미노출 케이스를 mock에서도 재현).
+ */
+export const nextStepFixtures: Record<number, NextStepBlock[]> = {
+  2: [
+    {
+      edgeKind: 'BUFFER',
+      reason: '각질 토너 다음 단계는 진정 세럼으로 완충하세요',
+      items: goodsFixtures.filter((item) => item.goodsNo === 4),
+    },
+  ],
+  21: [
+    {
+      edgeKind: 'NEXT_STEP',
+      reason: '보습을 마쳤다면 자외선차단으로 마무리하세요',
+      items: goodsFixtures.filter((item) => item.goodsNo >= 27 && item.goodsNo <= 30),
+    },
+    {
+      edgeKind: 'PAIRED_REMOVAL',
+      reason: '자외선차단제는 오일로 지워야 남지 않아요',
+      items: goodsFixtures.filter((item) => item.goodsNo >= 4 && item.goodsNo <= 6),
+    },
+  ],
+};

@@ -43,6 +43,21 @@ export interface PageResponse<T> {
   hasNext: boolean;
 }
 
+/** 다음 단계 추천 블록의 관계 종류. 백엔드 routine_flow_rule.kind와 1:1(NextStepBlock 참고). */
+export type EdgeKind = 'NEXT_STEP' | 'PAIRED_REMOVAL' | 'BUFFER';
+
+/**
+ * 다음 단계 추천 한 블록 — 백엔드 NextStepBlock
+ * (backend/src/main/java/com/beautyboy/routine/dto/NextStepBlock.java)과 필드를 1:1로 맞춘다.
+ * reason은 routine_flow_rule.reason 원문이 유일한 출처 — 프론트가 문구를 하드코딩하지 않는다.
+ */
+export interface NextStepBlock {
+  edgeKind: EdgeKind;
+  reason: string;
+  /** 블록당 최대 4개. GoodsListItem은 동결 계약이므로 그대로 싣는다. */
+  items: GoodsListItem[];
+}
+
 export interface ApiEnvelope<T> {
   code: string;
   message: string;
