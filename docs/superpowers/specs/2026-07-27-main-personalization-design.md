@@ -71,10 +71,10 @@
   `exfoliate,sebum,pore,trouble,soothe,moisture,barrier,bright,anti-aging,fresh,dewy,matte` = 87자로
   `VARCHAR(200)` 안에 들어간다(`ProfileRequest.concernsWithinLimit`의 200자 검증도 통과).
 
-### 4.2 기존 데이터 마이그레이션 (V77)
+### 4.2 기존 데이터 마이그레이션 (V78)
 
 ```sql
--- V77__migrate_concerns_to_tag_slug.sql
+-- V78__migrate_concerns_to_tag_slug.sql
 -- member_profile.concerns의 구 어휘(PORE/TROUBLE/WRINKLE/DARK_SPOT)를 tag.slug 체계로 옮긴다.
 -- 값 집합만 바뀌고 컬럼 타입·제약은 그대로다(설계 §4).
 -- WRINKLE→anti-aging, DARK_SPOT→bright: 구 어휘가 증상명이고 신 어휘가 효과명이라 1:1이 아니지만,
@@ -90,14 +90,14 @@ UPDATE member_profile SET concerns = REPLACE(concerns, 'DARK_SPOT',  'bright')  
 
 ## 5. 규칙 배포 (서버 신규 — 백엔드 작업의 전부)
 
-### 5.1 concern_target_rule (V78)
+### 5.1 concern_target_rule (V79)
 
 프로필만 있는 티어1에는 앵커 상품이 없어 `routine_flow_rule`의 `from`이 성립하지 않는다.
 그렇다고 "트러블이 고민이라면…" 같은 문구를 프론트에 하드코딩하면 *reason은 DB가 유일한 출처*라는
 선행 설계의 원칙(next-step 설계 §3)이 깨진다. 따라서 고민 → 목표 규칙을 데이터로 둔다.
 
 ```sql
--- V78__concern_target_rule.sql
+-- V79__concern_target_rule.sql
 CREATE TABLE concern_target_rule (
   id                BIGINT AUTO_INCREMENT PRIMARY KEY,
   concern_tag_slug  VARCHAR(40)  NOT NULL,   -- 프로필 고민 슬러그. tag.slug와 같은 어휘(물리 FK는 걸지 않는다)
@@ -355,7 +355,7 @@ COMBINATION의 신호 태그는 `[moisture, sebum]`이지만 그 두 색은 DRY�
 - **시드 정합**: `concern_target_rule`의 모든 행에 대해 (`to_category_code` 접두사 + `to_tag_slug`
   보유 + 비HIDDEN) 상품이 **4개 이상** 존재한다. 미달 행이 있으면 실패하고 그 행을 출력한다.
 - `concern_tag_slug`·`to_tag_slug`가 전부 `tag` 테이블에 실재한다(물리 FK가 없으므로 테스트로 잡는다).
-- 실 MySQL clean 로드(V1~V78) + `ddl-auto=validate` 통합 테스트.
+- 실 MySQL clean 로드(V1~V79) + `ddl-auto=validate` 통합 테스트.
   (H2 `create-drop`이 validate 불일치를 가리는 함정 회피 — 기존 웨이브에서 실제로 겪었다.)
 
 ### 화면 테스트
@@ -373,11 +373,11 @@ COMBINATION의 신호 태그는 `[moisture, sebum]`이지만 그 두 색은 DRY�
 
 **웨이브 A (병렬 2터미널)**
 
-1. **프로필 태그 교체** — V77 마이그레이션 + `SkinProfileFields.tsx`·`api/auth.ts`(`Concern` 유니온)
+1. **프로필 태그 교체** — V78 마이그레이션 + `SkinProfileFields.tsx`·`api/auth.ts`(`Concern` 유니온)
    + `SkinProfileFields.css` + DESIGN.md §8 세 절 추가. 화면 태스크이므로 스크린샷 DoD.
 2. **규칙 배포 API** — V78 테이블·시드 + `routine` 패키지 컨트롤러·서비스·DTO + `SecurityConfig` 1줄.
 
-Flyway 번호(V77 / V78)를 계획서에서 미리 고정하므로 두 터미널이 마이그레이션 파일을 두고
+Flyway 번호(V78 / V79)를 계획서에서 미리 고정하므로 두 터미널이 마이그레이션 파일을 두고
 충돌하지 않는다. **공유 계약이므로 번호를 즉흥으로 바꾸지 않는다.**
 
 **웨이브 B (웨이브 A 머지 후, 1터미널)**
