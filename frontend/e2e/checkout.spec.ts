@@ -7,29 +7,20 @@ const SEED_PASSWORD = 'seed1234!';
 /**
  * 인증이 필요한 경로로 하드 네비게이션(`page.goto`)한다.
  *
- * `loginAsSeedUser`가 이 페이지에 `installAuthRefreshDedup`(fixtures/auth.ts)을 걸어뒀으므로,
- * 하드 네비게이션마다 App 부트스트랩이 두 번 쏘는 `POST /auth/refresh`는 실제로는 서버에
- * 1건만 나가고 두 호출 모두 같은 성공 응답을 받는다 — 그 자세한 이유(실제 결함)는
- * fixtures/auth.ts 주석과 보고서 "E2E가 드러낸 실제 결함" 절 참고.
+ * 하드 네비게이션은 매번 App 부트스트랩(`POST /auth/refresh`)을 다시 태우고, `npm run dev`의
+ * React StrictMode는 그 이펙트를 두 번 실행한다 — 즉 여기가 **동시 refresh를 실제로 발생시키는
+ * 지점**이다. Task 4-16a 이전에는 그 레이스가 500 → 세션 소멸 → `/login` 튕김으로 이어졌고,
+ * 픽스처의 `installAuthRefreshDedup` shim이 그것을 우회해 결함을 가리고 있었다.
+ * shim과 함께 "튕겼으면 재로그인" 폴백도 없앴다 — 폴백이 남아 있으면 회귀가 조용히 통과한다.
  *
- * 그래도 만약을 대비해 로그인 화면으로 튕겼는지 한 번 확인하고, 튕겼다면(레이스가 새어 나온
- * 경우) 재로그인 후 같은 경로로 한 번만 다시 이동한다 — 그 이상은 재시도하지 않고 그대로
- * 실패시킨다(조용히 통과시키지 않는다). Playwright의 `retries: 0`은 그대로 유지된다.
+ * 그래서 여기서 로그인 화면으로 튕기지 않았음을 **단언**한다. 이것이 이 태스크가 지켜야 할
+ * 불변식("유효한 리프레시 쿠키로 인증 경로에 하드 네비게이션하면 로그인 화면으로 튕기지 않는다")
+ * 을 E2E에서 확인하는 자리다.
  */
 async function gotoAuthenticated(page: Page, path: string): Promise<void> {
   await page.goto(path);
   await page.waitForLoadState('networkidle');
-
-  const loggedOut = await page
-    .getByRole('link', { name: '로그인' })
-    .isVisible()
-    .catch(() => false);
-
-  if (loggedOut) {
-    await loginAsSeedUser(page, SEED_EMAIL, SEED_PASSWORD);
-    await page.goto(path);
-    await page.waitForLoadState('networkidle');
-  }
+  await expect(page).not.toHaveURL(/\/login/);
 }
 
 /**

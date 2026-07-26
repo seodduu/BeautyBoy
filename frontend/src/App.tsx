@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import axios from 'axios';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RouterProvider } from 'react-router-dom';
 import { router } from './router';
@@ -6,6 +7,17 @@ import { useAuthStore } from './stores/authStore';
 import { refreshSession } from './api/auth';
 
 const queryClient = new QueryClient();
+
+/**
+ * "이 실패는 세션이 없다는 뜻인가?" — 오직 401만 그렇다.
+ *
+ * 409(`AUTH_REFRESH_CONFLICT`)·5xx·네트워크 오류는 "지금 확인하지 못했다"일 뿐이며,
+ * 그때 세션을 지우면 다른 호출이 방금 정상 복구한 로그인 상태까지 날아간다(Task 4-16a).
+ * 서버가 상태 코드로 "인증 실패"와 "경쟁에서 졌다"를 구분해주므로 여기서는 그것만 읽으면 된다.
+ */
+function isSessionGone(error: unknown): boolean {
+  return axios.isAxiosError(error) && error.response?.status === 401;
+}
 
 function App() {
   useEffect(() => {
@@ -21,8 +33,9 @@ function App() {
         if (!cancelled) {
           useAuthStore.getState().setAuth(accessToken, member);
         }
-      } catch {
-        if (!cancelled) {
+      } catch (error) {
+        // 401(세션 없음)일 때만 비운다. 그 외 실패로 유효 세션을 파괴하지 않는다.
+        if (!cancelled && isSessionGone(error)) {
           useAuthStore.getState().clear();
         }
       } finally {
