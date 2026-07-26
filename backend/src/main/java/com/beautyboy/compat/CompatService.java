@@ -11,7 +11,9 @@ import com.beautyboy.ingredient.IngredientRuleRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -29,7 +31,7 @@ import java.util.TreeSet;
  * 항상 같은 순서이고, 최종 findings는 심각도 내림차순→categoryA→categoryB로 재정렬해 고정한다.
  */
 @Service
-public class CompatService {
+public class CompatService implements CompatQueryService {
 
     // 심각도 순위: CONFLICT(3) > CAUTION(2) > SYNERGY(1). overall/정렬 기준.
     private static int severity(String verdict) {
@@ -98,5 +100,43 @@ public class CompatService {
         String overall = findings.isEmpty() ? "OK" : findings.get(0).verdict();
 
         return new CompatCheckResponse(overall, findings);
+    }
+
+    @Override
+    public Map<Long, String> worstVerdicts(Long baseGoodsNo, Collection<Long> candidateGoodsNos) {
+        if (candidateGoodsNos.isEmpty()) {
+            return Map.of();
+        }
+        List<Long> all = new ArrayList<>(candidateGoodsNos);
+        all.add(baseGoodsNo);
+        Map<Long, Set<String>> cats = goodsIngredientQueryService.findCategoriesByGoodsIds(all);
+        Set<String> baseCats = cats.getOrDefault(baseGoodsNo, Set.of());
+
+        // 규칙 전량(시드 18행) 1회 로드 후 정규화 키("A|B", A<B 사전순)로 인덱싱 —
+        // 후보 × 분류쌍마다 findNormalized를 부르면 쿼리가 후보 수 × 쌍 수만큼 나간다.
+        Map<String, String> verdictByPair = new HashMap<>();
+        for (IngredientRule rule : ruleRepository.findAll()) {
+            verdictByPair.put(rule.getCategoryA() + "|" + rule.getCategoryB(), rule.getVerdict());
+        }
+
+        Map<Long, String> result = new HashMap<>();
+        for (Long candidate : candidateGoodsNos) {
+            Set<String> candCats = cats.getOrDefault(candidate, Set.of());
+            String worst = "OK";
+            for (String ca : baseCats) {
+                for (String cb : candCats) {
+                    if (ca.equals(cb)) {
+                        continue;    // 같은 분류끼리는 규칙 대상이 아니다(check()의 i<j와 동일 의미)
+                    }
+                    String key = ca.compareTo(cb) < 0 ? ca + "|" + cb : cb + "|" + ca;
+                    String verdict = verdictByPair.get(key);
+                    if (verdict != null && severity(verdict) > severity(worst)) {
+                        worst = verdict;
+                    }
+                }
+            }
+            result.put(candidate, worst);
+        }
+        return result;
     }
 }
