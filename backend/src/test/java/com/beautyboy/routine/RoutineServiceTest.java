@@ -33,7 +33,7 @@ class RoutineServiceTest {
     private static GoodsListItem 카드(long goodsNo) {
         return new GoodsListItem(goodsNo, "브랜드" + goodsNo, "상품" + goodsNo,
                 "https://img.example/" + goodsNo + ".jpg", 10000, 9000, 10,
-                List.of(), 0.0, 0, false, false);
+                List.of(), 0.0, 0, false, false, List.of());
     }
 
     /** 5단계, 각 단계에 goodsNo 1,2를 추천으로 건 템플릿. */

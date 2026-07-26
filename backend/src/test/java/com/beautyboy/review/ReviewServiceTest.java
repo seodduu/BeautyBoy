@@ -47,7 +47,7 @@ class ReviewServiceTest {
 
     private static GoodsListItem 카드(Long goodsNo, String name, String thumbnailUrl) {
         return new GoodsListItem(goodsNo, "브랜드", name, thumbnailUrl, 10000, 9000, 10,
-                List.of(), 0.0, 0, false, false);
+                List.of(), 0.0, 0, false, false, List.of());
     }
 
     @Test

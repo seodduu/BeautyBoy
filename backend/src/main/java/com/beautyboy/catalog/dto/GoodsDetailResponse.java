@@ -26,5 +26,6 @@ public record GoodsDetailResponse(
         double rating,
         int reviewCount,
         boolean wished,
-        boolean todayDreamAvailable) {
+        boolean todayDreamAvailable,
+        List<TagView> tags) {
 }

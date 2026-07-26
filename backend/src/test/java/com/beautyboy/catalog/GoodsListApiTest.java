@@ -43,6 +43,10 @@ class GoodsListApiTest {
     @Autowired
     PromotionRepository promotionRepository;
     @Autowired
+    TagRepository tagRepository;
+    @Autowired
+    GoodsTagRepository goodsTagRepository;
+    @Autowired
     EntityManagerFactory entityManagerFactory;
     @jakarta.persistence.PersistenceContext
     jakarta.persistence.EntityManager entityManager;
@@ -240,6 +244,34 @@ class GoodsListApiTest {
         assertThat(endedHasBadge).isFalse();
     }
 
+    // ---------- 태그 ----------
+
+    @Test
+    void 목록응답에_태그가_실린다() throws Exception {
+        Brand brand = 브랜드_저장("브랜드1");
+        카테고리_저장("C001001001", 3);
+        Goods goods = 상품_저장(brand, "C001001001", "토너", 10000, 10000);
+        Tag tag = tagRepository.save(new Tag("저자극", "EFFECT", "gentle", 0));
+        goodsTagRepository.save(new GoodsTag(goods.getId(), tag.getId(), null, 0));
+
+        mockMvc.perform(get("/api/v1/goods"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.content[0].tags[0].slug").value("gentle"))
+                .andExpect(jsonPath("$.data.content[0].tags[0].kind").value("EFFECT"));
+    }
+
+    @Test
+    void 태그가_없는_상품은_목록에서_빈_배열이다() throws Exception {
+        Brand brand = 브랜드_저장("브랜드1");
+        카테고리_저장("C001001001", 3);
+        상품_저장(brand, "C001001001", "토너", 10000, 10000);
+
+        mockMvc.perform(get("/api/v1/goods"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.content[0].tags").isArray())
+                .andExpect(jsonPath("$.data.content[0].tags.length()").value(0));
+    }
+
     // ---------- HIDDEN 제외 ----------
 
     @Test
@@ -298,8 +330,8 @@ class GoodsListApiTest {
     // ---------- N+1 방지 ----------
 
     @Test
-    void 목록_조회는_상품수와_무관하게_쿼리_4개_이하로_끝난다() throws Exception {
-        // 목록(1) + count(1) + 배지(1) + 별점(1) = 4. 비로그인이라 wished 공급자는 DB를 부르지 않는다
+    void 목록_조회는_상품수와_무관하게_쿼리_5개_이하로_끝난다() throws Exception {
+        // 목록(1) + count(1) + 배지(1) + 태그(1) + 별점(1) = 5. 비로그인이라 wished 공급자는 DB를 부르지 않는다
         // (WishedGoodsProvider 계약: viewerId가 null이면 조회 없이 빈 집합).
         Brand brand = 브랜드_저장("브랜드1");
         카테고리_저장("C001001001", 3);
@@ -315,7 +347,7 @@ class GoodsListApiTest {
         mockMvc.perform(get("/api/v1/goods").param("size", "20"))
                 .andExpect(status().isOk());
 
-        assertThat(statistics.getPrepareStatementCount()).isLessThanOrEqualTo(4);
+        assertThat(statistics.getPrepareStatementCount()).isLessThanOrEqualTo(5);
     }
 
     // ---------- 헬퍼 ----------

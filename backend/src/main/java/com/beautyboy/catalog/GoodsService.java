@@ -5,6 +5,7 @@ import com.beautyboy.catalog.dto.GoodsDetailResponse;
 import com.beautyboy.catalog.dto.GoodsListItem;
 import com.beautyboy.catalog.dto.GoodsOptionResponse;
 import com.beautyboy.catalog.dto.GoodsSearchCondition;
+import com.beautyboy.catalog.dto.TagView;
 import com.beautyboy.common.BusinessException;
 import com.beautyboy.common.ErrorCode;
 import com.beautyboy.common.PageResponse;
@@ -27,17 +28,20 @@ public class GoodsService implements GoodsQueryService {
     private final CategoryRepository categoryRepository;
     private final GoodsRatingProvider goodsRatingProvider;
     private final WishedGoodsProvider wishedGoodsProvider;
+    private final GoodsTagRepository goodsTagRepository;
 
     public GoodsService(GoodsRepository goodsRepository,
                          GoodsQueryRepository goodsQueryRepository,
                          CategoryRepository categoryRepository,
                          GoodsRatingProvider goodsRatingProvider,
-                         WishedGoodsProvider wishedGoodsProvider) {
+                         WishedGoodsProvider wishedGoodsProvider,
+                         GoodsTagRepository goodsTagRepository) {
         this.goodsRepository = goodsRepository;
         this.goodsQueryRepository = goodsQueryRepository;
         this.categoryRepository = categoryRepository;
         this.goodsRatingProvider = goodsRatingProvider;
         this.wishedGoodsProvider = wishedGoodsProvider;
+        this.goodsTagRepository = goodsTagRepository;
     }
 
     @Transactional(readOnly = true)
@@ -65,6 +69,8 @@ public class GoodsService implements GoodsQueryService {
                 .findValidBadges(List.of(goodsNo), LocalDateTime.now())
                 .getOrDefault(goodsNo, List.of());
         List<String> categoryPath = categoryPath(goods.getCategoryCode());
+        List<TagView> tags = goodsTagRepository.findTagsByGoodsIds(List.of(goodsNo))
+                .getOrDefault(goodsNo, List.of());
 
         GoodsRatingProvider.RatingStat ratingStat = goodsRatingProvider.ratingsByGoods(List.of(goodsNo))
                 .get(goodsNo);
@@ -88,7 +94,8 @@ public class GoodsService implements GoodsQueryService {
                 ratingStat == null ? 0.0 : ratingStat.rating(),
                 ratingStat == null ? 0 : ratingStat.reviewCount(),
                 wished,
-                false);
+                false,
+                tags);
     }
 
     /** PDP 지연 로딩 3분할 중 무거운 본문. 목록/기본 상세와 같은 존재·노출 기준을 쓴다. */
@@ -264,6 +271,7 @@ public class GoodsService implements GoodsQueryService {
         List<Long> goodsIds = rows.stream().map(GoodsQueryRepository.GoodsRow::goodsId).toList();
 
         Map<Long, List<String>> badgesByGoodsId = goodsQueryRepository.findValidBadges(goodsIds, LocalDateTime.now());
+        Map<Long, List<TagView>> tagsByGoodsId = goodsTagRepository.findTagsByGoodsIds(goodsIds);
         Map<Long, GoodsRatingProvider.RatingStat> ratingsByGoodsId = goodsRatingProvider.ratingsByGoods(goodsIds);
         java.util.Set<Long> wishedGoodsIds = wishedGoodsProvider.wishedGoodsIds(viewerId, goodsIds);
 
@@ -271,12 +279,13 @@ public class GoodsService implements GoodsQueryService {
                 .map(row -> toItem(
                         row,
                         badgesByGoodsId.getOrDefault(row.goodsId(), List.of()),
+                        tagsByGoodsId.getOrDefault(row.goodsId(), List.of()),
                         ratingsByGoodsId.get(row.goodsId()),
                         wishedGoodsIds.contains(row.goodsId())))
                 .toList();
     }
 
-    private GoodsListItem toItem(GoodsQueryRepository.GoodsRow row, List<String> badges,
+    private GoodsListItem toItem(GoodsQueryRepository.GoodsRow row, List<String> badges, List<TagView> tags,
                                   GoodsRatingProvider.RatingStat ratingStat, boolean wished) {
         return new GoodsListItem(
                 row.goodsId(),
@@ -290,7 +299,8 @@ public class GoodsService implements GoodsQueryService {
                 ratingStat == null ? 0.0 : ratingStat.rating(),
                 ratingStat == null ? 0 : ratingStat.reviewCount(),
                 wished,
-                false);
+                false,
+                tags);
     }
 
     private int discountRate(int listPrice, int salePrice) {

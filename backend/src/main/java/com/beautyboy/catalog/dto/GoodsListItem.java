@@ -18,5 +18,6 @@ public record GoodsListItem(
         double rating,
         int reviewCount,
         boolean wished,
-        boolean todayDreamAvailable) {
+        boolean todayDreamAvailable,
+        List<TagView> tags) {
 }

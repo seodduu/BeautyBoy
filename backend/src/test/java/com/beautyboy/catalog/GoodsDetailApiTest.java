@@ -36,6 +36,10 @@ class GoodsDetailApiTest {
     GoodsRepository goodsRepository;
     @Autowired
     GoodsQueryService goodsQueryService;
+    @Autowired
+    TagRepository tagRepository;
+    @Autowired
+    GoodsTagRepository goodsTagRepository;
 
     // ---------- 기본 상세 ----------
 
@@ -144,6 +148,35 @@ class GoodsDetailApiTest {
         mockMvc.perform(get("/api/v1/goods/" + goods.getId()))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value("GOODS_NOT_FOUND"));
+    }
+
+    // ---------- 태그 ----------
+
+    @Test
+    void 상세응답에_태그가_실린다() throws Exception {
+        Brand brand = 브랜드_저장("브랜드1");
+        카테고리3계층_저장();
+        Goods goods = 상품_저장(brand, "C001001001", "토너", "요약", 10000, 8000);
+        Tag tag = tagRepository.save(new Tag("저자극", "EFFECT", "gentle", 0));
+        goodsTagRepository.save(new GoodsTag(goods.getId(), tag.getId(), null, 0));
+
+        mockMvc.perform(get("/api/v1/goods/" + goods.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.tags[0].slug").value("gentle"))
+                .andExpect(jsonPath("$.data.tags[0].kind").value("EFFECT"))
+                .andExpect(jsonPath("$.data.tags[0].name").value("저자극"));
+    }
+
+    @Test
+    void 태그가_없는_상품은_빈_배열이다() throws Exception {
+        Brand brand = 브랜드_저장("브랜드1");
+        카테고리3계층_저장();
+        Goods goods = 상품_저장(brand, "C001001001", "토너", "요약", 10000, 8000);
+
+        mockMvc.perform(get("/api/v1/goods/" + goods.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.tags").isArray())
+                .andExpect(jsonPath("$.data.tags.length()").value(0));
     }
 
     // ---------- 설명(지연 로딩) ----------
