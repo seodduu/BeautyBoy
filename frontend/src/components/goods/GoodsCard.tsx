@@ -61,6 +61,9 @@ export function GoodsCard({ item, onWishToggle, soldOut = false }: GoodsCardProp
 
         {effectTags.length > 0 && (
           <div className="bb-goods-card__tags">
+            {/* 카드 전체가 이미 상세로 가는 <Link>다 — Tag에 to를 주면 <a> 안에 <a>가 중첩돼
+                무효한 HTML이 되고 클릭 타깃이 꼬인다. 카드의 태그는 표시 전용으로 두고,
+                태그 클릭 필터는 중첩 걱정이 없는 상세 화면(Detail.tsx)에서만 제공한다. */}
             {effectTags.map((tag) => (
               <Tag key={tag.slug} view={tag} />
             ))}

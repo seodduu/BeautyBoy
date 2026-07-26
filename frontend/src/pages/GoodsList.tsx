@@ -17,21 +17,25 @@ const PAGE_SIZE = 40;
 export function GoodsList() {
   const [searchParams] = useSearchParams();
   const category = searchParams.get('category');
+  // 태그 pill 클릭(Tag의 `to` prop) 진입점 — `/goods?tag=<slug>`. 카테고리와 동시에 걸리지 않으므로
+  // 서로 독립적으로 params에 얹는다.
+  const tag = searchParams.get('tag');
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ['goods-list', category],
+    queryKey: ['goods-list', category, tag],
     queryFn: () =>
       fetchGoodsList({
         page: 0,
         size: PAGE_SIZE,
         ...(category ? { categoryCode: category } : {}),
+        ...(tag ? { tag } : {}),
       }),
   });
 
   // 루틴 단계 코드로 들어왔으면 그 단계 이름을 그대로 제목에 쓴다.
   // 매핑에 없는 코드는 이름을 지어내지 않는다 — 코드만 부제로 노출한다.
   const matchedStep = ROUTINE_STEPS.find((step) => step.categoryCode === category);
-  const title = matchedStep?.label ?? (category ? '카테고리 상품' : '전체 상품');
+  const title = matchedStep?.label ?? (tag ? '태그 상품' : category ? '카테고리 상품' : '전체 상품');
 
   return (
     <div className="bb-goods-list">

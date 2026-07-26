@@ -116,7 +116,7 @@ export function Detail() {
           {displayTags.length > 0 && (
             <div className="bb-detail__tags">
               {displayTags.map((tag) => (
-                <Tag key={tag.slug} view={tag} />
+                <Tag key={tag.slug} view={tag} to={`/goods?tag=${tag.slug}`} />
               ))}
             </div>
           )}

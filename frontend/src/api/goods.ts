@@ -10,6 +10,8 @@ export interface FetchGoodsListParams {
   size?: number;
   sort?: GoodsSort;
   categoryCode?: string;
+  /** 태그 슬러그 필터(예: "uv"). GoodsList가 `/goods?tag=` 진입 시 이 값을 그대로 실어 보낸다. */
+  tag?: string;
 }
 
 /** GET /goods — 정렬·페이지네이션·카테고리 필터. ApiEnvelope를 벗겨 PageResponse만 반환한다. */

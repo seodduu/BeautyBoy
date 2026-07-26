@@ -401,10 +401,11 @@ export const handlers = [
     const size = Number(url.searchParams.get('size') ?? '20');
     const sort = url.searchParams.get('sort');
     const categoryCode = url.searchParams.get('categoryCode');
+    const tag = url.searchParams.get('tag');
 
-    const filtered = categoryCode
-      ? goodsFixtures.filter((item) => item.categoryCode.startsWith(categoryCode))
-      : goodsFixtures;
+    const filtered = goodsFixtures
+      .filter((item) => (categoryCode ? item.categoryCode.startsWith(categoryCode) : true))
+      .filter((item) => (tag ? item.tags.some((t) => t.slug === tag) : true));
 
     const sorted = sortGoods(filtered, sort);
     const start = page * size;
