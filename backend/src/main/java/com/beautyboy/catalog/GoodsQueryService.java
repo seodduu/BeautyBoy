@@ -81,7 +81,8 @@ public interface GoodsQueryService {
      * @param stock     옵션 재고. <b>상품에 옵션이 하나도 없는 경우에만</b> {@link Integer#MAX_VALUE}
      *                  (재고 관리 단위가 옵션이므로 관리 대상이 아니라는 뜻). 옵션이 있으면 조회한
      *                  옵션(또는 대표 옵션)의 실제 재고이며, 품절이면 0이 실려 재고 게이트에 막힌다.
-     *                  이 웨이브는 재고를 <b>검증만</b> 하고 차감하지 않는다(차감은 Wave 3).
+     *                  이 스냅샷은 재고를 <b>검증만</b> 하는 데 쓴다 —
+     *                  차감은 결제 승인 시점에 {@link StockCommandService}가 한다.
      */
     record OrderGoodsSnapshot(
             Long goodsId,
