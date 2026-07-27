@@ -104,6 +104,8 @@ describe('Signup — 2스텝 가입 흐름', () => {
     fireEvent.click(screen.getByText('지성'));
     fireEvent.click(screen.getByRole('button', { name: '모공' }));
     fireEvent.click(screen.getByRole('button', { name: '트러블' }));
+    // 사용감은 별도 fieldset이지만 같은 concerns 배열에 실려 간다(설계 §4.1).
+    fireEvent.click(screen.getByRole('button', { name: '촉촉함' }));
     fireEvent.click(screen.getByRole('button', { name: '20s' }));
     fireEvent.click(screen.getByRole('button', { name: '가입 완료' }));
 
@@ -113,7 +115,7 @@ describe('Signup — 2스텝 가입 흐름', () => {
 
     expect(capturedBody).toMatchObject({
       skinType: 'OILY',
-      concerns: ['PORE', 'TROUBLE'],
+      concerns: ['pore', 'trouble', 'dewy'],
       ageBand: '20s',
     });
   });

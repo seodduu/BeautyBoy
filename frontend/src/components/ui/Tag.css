@@ -9,8 +9,9 @@
                        pill 형태를 유지해야 한다). kind 클래스는 slug 클래스와 항상 함께
                        붙으므로, slug 클래스가 정의돼 있으면 그 배경·글자색·테두리(transparent)가
                        폴백을 덮어쓴다.
-  bb-tag--{slug}     → 아래 15쌍은 DESIGN.md 표의 hex를 한 글자도 바꾸지 않고 그대로 옮긴 것이다.
-                       hex를 여기서 손으로 다시 고치지 않는다 — 값을 바꾸려면 DESIGN.md 표를 먼저 고친다.
+  bb-tag--{slug}     → 아래 18쌍(효과·속성 15 + TEXTURE 3)은 index.css의 --tag-{slug}-* 토큰을
+                       참조한다. hex는 이 파일에 한 개도 없다 — 값을 바꾸려면 DESIGN.md 표를
+                       먼저 고치고 index.css 토큰만 고친다.
                        틴트 배경 자체가 pill 경계를 만들므로 테두리는 transparent로 지운다.
 */
 .bb-tag {
@@ -49,91 +50,112 @@
 /* 틴트 배경이 곧 pill 경계이므로 위 kind 폴백의 hairline 테두리는 여기서 transparent로 지운다. */
 
 .bb-tag--moisture {
-  background: #e0f2fe;
-  color: #0369a1;
+  background: var(--tag-moisture-bg);
+  color: var(--tag-moisture-ink);
   border-color: transparent;
 }
 
 .bb-tag--soothe {
-  background: #dcfce7;
-  color: #15803d;
+  background: var(--tag-soothe-bg);
+  color: var(--tag-soothe-ink);
   border-color: transparent;
 }
 
 .bb-tag--cleanse {
-  background: #dbeafe;
-  color: #1d4ed8;
+  background: var(--tag-cleanse-bg);
+  color: var(--tag-cleanse-ink);
   border-color: transparent;
 }
 
 .bb-tag--exfoliate {
-  background: #ffedd5;
-  color: #c2410c;
+  background: var(--tag-exfoliate-bg);
+  color: var(--tag-exfoliate-ink);
   border-color: transparent;
 }
 
 .bb-tag--sebum {
-  background: #ccfbf1;
-  color: #0f766e;
+  background: var(--tag-sebum-bg);
+  color: var(--tag-sebum-ink);
   border-color: transparent;
 }
 
 .bb-tag--uv {
-  background: #fef08a;
-  color: #854d0e;
+  background: var(--tag-uv-bg);
+  color: var(--tag-uv-ink);
   border-color: transparent;
 }
 
 .bb-tag--bright {
-  background: #ede9fe;
-  color: #6d28d9;
+  background: var(--tag-bright-bg);
+  color: var(--tag-bright-ink);
   border-color: transparent;
 }
 
 .bb-tag--gentle {
-  background: #fce7f3;
-  color: #be185d;
+  background: var(--tag-gentle-bg);
+  color: var(--tag-gentle-ink);
   border-color: transparent;
 }
 
 .bb-tag--anti-aging {
-  background: #fae8ff;
-  color: #86198f;
+  background: var(--tag-anti-aging-bg);
+  color: var(--tag-anti-aging-ink);
   border-color: transparent;
 }
 
 .bb-tag--firm {
-  background: #ffe4e6;
-  color: #be123c;
+  background: var(--tag-firm-bg);
+  color: var(--tag-firm-ink);
   border-color: transparent;
 }
 
 .bb-tag--antioxidant {
-  background: #fef3c7;
-  color: #b45309;
+  background: var(--tag-antioxidant-bg);
+  color: var(--tag-antioxidant-ink);
   border-color: transparent;
 }
 
 .bb-tag--barrier {
-  background: #fef9c3;
-  color: #a16207;
+  background: var(--tag-barrier-bg);
+  color: var(--tag-barrier-ink);
   border-color: transparent;
 }
 
 .bb-tag--scalp {
-  background: #f5f5f4;
-  color: #57534e;
+  background: var(--tag-scalp-bg);
+  color: var(--tag-scalp-ink);
   border-color: transparent;
 }
 
 .bb-tag--pore {
-  background: #cffafe;
-  color: #0e7490;
+  background: var(--tag-pore-bg);
+  color: var(--tag-pore-ink);
   border-color: transparent;
 }
 
 .bb-tag--trouble {
-  background: #fee2e2;
-  color: #b91c1c;
+  background: var(--tag-trouble-bg);
+  color: var(--tag-trouble-ink);
+  border-color: transparent;
+}
+
+/* TEXTURE 3종 — DESIGN.md "TEXTURE 3종 (사용감)" 표. 무채색 유지 규칙이 해제되면서 색이 생겼다.
+   .bb-tag--texture 폴백보다 뒤에 있으므로 같은 특이도에서 이 규칙이 이긴다. */
+
+.bb-tag--fresh {
+  background: var(--tag-fresh-bg);
+  color: var(--tag-fresh-ink);
+  border-color: transparent;
+}
+
+.bb-tag--dewy {
+  background: var(--tag-dewy-bg);
+  color: var(--tag-dewy-ink);
+  border-color: transparent;
+}
+
+.bb-tag--matte {
+  background: var(--tag-matte-bg);
+  color: var(--tag-matte-ink);
   border-color: transparent;
 }

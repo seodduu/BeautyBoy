@@ -27,6 +27,9 @@
   gap: var(--space-sm);
 }
 
+/* 테두리는 미선택·선택 모두 2px로 고정한다 — 선택 시 1px→2px로 바뀌면 카드가 1px 튄다.
+   미선택의 hairline 경계와 좌측 컬러 바는 레이아웃을 차지하지 않는 inset box-shadow로 그린다.
+   (border와 box-shadow를 섞지 않고 "테두리 두께는 border, 나머지 선은 shadow"로 통일했다.) */
 .bb-skin-type-card {
   position: relative;
   display: flex;
@@ -35,9 +38,11 @@
   padding: var(--space-sm) var(--space-md);
   border-radius: var(--rounded-sm);
   background: var(--color-canvas);
-  border: 1px solid var(--color-hairline);
+  border: 2px solid transparent;
+  box-shadow: inset 0 0 0 1px var(--color-hairline);
   cursor: pointer;
-  transition: border-color 0.15s ease, background 0.15s ease;
+  word-break: keep-all;
+  transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
 }
 
 .bb-skin-type-card input {
@@ -47,14 +52,7 @@
 }
 
 .bb-skin-type-card:hover {
-  border-color: var(--color-hairline-soft);
-}
-
-/* 선택 상태 배경으로 쓰는 --color-hairline은 무채색 사다리 톤이라 DESIGN.md의
-   signal-* 배경 금지 규칙과 무관하다(project law로 확인됨). */
-.bb-skin-type-card--active {
-  border-color: var(--color-ink);
-  background: var(--color-hairline);
+  box-shadow: inset 0 0 0 1px var(--color-hairline-soft);
 }
 
 .bb-skin-type-card__label {
@@ -68,6 +66,81 @@
   color: var(--color-stone);
 }
 
+/* 체크 표시는 마크업(aria-hidden)으로 들어온다 — 위치만 여기서 잡는다. */
+.bb-skin-type-card__check {
+  position: absolute;
+  top: var(--space-xs);
+  right: var(--space-sm);
+  font-size: var(--fs-meta);
+  line-height: 1;
+}
+
+/* ── 피부타입 카드 색 (DESIGN.md "피부 프로필 색 배정") ──
+   태그가 아니라 팔레트 행이 없으므로 신호 매핑의 대표 태그 색을 빌린다.
+   칩보다 한 단계 절제: 미선택은 흰 배경 + 좌측 3px 바, 선택은 틴트 배경 + 2px 테두리.
+   COMBINATION만 --tag-barrier-ink가 아니라 반전 보정값 --tag-barrier-fill을 쓴다 —
+   같은 색을 바·테두리·제목에 함께 쓰므로 진한 쪽으로 통일한다(DESIGN.md 해당 절). */
+
+.bb-skin-type-card--dry {
+  box-shadow: inset 3px 0 0 var(--tag-moisture-ink), inset 0 0 0 1px var(--color-hairline);
+}
+
+.bb-skin-type-card--dry.bb-skin-type-card--active {
+  background: var(--tag-moisture-bg);
+  border-color: var(--tag-moisture-ink);
+  box-shadow: none;
+}
+
+.bb-skin-type-card--dry.bb-skin-type-card--active .bb-skin-type-card__label,
+.bb-skin-type-card--dry.bb-skin-type-card--active .bb-skin-type-card__check {
+  color: var(--tag-moisture-ink);
+}
+
+.bb-skin-type-card--oily {
+  box-shadow: inset 3px 0 0 var(--tag-sebum-ink), inset 0 0 0 1px var(--color-hairline);
+}
+
+.bb-skin-type-card--oily.bb-skin-type-card--active {
+  background: var(--tag-sebum-bg);
+  border-color: var(--tag-sebum-ink);
+  box-shadow: none;
+}
+
+.bb-skin-type-card--oily.bb-skin-type-card--active .bb-skin-type-card__label,
+.bb-skin-type-card--oily.bb-skin-type-card--active .bb-skin-type-card__check {
+  color: var(--tag-sebum-ink);
+}
+
+.bb-skin-type-card--combination {
+  box-shadow: inset 3px 0 0 var(--tag-barrier-fill), inset 0 0 0 1px var(--color-hairline);
+}
+
+.bb-skin-type-card--combination.bb-skin-type-card--active {
+  background: var(--tag-barrier-bg);
+  border-color: var(--tag-barrier-fill);
+  box-shadow: none;
+}
+
+.bb-skin-type-card--combination.bb-skin-type-card--active .bb-skin-type-card__label,
+.bb-skin-type-card--combination.bb-skin-type-card--active .bb-skin-type-card__check {
+  color: var(--tag-barrier-fill);
+}
+
+.bb-skin-type-card--sensitive {
+  box-shadow: inset 3px 0 0 var(--tag-gentle-ink), inset 0 0 0 1px var(--color-hairline);
+}
+
+.bb-skin-type-card--sensitive.bb-skin-type-card--active {
+  background: var(--tag-gentle-bg);
+  border-color: var(--tag-gentle-ink);
+  box-shadow: none;
+}
+
+.bb-skin-type-card--sensitive.bb-skin-type-card--active .bb-skin-type-card__label,
+.bb-skin-type-card--sensitive.bb-skin-type-card--active .bb-skin-type-card__check {
+  color: var(--tag-gentle-ink);
+}
+
 .bb-skin-fields__chip-row {
   display: flex;
   flex-wrap: wrap;
@@ -75,6 +148,9 @@
 }
 
 .bb-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xxs);
   padding: var(--space-xs) var(--space-md);
   border-radius: var(--rounded-full);
   background: var(--color-canvas);
@@ -82,6 +158,7 @@
   color: var(--color-graphite);
   font-size: var(--fs-meta);
   cursor: pointer;
+  word-break: keep-all;
   transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
 }
 
@@ -89,8 +166,147 @@
   border-color: var(--color-hairline-soft);
 }
 
+/* 무채색 선택 상태 — 팔레트가 없는 칩(연령대)의 경로다. slug 칩은 아래 반전 규칙이
+   두 클래스 특이도로 이 규칙을 덮는다. slug 클래스가 빠져도 선택이 보이는 안전망이기도 하다. */
 .bb-chip--active {
   border-color: var(--color-ink);
   background: var(--color-hairline);
   color: var(--color-ink);
+}
+
+/* ── 고민·사용감 칩 색 (DESIGN.md "태그 컬러" + "선택 상태 — 색 반전") ──
+   미선택 = 틴트 배경(bg) + 같은 계열 진한 글자(ink), 테두리는 틴트가 대신하므로 지운다.
+   선택   = 반전(fill 배경 + 흰 글자). fill은 barrier·soothe만 ink보다 한 단계 진하다.
+   hex는 여기에 없다 — index.css의 --tag-{slug}-* 토큰이 유일한 사본이다. */
+
+.bb-chip--exfoliate {
+  background: var(--tag-exfoliate-bg);
+  color: var(--tag-exfoliate-ink);
+  border-color: transparent;
+}
+
+.bb-chip--exfoliate.bb-chip--on {
+  background: var(--tag-exfoliate-fill);
+  color: var(--tag-on-fill);
+}
+
+.bb-chip--sebum {
+  background: var(--tag-sebum-bg);
+  color: var(--tag-sebum-ink);
+  border-color: transparent;
+}
+
+.bb-chip--sebum.bb-chip--on {
+  background: var(--tag-sebum-fill);
+  color: var(--tag-on-fill);
+}
+
+.bb-chip--pore {
+  background: var(--tag-pore-bg);
+  color: var(--tag-pore-ink);
+  border-color: transparent;
+}
+
+.bb-chip--pore.bb-chip--on {
+  background: var(--tag-pore-fill);
+  color: var(--tag-on-fill);
+}
+
+.bb-chip--trouble {
+  background: var(--tag-trouble-bg);
+  color: var(--tag-trouble-ink);
+  border-color: transparent;
+}
+
+.bb-chip--trouble.bb-chip--on {
+  background: var(--tag-trouble-fill);
+  color: var(--tag-on-fill);
+}
+
+.bb-chip--soothe {
+  background: var(--tag-soothe-bg);
+  color: var(--tag-soothe-ink);
+  border-color: transparent;
+}
+
+.bb-chip--soothe.bb-chip--on {
+  background: var(--tag-soothe-fill);
+  color: var(--tag-on-fill);
+}
+
+.bb-chip--moisture {
+  background: var(--tag-moisture-bg);
+  color: var(--tag-moisture-ink);
+  border-color: transparent;
+}
+
+.bb-chip--moisture.bb-chip--on {
+  background: var(--tag-moisture-fill);
+  color: var(--tag-on-fill);
+}
+
+.bb-chip--barrier {
+  background: var(--tag-barrier-bg);
+  color: var(--tag-barrier-ink);
+  border-color: transparent;
+}
+
+.bb-chip--barrier.bb-chip--on {
+  background: var(--tag-barrier-fill);
+  color: var(--tag-on-fill);
+}
+
+.bb-chip--bright {
+  background: var(--tag-bright-bg);
+  color: var(--tag-bright-ink);
+  border-color: transparent;
+}
+
+.bb-chip--bright.bb-chip--on {
+  background: var(--tag-bright-fill);
+  color: var(--tag-on-fill);
+}
+
+.bb-chip--anti-aging {
+  background: var(--tag-anti-aging-bg);
+  color: var(--tag-anti-aging-ink);
+  border-color: transparent;
+}
+
+.bb-chip--anti-aging.bb-chip--on {
+  background: var(--tag-anti-aging-fill);
+  color: var(--tag-on-fill);
+}
+
+.bb-chip--fresh {
+  background: var(--tag-fresh-bg);
+  color: var(--tag-fresh-ink);
+  border-color: transparent;
+}
+
+.bb-chip--fresh.bb-chip--on {
+  background: var(--tag-fresh-fill);
+  color: var(--tag-on-fill);
+}
+
+.bb-chip--dewy {
+  background: var(--tag-dewy-bg);
+  color: var(--tag-dewy-ink);
+  border-color: transparent;
+}
+
+.bb-chip--dewy.bb-chip--on {
+  background: var(--tag-dewy-fill);
+  color: var(--tag-on-fill);
+}
+
+.bb-chip--matte {
+  background: var(--tag-matte-bg);
+  color: var(--tag-matte-ink);
+  border-color: transparent;
+}
+
+.bb-chip--matte.bb-chip--on {
+  background: var(--tag-matte-fill);
+  color: var(--tag-on-fill);
 }

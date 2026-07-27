@@ -44,6 +44,36 @@
   --color-signal-success: #146c43;
   --color-signal-muted: #939393;
 
+  /* ---- 태그 팔레트 (DESIGN.md "태그 컬러" 표 그대로 — 여기가 코드 측 유일한 사본이다) ----
+     --tag-{slug}-bg   틴트 배경 (미선택 칩·선택된 피부타입 카드)
+     --tag-{slug}-ink  진한 글자 (미선택 칩 글자·카드 좌측 바·테두리)
+     --tag-{slug}-fill 반전 배경 (선택된 칩). 기본은 ink와 같은 값이고,
+                       흰 글자 대비 4.5:1 미달인 barrier·soothe만 한 단계 진한 값을 쓴다
+                       (DESIGN.md "선택 상태 — 색 반전"의 대비 보정 표).
+     소비자는 Tag.css(상품 태그 pill)와 SkinProfileFields.css(프로필 칩·카드) 둘뿐이고,
+     둘 다 hex를 다시 적지 않는다 — 값을 바꾸려면 DESIGN.md 표를 먼저 고치고 여기만 고친다. */
+  --tag-moisture-bg: #e0f2fe;    --tag-moisture-ink: #0369a1;    --tag-moisture-fill: #0369a1;
+  --tag-soothe-bg: #dcfce7;      --tag-soothe-ink: #15803d;      --tag-soothe-fill: #166534;
+  --tag-cleanse-bg: #dbeafe;     --tag-cleanse-ink: #1d4ed8;     --tag-cleanse-fill: #1d4ed8;
+  --tag-exfoliate-bg: #ffedd5;   --tag-exfoliate-ink: #c2410c;   --tag-exfoliate-fill: #c2410c;
+  --tag-sebum-bg: #ccfbf1;       --tag-sebum-ink: #0f766e;       --tag-sebum-fill: #0f766e;
+  --tag-uv-bg: #fef08a;          --tag-uv-ink: #854d0e;          --tag-uv-fill: #854d0e;
+  --tag-bright-bg: #ede9fe;      --tag-bright-ink: #6d28d9;      --tag-bright-fill: #6d28d9;
+  --tag-gentle-bg: #fce7f3;      --tag-gentle-ink: #be185d;      --tag-gentle-fill: #be185d;
+  --tag-anti-aging-bg: #fae8ff;  --tag-anti-aging-ink: #86198f;  --tag-anti-aging-fill: #86198f;
+  --tag-firm-bg: #ffe4e6;        --tag-firm-ink: #be123c;        --tag-firm-fill: #be123c;
+  --tag-antioxidant-bg: #fef3c7; --tag-antioxidant-ink: #b45309; --tag-antioxidant-fill: #b45309;
+  --tag-barrier-bg: #fef9c3;     --tag-barrier-ink: #a16207;     --tag-barrier-fill: #854d0e;
+  --tag-scalp-bg: #f5f5f4;       --tag-scalp-ink: #57534e;       --tag-scalp-fill: #57534e;
+  --tag-pore-bg: #cffafe;        --tag-pore-ink: #0e7490;        --tag-pore-fill: #0e7490;
+  --tag-trouble-bg: #fee2e2;     --tag-trouble-ink: #b91c1c;     --tag-trouble-fill: #b91c1c;
+  --tag-fresh-bg: #ecfeff;       --tag-fresh-ink: #155e75;       --tag-fresh-fill: #155e75;
+  --tag-dewy-bg: #eff6ff;        --tag-dewy-ink: #1e40af;        --tag-dewy-fill: #1e40af;
+  --tag-matte-bg: #f1f5f9;       --tag-matte-ink: #334155;       --tag-matte-fill: #334155;
+
+  /* 반전 배경 위의 글자 — 팔레트 전체가 공유하는 단일 값. */
+  --tag-on-fill: #ffffff;
+
   /* ---- Typography: font stacks ----
      abcNormal은 독점 서체라 한글 글리프가 없다. 라틴은 Inter, 한글은
      Pretendard가 받는다 (DESIGN.md "한글 적용"). --font-mono은 폐기 —
