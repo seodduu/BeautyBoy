@@ -17,6 +17,7 @@ import type { Address, AddressInput, ProfileInput } from '../api/member';
 import type { OrderCreateRequest, OrderDetail, OrderSummary } from '../api/order';
 import type { MyReviewItem } from '../api/review';
 import type { RoutineResponse, SkinType } from '../api/routine';
+import type { FlowRulesResponse } from '../types/routine';
 import type {
   AdminGoodsDetailResponse,
   AdminGoodsListItem,
@@ -195,6 +196,141 @@ let addressesFixture: Address[] = [
     isDefault: true,
   },
 ];
+
+/**
+ * 규칙 배포 mock(GET /routine/flow-rules) — 메인 개인화 Task 3-6.
+ *
+ * 실 시드(V75__seed_routine_flow_rule.sql · V82__concern_target_rule.sql)에서 루틴 5단계를
+ * 겨냥하는 행만 골라 옮겼다. **문구는 여기 한 곳에서만 관리한다** — 화면 컴포넌트는 reason을
+ * 하드코딩하지 않는다(next-step 설계 §3의 "reason은 DB가 유일한 출처" 원칙을 mock에서도 지킨다).
+ *
+ * version은 실 서버라면 두 테이블의 SHA-256 앞 16자다. mock은 내용을 손으로 고치는 자리이므로
+ * 고정 문자열을 두고, 픽스처를 바꿀 때 함께 올린다(안 올리면 저장본이 304로 계속 살아남는다).
+ */
+const flowRulesFixture: FlowRulesResponse = {
+  version: 'mock-flowrules-1',
+  flowRules: [
+    {
+      fromCategoryCode: 'C002001',
+      fromTagSlug: 'exfoliate',
+      toCategoryCode: 'C001001',
+      toTagSlug: 'soothe',
+      edgeKind: 'BUFFER',
+      reason: '피지·각질까지 씻어낸 다음엔 진정 토너로 완충해 주세요',
+      priority: 10,
+    },
+    {
+      fromCategoryCode: 'C002001',
+      fromTagSlug: null,
+      toCategoryCode: 'C001001',
+      toTagSlug: 'moisture',
+      edgeKind: 'NEXT_STEP',
+      reason: '세안 다음 단계는 수분 충전이에요',
+      priority: 20,
+    },
+    {
+      fromCategoryCode: 'C001001',
+      fromTagSlug: null,
+      toCategoryCode: 'C001002',
+      toTagSlug: null,
+      edgeKind: 'NEXT_STEP',
+      reason: '결을 정돈했다면 영양을 채울 차례예요',
+      priority: 20,
+    },
+    {
+      fromCategoryCode: 'C001002',
+      fromTagSlug: null,
+      toCategoryCode: 'C001003',
+      toTagSlug: 'moisture',
+      edgeKind: 'NEXT_STEP',
+      reason: '세럼의 수분을 크림으로 덮어 가두세요',
+      priority: 20,
+    },
+    {
+      fromCategoryCode: 'C001003',
+      fromTagSlug: null,
+      toCategoryCode: 'C004001',
+      toTagSlug: 'uv',
+      edgeKind: 'NEXT_STEP',
+      reason: '아침 루틴의 마지막은 자외선 차단이에요',
+      priority: 20,
+    },
+    {
+      fromCategoryCode: 'C004001',
+      fromTagSlug: null,
+      toCategoryCode: 'C002002',
+      toTagSlug: 'cleanse',
+      edgeKind: 'PAIRED_REMOVAL',
+      reason: '자외선차단제는 클렌징오일로 지워야 남지 않아요',
+      priority: 10,
+    },
+  ],
+  concernRules: [
+    {
+      concernTagSlug: 'pore',
+      toCategoryCode: 'C001002',
+      toTagSlug: 'pore',
+      reason: '모공은 세럼 단계에서 정면으로 잡는 게 효율적이에요',
+      priority: 10,
+    },
+    {
+      concernTagSlug: 'pore',
+      toCategoryCode: 'C002001',
+      toTagSlug: 'pore',
+      reason: '모공 관리는 잘 씻어내는 것부터예요',
+      priority: 20,
+    },
+    {
+      concernTagSlug: 'moisture',
+      toCategoryCode: 'C001003',
+      toTagSlug: 'moisture',
+      reason: '보습이 고민이라면 덮어 가두는 크림이 핵심이에요',
+      priority: 10,
+    },
+    {
+      concernTagSlug: 'moisture',
+      toCategoryCode: 'C001002',
+      toTagSlug: 'moisture',
+      reason: '크림 전에 수분 세럼으로 채워 두세요',
+      priority: 20,
+    },
+    {
+      concernTagSlug: 'soothe',
+      toCategoryCode: 'C001001',
+      toTagSlug: 'soothe',
+      reason: '예민한 날엔 진정 토너로 결부터 달래 주세요',
+      priority: 10,
+    },
+    {
+      concernTagSlug: 'sebum',
+      toCategoryCode: 'C002001',
+      toTagSlug: 'sebum',
+      reason: '피지가 고민이라면 세안부터 피지 잡는 제품으로',
+      priority: 10,
+    },
+    {
+      concernTagSlug: 'gentle',
+      toCategoryCode: 'C001001',
+      toTagSlug: 'gentle',
+      reason: '자극 없는 토너로 결만 정돈해 주세요',
+      priority: 20,
+    },
+  ],
+};
+
+/**
+ * 궁합 배치 판정 mock 픽스처(GET /compat/verdicts) — 루틴 조합기 궁합 게이트(설계 §3.3).
+ *
+ * `base goodsNo → (후보 goodsNo → verdict)`. 실 서버는 compat_rule 시드로 성분 축을 비교하지만,
+ * mock은 **체인이 실제로 후보를 걸러내는지 눈으로 확인할 수 있을 만큼**만 고정한다.
+ * 판정이 없는 후보는 응답에서 빠진다(= 충돌 없음) — 실 서버 `worstVerdicts`도 같은 형태다.
+ *
+ * 1(클렌징폼) × 9(수분토너)를 CONFLICT로 두면 클렌징 픽이 1일 때 토너 단계의 픽이 인기 1위(9)가
+ * 아니라 그다음 후보로 밀린다. 게이트가 걸렸다는 사실이 화면에서 바로 드러나는 최소 조합이다.
+ */
+const compatVerdictsFixture: Record<number, Record<number, string>> = {
+  1: { 9: 'CONFLICT', 12: 'CAUTION' },
+};
 
 /** 이미 승인된 주문번호(mock 전용). 실 서버의 결제 상태 대신 중복 승인만 흉내낸다. */
 const confirmedOrderNos = new Set<string>();
@@ -384,7 +520,9 @@ export const handlers = [
         nickname: '민수',
         grade: 'BRONZE',
         skinType: 'COMBINATION',
-        concerns: ['PORE'],
+        // 프로필 태그 교체(V81) 이후의 어휘 — tag.slug와 같은 소문자 슬러그다. 구 어휘('PORE')를
+        // 두면 effectiveConcerns가 통째로 버리고 피부타입 파생으로 내려가 mock만 다르게 움직인다.
+        concerns: ['pore', 'dewy'],
         ageBand: '20s',
         role: 'ADMIN',
       },
@@ -782,6 +920,31 @@ export const handlers = [
     return HttpResponse.json({ code: 'OK', message: 'success', data: result });
   }),
 
+  /* 궁합 배치 판정 — 조합기 체인이 단계 경계마다 1회 부른다(설계 §3.3).
+     응답은 Map<Long, String>이라 JSON 키가 문자열이다(Record<string, string>) — 프론트
+     계약(api/compat.ts fetchVerdicts)이 이 형태를 그대로 받는다. */
+  http.get('/api/v1/compat/verdicts', ({ request }) => {
+    const url = new URL(request.url);
+    const base = Number(url.searchParams.get('base'));
+    // 서버는 List<Long>을 csv로도 반복 파라미터로도 받는다 — mock은 둘 다 받아 둔다.
+    const candidates = url.searchParams
+      .getAll('candidates')
+      .flatMap((value) => value.split(','))
+      .filter((value) => value !== '')
+      .map(Number);
+
+    const table = compatVerdictsFixture[base] ?? {};
+    const data: Record<string, string> = {};
+    for (const candidate of candidates) {
+      const verdict = table[candidate];
+      if (verdict) {
+        data[String(candidate)] = verdict;
+      }
+    }
+
+    return HttpResponse.json({ code: 'OK', message: 'success', data });
+  }),
+
   // 루틴 가이드 — Task 4-12. skinType×time 단순 룩업(설계 8장 "1차: 템플릿 매칭").
   // steps.ts(ROUTINE_STEPS)의 5단계 매핑을 그대로 써서 카테고리별 fixture를 추천으로 묶는다.
   http.get('/api/v1/routines', ({ request }) => {
@@ -810,6 +973,20 @@ export const handlers = [
     };
 
     return HttpResponse.json(body);
+  }),
+
+  // 규칙 배포 — 메인 개인화 Task 3-6. 실 서버(FlowRuleController)와 같은 ETag 계약을 흉내낸다:
+  // If-None-Match가 version과 같으면 본문 없이 304. 기기 측 캐시(features/affinity/flowRules.ts)의
+  // 재방문 경로를 오프라인에서도 그대로 밟게 하려는 것이다.
+  http.get('/api/v1/routine/flow-rules', ({ request }) => {
+    const ifNoneMatch = request.headers.get('If-None-Match')?.replace(/^W\/|"/g, '');
+    if (ifNoneMatch === flowRulesFixture.version) {
+      return new HttpResponse(null, { status: 304 });
+    }
+    return HttpResponse.json(
+      { code: 'OK', message: 'success', data: flowRulesFixture },
+      { headers: { ETag: flowRulesFixture.version } },
+    );
   }),
 
   // 프로필 수정 — Task 4-12(로컬 퀴즈 결과 승격). 실 서버 응답은 소비하지 않으므로 데이터 없이 OK만 낸다.

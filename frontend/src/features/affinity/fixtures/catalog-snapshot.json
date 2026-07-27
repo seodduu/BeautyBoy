@@ -1,0 +1,1973 @@
+{
+ "source": "V83 적용 후 실 DB 스냅샷 (2026-07-27)",
+ "goods": [
+  {
+   "name": "어반노트 수분 진정 토너 200ml",
+   "tags": [
+    "moisture"
+   ],
+   "goodsNo": 1,
+   "viewCount": 1200,
+   "categoryCode": "C001001001"
+  },
+  {
+   "name": "마인드스킨 딥모이스처 토너 250ml",
+   "tags": [
+    "exfoliate",
+    "soothe",
+    "dewy"
+   ],
+   "goodsNo": 2,
+   "viewCount": 3400,
+   "categoryCode": "C001001001"
+  },
+  {
+   "name": "클리어랩 저자극 진정토너 180ml",
+   "tags": [
+    "soothe",
+    "gentle"
+   ],
+   "goodsNo": 3,
+   "viewCount": 800,
+   "categoryCode": "C001001002"
+  },
+  {
+   "name": "데일리베이스 고보습 에센스 50ml",
+   "tags": [
+    "sebum",
+    "pore",
+    "gentle"
+   ],
+   "goodsNo": 4,
+   "viewCount": 5000,
+   "categoryCode": "C001002001"
+  },
+  {
+   "name": "어센틱맨 브라이트닝 세럼 40ml",
+   "tags": [
+    "sebum",
+    "bright",
+    "antioxidant"
+   ],
+   "goodsNo": 5,
+   "viewCount": 2100,
+   "categoryCode": "C001002002"
+  },
+  {
+   "name": "노르말킷 데일리 로션 150ml",
+   "tags": [
+    "moisture",
+    "barrier",
+    "gentle"
+   ],
+   "goodsNo": 6,
+   "viewCount": 900,
+   "categoryCode": "C001003001"
+  },
+  {
+   "name": "발란스포뮬러 고영양 크림 80ml",
+   "tags": [
+    "moisture",
+    "barrier",
+    "gentle"
+   ],
+   "goodsNo": 7,
+   "viewCount": 1750,
+   "categoryCode": "C001003002"
+  },
+  {
+   "name": "그레이스튜디오 순한 클렌징폼 180ml",
+   "tags": [
+    "cleanse",
+    "sebum",
+    "pore"
+   ],
+   "goodsNo": 8,
+   "viewCount": 4200,
+   "categoryCode": "C002001001"
+  },
+  {
+   "name": "퓨어그루브 딥클렌징폼 150ml",
+   "tags": [
+    "cleanse",
+    "fresh",
+    "trouble"
+   ],
+   "goodsNo": 9,
+   "viewCount": 6102,
+   "categoryCode": "C002001001"
+  },
+  {
+   "name": "어반노트 딥클렌징 폼 클레이 200ml",
+   "tags": [
+    "cleanse",
+    "sebum",
+    "trouble"
+   ],
+   "goodsNo": 10,
+   "viewCount": 3300,
+   "categoryCode": "C002001002"
+  },
+  {
+   "name": "마인드스킨 클렌징 오일 200ml",
+   "tags": [
+    "cleanse",
+    "moisture",
+    "gentle"
+   ],
+   "goodsNo": 11,
+   "viewCount": 2600,
+   "categoryCode": "C002002001"
+  },
+  {
+   "name": "스톤크래프트 클렌징 밤 100ml",
+   "tags": [
+    "cleanse"
+   ],
+   "goodsNo": 12,
+   "viewCount": 1500,
+   "categoryCode": "C002002002"
+  },
+  {
+   "name": "선데이랩 필링 패드 60매",
+   "tags": [
+    "cleanse",
+    "exfoliate"
+   ],
+   "goodsNo": 13,
+   "viewCount": 3900,
+   "categoryCode": "C002003001"
+  },
+  {
+   "name": "데일리베이스 스크럽 젤 120ml",
+   "tags": [
+    "cleanse",
+    "sebum",
+    "trouble"
+   ],
+   "goodsNo": 14,
+   "viewCount": 700,
+   "categoryCode": "C002003002"
+  },
+  {
+   "name": "어센틱맨 탈모케어 샴푸 400ml",
+   "tags": [
+    "sebum",
+    "scalp",
+    "pore"
+   ],
+   "goodsNo": 15,
+   "viewCount": 5400,
+   "categoryCode": "C003001001"
+  },
+  {
+   "name": "노르말킷 데일리 샴푸 500ml",
+   "tags": [
+    "moisture",
+    "scalp",
+    "gentle"
+   ],
+   "goodsNo": 16,
+   "viewCount": 1300,
+   "categoryCode": "C003001002"
+  },
+  {
+   "name": "클리어랩 프레시 바디워시 500ml",
+   "tags": [
+    "moisture"
+   ],
+   "goodsNo": 17,
+   "viewCount": 2200,
+   "categoryCode": "C003002001"
+  },
+  {
+   "name": "브라이트필드 보습 바디워시 450ml",
+   "tags": [
+    "moisture",
+    "barrier",
+    "gentle"
+   ],
+   "goodsNo": 18,
+   "viewCount": 1900,
+   "categoryCode": "C003002002"
+  },
+  {
+   "name": "어반노트 매트 헤어왁스 80g",
+   "tags": [],
+   "goodsNo": 19,
+   "viewCount": 3300,
+   "categoryCode": "C003003001"
+  },
+  {
+   "name": "퓨어그루브 헤어 스프레이 150ml",
+   "tags": [],
+   "goodsNo": 20,
+   "viewCount": 1600,
+   "categoryCode": "C003003002"
+  },
+  {
+   "name": "발란스포뮬러 무기자차 선크림 50ml",
+   "tags": [
+    "uv",
+    "gentle"
+   ],
+   "goodsNo": 21,
+   "viewCount": 7200,
+   "categoryCode": "C004001001"
+  },
+  {
+   "name": "그레이스튜디오 저자극 무기자차 선크림 60ml",
+   "tags": [
+    "uv",
+    "gentle"
+   ],
+   "goodsNo": 22,
+   "viewCount": 2800,
+   "categoryCode": "C004001001"
+  },
+  {
+   "name": "마인드스킨 유기자차 선크림 50ml",
+   "tags": [
+    "uv"
+   ],
+   "goodsNo": 23,
+   "viewCount": 3300,
+   "categoryCode": "C004001002"
+  },
+  {
+   "name": "어센틱맨 톤업 선스틱 22g",
+   "tags": [
+    "uv",
+    "gentle"
+   ],
+   "goodsNo": 24,
+   "viewCount": 4100,
+   "categoryCode": "C004002001"
+  },
+  {
+   "name": "스톤크래프트 매트 선스틱 20g",
+   "tags": [
+    "uv"
+   ],
+   "goodsNo": 25,
+   "viewCount": 900,
+   "categoryCode": "C004002002"
+  },
+  {
+   "name": "데일리베이스 쿨링 애프터선젤 300ml",
+   "tags": [
+    "soothe",
+    "uv",
+    "gentle"
+   ],
+   "goodsNo": 26,
+   "viewCount": 2500,
+   "categoryCode": "C004003001"
+  },
+  {
+   "name": "선데이랩 애프터선 로션 200ml",
+   "tags": [
+    "soothe",
+    "uv",
+    "gentle"
+   ],
+   "goodsNo": 27,
+   "viewCount": 1100,
+   "categoryCode": "C004003002"
+  },
+  {
+   "name": "클리어랩 면도날 카트리지 8입",
+   "tags": [],
+   "goodsNo": 28,
+   "viewCount": 4600,
+   "categoryCode": "C005001001"
+  },
+  {
+   "name": "브라이트필드 전기면도기 프로",
+   "tags": [],
+   "goodsNo": 29,
+   "viewCount": 6200,
+   "categoryCode": "C005001002"
+  },
+  {
+   "name": "어반노트 쉐이빙 폼 200ml",
+   "tags": [],
+   "goodsNo": 30,
+   "viewCount": 1500,
+   "categoryCode": "C005002001"
+  },
+  {
+   "name": "퓨어그루브 쉐이빙 젤 180ml",
+   "tags": [
+    "gentle"
+   ],
+   "goodsNo": 31,
+   "viewCount": 1800,
+   "categoryCode": "C005002002"
+  },
+  {
+   "name": "노르말킷 애프터쉐이브 로션 150ml",
+   "tags": [],
+   "goodsNo": 32,
+   "viewCount": 950,
+   "categoryCode": "C005003001"
+  },
+  {
+   "name": "마인드스킨 톤업크림 50ml",
+   "tags": [
+    "sebum",
+    "anti-aging",
+    "pore"
+   ],
+   "goodsNo": 34,
+   "viewCount": 5200,
+   "categoryCode": "C006001001"
+  },
+  {
+   "name": "어센틱맨 매트 톤업크림 40ml",
+   "tags": [
+    "sebum",
+    "pore",
+    "gentle"
+   ],
+   "goodsNo": 35,
+   "viewCount": 2100,
+   "categoryCode": "C006001001"
+  },
+  {
+   "name": "그레이스튜디오 스틱 컨실러 3.5g",
+   "tags": [
+    "gentle"
+   ],
+   "goodsNo": 36,
+   "viewCount": 1400,
+   "categoryCode": "C006001002"
+  },
+  {
+   "name": "스톤크래프트 아이브로우 펜슬 0.3g",
+   "tags": [
+    "antioxidant",
+    "gentle"
+   ],
+   "goodsNo": 37,
+   "viewCount": 800,
+   "categoryCode": "C006002001"
+  },
+  {
+   "name": "데일리베이스 아이브로우 섀도 팔레트",
+   "tags": [],
+   "goodsNo": 38,
+   "viewCount": 600,
+   "categoryCode": "C006002002"
+  },
+  {
+   "name": "선데이랩 모이스처 립밤 10g",
+   "tags": [
+    "moisture",
+    "gentle"
+   ],
+   "goodsNo": 39,
+   "viewCount": 2200,
+   "categoryCode": "C006003001"
+  },
+  {
+   "name": "클리어랩 립 트리트먼트 15g",
+   "tags": [
+    "moisture",
+    "gentle"
+   ],
+   "goodsNo": 40,
+   "viewCount": 1300,
+   "categoryCode": "C006003002"
+  },
+  {
+   "name": "클리어랩 모닝 쉐이빙젤 180ml",
+   "tags": [
+    "bright",
+    "antioxidant",
+    "gentle"
+   ],
+   "goodsNo": 42,
+   "viewCount": 899,
+   "categoryCode": "C005002002"
+  },
+  {
+   "name": "그레이스튜디오 젠틀 유기자차선크림 50ml",
+   "tags": [
+    "uv",
+    "bright",
+    "firm"
+   ],
+   "goodsNo": 43,
+   "viewCount": 1047,
+   "categoryCode": "C004001002"
+  },
+  {
+   "name": "노르말킷 액티브 애프터쉐이브로션 150ml",
+   "tags": [
+    "uv",
+    "firm",
+    "trouble"
+   ],
+   "goodsNo": 44,
+   "viewCount": 1195,
+   "categoryCode": "C005003001"
+  },
+  {
+   "name": "데일리베이스 실키 클렌징밤 80g",
+   "tags": [
+    "cleanse",
+    "anti-aging",
+    "gentle"
+   ],
+   "goodsNo": 45,
+   "viewCount": 1343,
+   "categoryCode": "C002002002"
+  },
+  {
+   "name": "마인드스킨 퓨어 저자극폼 180ml",
+   "tags": [
+    "cleanse",
+    "trouble",
+    "gentle"
+   ],
+   "goodsNo": 46,
+   "viewCount": 1491,
+   "categoryCode": "C002001001"
+  },
+  {
+   "name": "퓨어그루브 저자극 쉐이빙폼 200ml",
+   "tags": [
+    "moisture",
+    "trouble",
+    "barrier"
+   ],
+   "goodsNo": 47,
+   "viewCount": 1639,
+   "categoryCode": "C005002001"
+  },
+  {
+   "name": "선데이랩 인텐시브 미백세럼 30ml",
+   "tags": [
+    "firm",
+    "anti-aging",
+    "barrier"
+   ],
+   "goodsNo": 48,
+   "viewCount": 1787,
+   "categoryCode": "C001002002"
+  },
+  {
+   "name": "어센틱맨 리페어 데일리로션 150ml",
+   "tags": [
+    "soothe",
+    "bright",
+    "gentle"
+   ],
+   "goodsNo": 49,
+   "viewCount": 1935,
+   "categoryCode": "C001003001"
+  },
+  {
+   "name": "발란스포뮬러 프레시 미백세럼 50ml",
+   "tags": [
+    "exfoliate",
+    "bright",
+    "firm"
+   ],
+   "goodsNo": 50,
+   "viewCount": 2083,
+   "categoryCode": "C001002002"
+  },
+  {
+   "name": "브라이트필드 프로 딥클렌징폼 150ml",
+   "tags": [
+    "cleanse",
+    "moisture",
+    "firm"
+   ],
+   "goodsNo": 51,
+   "viewCount": 2231,
+   "categoryCode": "C002001002"
+  },
+  {
+   "name": "스톤크래프트 캄 탈모케어샴푸 400ml",
+   "tags": [
+    "anti-aging",
+    "scalp",
+    "barrier"
+   ],
+   "goodsNo": 52,
+   "viewCount": 2379,
+   "categoryCode": "C003001001"
+  },
+  {
+   "name": "어반노트 모닝 수분토너 180ml",
+   "tags": [
+    "moisture",
+    "trouble",
+    "gentle"
+   ],
+   "goodsNo": 53,
+   "viewCount": 2527,
+   "categoryCode": "C001001001"
+  },
+  {
+   "name": "클리어랩 젠틀 컨실러 3.5g",
+   "tags": [
+    "anti-aging",
+    "trouble",
+    "barrier"
+   ],
+   "goodsNo": 54,
+   "viewCount": 2675,
+   "categoryCode": "C006001002"
+  },
+  {
+   "name": "그레이스튜디오 액티브 헤어스프레이 150ml",
+   "tags": [
+    "sebum",
+    "anti-aging",
+    "pore"
+   ],
+   "goodsNo": 55,
+   "viewCount": 2823,
+   "categoryCode": "C003003002"
+  },
+  {
+   "name": "노르말킷 실키 미백세럼 50ml",
+   "tags": [
+    "soothe",
+    "bright",
+    "gentle"
+   ],
+   "goodsNo": 56,
+   "viewCount": 2971,
+   "categoryCode": "C001002002"
+  },
+  {
+   "name": "데일리베이스 퓨어 쉐이빙폼 200ml",
+   "tags": [
+    "exfoliate",
+    "uv",
+    "firm"
+   ],
+   "goodsNo": 57,
+   "viewCount": 3119,
+   "categoryCode": "C005002001"
+  },
+  {
+   "name": "마인드스킨 저자극 진정토너 180ml",
+   "tags": [
+    "exfoliate",
+    "uv",
+    "bright"
+   ],
+   "goodsNo": 58,
+   "viewCount": 3267,
+   "categoryCode": "C001001002"
+  },
+  {
+   "name": "퓨어그루브 인텐시브 스크럽젤 120ml",
+   "tags": [
+    "cleanse",
+    "bright",
+    "antioxidant"
+   ],
+   "goodsNo": 59,
+   "viewCount": 3415,
+   "categoryCode": "C002003002"
+  },
+  {
+   "name": "선데이랩 리페어 미백세럼 30ml",
+   "tags": [
+    "firm",
+    "trouble",
+    "gentle"
+   ],
+   "goodsNo": 60,
+   "viewCount": 3563,
+   "categoryCode": "C001002002"
+  },
+  {
+   "name": "어센틱맨 프레시 매트선스틱 20g",
+   "tags": [
+    "uv",
+    "anti-aging",
+    "gentle"
+   ],
+   "goodsNo": 61,
+   "viewCount": 3711,
+   "categoryCode": "C004002002"
+  },
+  {
+   "name": "발란스포뮬러 프로 쉐이빙젤 180ml",
+   "tags": [
+    "sebum",
+    "anti-aging",
+    "antioxidant"
+   ],
+   "goodsNo": 62,
+   "viewCount": 3859,
+   "categoryCode": "C005002002"
+  },
+  {
+   "name": "브라이트필드 캄 클렌징밤 80g",
+   "tags": [
+    "cleanse",
+    "sebum",
+    "trouble"
+   ],
+   "goodsNo": 63,
+   "viewCount": 4007,
+   "categoryCode": "C002002002"
+  },
+  {
+   "name": "스톤크래프트 모닝 애프터선로션 200ml",
+   "tags": [
+    "moisture",
+    "uv",
+    "barrier"
+   ],
+   "goodsNo": 64,
+   "viewCount": 4155,
+   "categoryCode": "C004003002"
+  },
+  {
+   "name": "어반노트 젠틀 전기면도기 본체",
+   "tags": [
+    "moisture",
+    "gentle"
+   ],
+   "goodsNo": 65,
+   "viewCount": 4303,
+   "categoryCode": "C005001002"
+  },
+  {
+   "name": "클리어랩 액티브 애프터쉐이브밤 100g",
+   "tags": [
+    "soothe",
+    "bright",
+    "antioxidant"
+   ],
+   "goodsNo": 66,
+   "viewCount": 4451,
+   "categoryCode": "C005003002"
+  },
+  {
+   "name": "그레이스튜디오 실키 수분토너 180ml",
+   "tags": [
+    "exfoliate",
+    "firm",
+    "trouble"
+   ],
+   "goodsNo": 67,
+   "viewCount": 4599,
+   "categoryCode": "C001001001"
+  },
+  {
+   "name": "노르말킷 퓨어 고영양크림 100ml",
+   "tags": [
+    "moisture",
+    "anti-aging",
+    "barrier"
+   ],
+   "goodsNo": 68,
+   "viewCount": 4747,
+   "categoryCode": "C001003002"
+  },
+  {
+   "name": "데일리베이스 저자극 면도날카트리지 6입",
+   "tags": [
+    "sebum",
+    "soothe",
+    "gentle"
+   ],
+   "goodsNo": 69,
+   "viewCount": 4895,
+   "categoryCode": "C005001001"
+  },
+  {
+   "name": "마인드스킨 인텐시브 헤어왁스 80g",
+   "tags": [
+    "soothe",
+    "uv",
+    "trouble"
+   ],
+   "goodsNo": 70,
+   "viewCount": 5043,
+   "categoryCode": "C003003001"
+  },
+  {
+   "name": "선데이랩 프레시 딥클렌징폼 150ml",
+   "tags": [
+    "cleanse",
+    "bright",
+    "antioxidant"
+   ],
+   "goodsNo": 72,
+   "viewCount": 5339,
+   "categoryCode": "C002001002"
+  },
+  {
+   "name": "어센틱맨 프로 데일리로션 150ml",
+   "tags": [
+    "bright",
+    "firm",
+    "antioxidant"
+   ],
+   "goodsNo": 73,
+   "viewCount": 5487,
+   "categoryCode": "C001003001"
+  },
+  {
+   "name": "발란스포뮬러 캄 립밤 10g",
+   "tags": [
+    "exfoliate",
+    "uv",
+    "firm"
+   ],
+   "goodsNo": 74,
+   "viewCount": 5635,
+   "categoryCode": "C006003001"
+  },
+  {
+   "name": "브라이트필드 모닝 애프터쉐이브밤 100g",
+   "tags": [
+    "soothe",
+    "anti-aging",
+    "gentle"
+   ],
+   "goodsNo": 75,
+   "viewCount": 5783,
+   "categoryCode": "C005003002"
+  },
+  {
+   "name": "스톤크래프트 젠틀 유기자차선크림 50ml",
+   "tags": [
+    "sebum",
+    "pore",
+    "trouble"
+   ],
+   "goodsNo": 76,
+   "viewCount": 5931,
+   "categoryCode": "C004001002"
+  },
+  {
+   "name": "어반노트 액티브 톤업선스틱 22g",
+   "tags": [
+    "moisture",
+    "uv",
+    "barrier"
+   ],
+   "goodsNo": 77,
+   "viewCount": 6079,
+   "categoryCode": "C004002001"
+  },
+  {
+   "name": "클리어랩 실키 데일리샴푸 500ml",
+   "tags": [
+    "anti-aging",
+    "scalp",
+    "barrier"
+   ],
+   "goodsNo": 78,
+   "viewCount": 6227,
+   "categoryCode": "C003001002"
+  },
+  {
+   "name": "그레이스튜디오 퓨어 유기자차선크림 50ml",
+   "tags": [
+    "soothe",
+    "uv",
+    "gentle"
+   ],
+   "goodsNo": 79,
+   "viewCount": 6375,
+   "categoryCode": "C004001002"
+  },
+  {
+   "name": "노르말킷 저자극 딥클렌징폼 200ml",
+   "tags": [
+    "cleanse",
+    "exfoliate",
+    "firm"
+   ],
+   "goodsNo": 80,
+   "viewCount": 6523,
+   "categoryCode": "C002001002"
+  },
+  {
+   "name": "데일리베이스 인텐시브 스크럽젤 120ml",
+   "tags": [
+    "cleanse",
+    "exfoliate",
+    "moisture"
+   ],
+   "goodsNo": 81,
+   "viewCount": 6671,
+   "categoryCode": "C002003002"
+  },
+  {
+   "name": "마인드스킨 리페어 무기자차선크림 50ml",
+   "tags": [
+    "moisture",
+    "uv"
+   ],
+   "goodsNo": 82,
+   "viewCount": 6819,
+   "categoryCode": "C004001001"
+  },
+  {
+   "name": "퓨어그루브 프레시 보습바디워시 450ml",
+   "tags": [
+    "moisture",
+    "trouble",
+    "gentle"
+   ],
+   "goodsNo": 83,
+   "viewCount": 6967,
+   "categoryCode": "C003002002"
+  },
+  {
+   "name": "선데이랩 프로 진정토너 150ml",
+   "tags": [
+    "anti-aging",
+    "trouble",
+    "barrier"
+   ],
+   "goodsNo": 84,
+   "viewCount": 7115,
+   "categoryCode": "C001001002"
+  },
+  {
+   "name": "어센틱맨 캄 무기자차선크림 50ml",
+   "tags": [
+    "sebum",
+    "uv",
+    "pore"
+   ],
+   "goodsNo": 85,
+   "viewCount": 7263,
+   "categoryCode": "C004001001"
+  },
+  {
+   "name": "발란스포뮬러 모닝 프레시바디워시 500ml",
+   "tags": [
+    "soothe",
+    "bright",
+    "gentle"
+   ],
+   "goodsNo": 86,
+   "viewCount": 7411,
+   "categoryCode": "C003002001"
+  },
+  {
+   "name": "브라이트필드 젠틀 데일리로션 100ml",
+   "tags": [
+    "uv",
+    "bright",
+    "firm"
+   ],
+   "goodsNo": 87,
+   "viewCount": 7559,
+   "categoryCode": "C001003001"
+  },
+  {
+   "name": "스톤크래프트 액티브 아이브로우섀도 팔레트",
+   "tags": [
+    "exfoliate",
+    "bright",
+    "firm"
+   ],
+   "goodsNo": 88,
+   "viewCount": 7707,
+   "categoryCode": "C006002002"
+  },
+  {
+   "name": "어반노트 실키 무기자차선크림 60ml",
+   "tags": [
+    "uv",
+    "bright",
+    "antioxidant"
+   ],
+   "goodsNo": 89,
+   "viewCount": 7856,
+   "categoryCode": "C004001001"
+  },
+  {
+   "name": "클리어랩 퓨어 딥클렌징폼 150ml",
+   "tags": [
+    "cleanse",
+    "firm",
+    "gentle"
+   ],
+   "goodsNo": 90,
+   "viewCount": 8003,
+   "categoryCode": "C002001002"
+  },
+  {
+   "name": "그레이스튜디오 저자극 쿨링젤 250ml",
+   "tags": [
+    "uv",
+    "anti-aging",
+    "barrier"
+   ],
+   "goodsNo": 91,
+   "viewCount": 8151,
+   "categoryCode": "C004003001"
+  },
+  {
+   "name": "노르말킷 인텐시브 헤어스프레이 150ml",
+   "tags": [
+    "anti-aging",
+    "barrier",
+    "antioxidant"
+   ],
+   "goodsNo": 92,
+   "viewCount": 8299,
+   "categoryCode": "C003003002"
+  },
+  {
+   "name": "데일리베이스 리페어 필링패드 50매",
+   "tags": [
+    "cleanse",
+    "sebum",
+    "trouble"
+   ],
+   "goodsNo": 93,
+   "viewCount": 8448,
+   "categoryCode": "C002003001"
+  },
+  {
+   "name": "마인드스킨 프레시 미백세럼 40ml",
+   "tags": [
+    "moisture",
+    "firm",
+    "barrier"
+   ],
+   "goodsNo": 94,
+   "viewCount": 8596,
+   "categoryCode": "C001002002"
+  },
+  {
+   "name": "퓨어그루브 프로 유기자차선크림 50ml",
+   "tags": [
+    "exfoliate",
+    "moisture",
+    "uv"
+   ],
+   "goodsNo": 95,
+   "viewCount": 8743,
+   "categoryCode": "C004001002"
+  },
+  {
+   "name": "선데이랩 캄 수분토너 180ml",
+   "tags": [
+    "soothe",
+    "bright",
+    "antioxidant"
+   ],
+   "goodsNo": 96,
+   "viewCount": 8895,
+   "categoryCode": "C001001001"
+  },
+  {
+   "name": "어센틱맨 모닝 진정토너 180ml",
+   "tags": [
+    "exfoliate",
+    "firm"
+   ],
+   "goodsNo": 97,
+   "viewCount": 9039,
+   "categoryCode": "C001001002"
+  },
+  {
+   "name": "발란스포뮬러 젠틀 고보습에센스 50ml",
+   "tags": [
+    "moisture",
+    "anti-aging",
+    "gentle"
+   ],
+   "goodsNo": 98,
+   "viewCount": 9189,
+   "categoryCode": "C001002001"
+  },
+  {
+   "name": "브라이트필드 액티브 클렌징오일 200ml",
+   "tags": [
+    "cleanse",
+    "soothe",
+    "anti-aging"
+   ],
+   "goodsNo": 99,
+   "viewCount": 335,
+   "categoryCode": "C002002001"
+  },
+  {
+   "name": "스톤크래프트 실키 고영양크림 80ml",
+   "tags": [
+    "uv",
+    "bright",
+    "trouble"
+   ],
+   "goodsNo": 100,
+   "viewCount": 483,
+   "categoryCode": "C001003002"
+  },
+  {
+   "name": "클리어랩 저자극 고영양크림 50ml",
+   "tags": [
+    "bright",
+    "antioxidant",
+    "gentle"
+   ],
+   "goodsNo": 102,
+   "viewCount": 779,
+   "categoryCode": "C001003002"
+  },
+  {
+   "name": "그레이스튜디오 인텐시브 진정토너 180ml",
+   "tags": [
+    "bright",
+    "firm",
+    "antioxidant"
+   ],
+   "goodsNo": 103,
+   "viewCount": 927,
+   "categoryCode": "C001001002"
+  },
+  {
+   "name": "노르말킷 리페어 톤업크림 50ml",
+   "tags": [
+    "uv",
+    "firm",
+    "trouble"
+   ],
+   "goodsNo": 104,
+   "viewCount": 1075,
+   "categoryCode": "C006001001"
+  },
+  {
+   "name": "데일리베이스 프레시 데일리로션 100ml",
+   "tags": [
+    "moisture",
+    "anti-aging",
+    "gentle"
+   ],
+   "goodsNo": 105,
+   "viewCount": 1223,
+   "categoryCode": "C001003001"
+  },
+  {
+   "name": "마인드스킨 프로 립트리트먼트 15g",
+   "tags": [
+    "sebum",
+    "trouble",
+    "gentle"
+   ],
+   "goodsNo": 106,
+   "viewCount": 1371,
+   "categoryCode": "C006003002"
+  },
+  {
+   "name": "퓨어그루브 캄 클렌징밤 120g",
+   "tags": [
+    "cleanse",
+    "moisture",
+    "barrier"
+   ],
+   "goodsNo": 107,
+   "viewCount": 1519,
+   "categoryCode": "C002002002"
+  },
+  {
+   "name": "선데이랩 모닝 스크럽젤 120ml",
+   "tags": [
+    "cleanse",
+    "firm",
+    "anti-aging"
+   ],
+   "goodsNo": 108,
+   "viewCount": 1667,
+   "categoryCode": "C002003002"
+  },
+  {
+   "name": "어센틱맨 젠틀 애프터쉐이브로션 150ml",
+   "tags": [
+    "soothe",
+    "bright",
+    "gentle"
+   ],
+   "goodsNo": 109,
+   "viewCount": 1815,
+   "categoryCode": "C005003001"
+  },
+  {
+   "name": "발란스포뮬러 액티브 필링패드 70매",
+   "tags": [
+    "cleanse",
+    "exfoliate",
+    "firm"
+   ],
+   "goodsNo": 110,
+   "viewCount": 1963,
+   "categoryCode": "C002003001"
+  },
+  {
+   "name": "브라이트필드 실키 미백세럼 30ml",
+   "tags": [
+    "exfoliate",
+    "moisture",
+    "firm"
+   ],
+   "goodsNo": 111,
+   "viewCount": 2112,
+   "categoryCode": "C001002002"
+  },
+  {
+   "name": "스톤크래프트 퓨어 무기자차선크림 50ml",
+   "tags": [
+    "uv",
+    "anti-aging",
+    "barrier"
+   ],
+   "goodsNo": 112,
+   "viewCount": 2259,
+   "categoryCode": "C004001001"
+  },
+  {
+   "name": "어반노트 저자극 고보습에센스 50ml",
+   "tags": [
+    "moisture",
+    "trouble",
+    "gentle"
+   ],
+   "goodsNo": 113,
+   "viewCount": 2407,
+   "categoryCode": "C001002001"
+  },
+  {
+   "name": "클리어랩 인텐시브 수분토너 180ml",
+   "tags": [
+    "anti-aging",
+    "trouble",
+    "barrier"
+   ],
+   "goodsNo": 114,
+   "viewCount": 2555,
+   "categoryCode": "C001001001"
+  },
+  {
+   "name": "그레이스튜디오 리페어 미백세럼 40ml",
+   "tags": [
+    "sebum",
+    "anti-aging",
+    "pore"
+   ],
+   "goodsNo": 115,
+   "viewCount": 2703,
+   "categoryCode": "C001002002"
+  },
+  {
+   "name": "노르말킷 프레시 아이브로우펜슬 0.3g",
+   "tags": [
+    "soothe",
+    "bright",
+    "gentle"
+   ],
+   "goodsNo": 116,
+   "viewCount": 2851,
+   "categoryCode": "C006002001"
+  },
+  {
+   "name": "데일리베이스 프로 유기자차선크림 50ml",
+   "tags": [
+    "exfoliate",
+    "uv",
+    "firm"
+   ],
+   "goodsNo": 117,
+   "viewCount": 2999,
+   "categoryCode": "C004001002"
+  },
+  {
+   "name": "마인드스킨 캄 데일리로션 150ml",
+   "tags": [
+    "exfoliate",
+    "uv",
+    "bright"
+   ],
+   "goodsNo": 118,
+   "viewCount": 3147,
+   "categoryCode": "C001003001"
+  },
+  {
+   "name": "퓨어그루브 모닝 애프터선로션 200ml",
+   "tags": [
+    "uv",
+    "bright",
+    "antioxidant"
+   ],
+   "goodsNo": 119,
+   "viewCount": 3295,
+   "categoryCode": "C004003002"
+  },
+  {
+   "name": "선데이랩 젠틀 헤어왁스 70g",
+   "tags": [
+    "firm",
+    "trouble",
+    "gentle"
+   ],
+   "goodsNo": 120,
+   "viewCount": 3443,
+   "categoryCode": "C003003001"
+  },
+  {
+   "name": "어센틱맨 액티브 무기자차선크림 50ml",
+   "tags": [
+    "uv",
+    "anti-aging",
+    "gentle"
+   ],
+   "goodsNo": 121,
+   "viewCount": 3591,
+   "categoryCode": "C004001001"
+  },
+  {
+   "name": "발란스포뮬러 실키 매트선스틱 20g",
+   "tags": [
+    "uv",
+    "anti-aging",
+    "antioxidant"
+   ],
+   "goodsNo": 122,
+   "viewCount": 3739,
+   "categoryCode": "C004002002"
+  },
+  {
+   "name": "브라이트필드 퓨어 무기자차선크림 40ml",
+   "tags": [
+    "sebum",
+    "pore",
+    "trouble"
+   ],
+   "goodsNo": 123,
+   "viewCount": 3887,
+   "categoryCode": "C004001001"
+  },
+  {
+   "name": "스톤크래프트 저자극 유기자차선크림 50ml",
+   "tags": [
+    "moisture",
+    "uv",
+    "barrier"
+   ],
+   "goodsNo": 124,
+   "viewCount": 4035,
+   "categoryCode": "C004001002"
+  },
+  {
+   "name": "어반노트 인텐시브 데일리샴푸 500ml",
+   "tags": [
+    "moisture",
+    "scalp",
+    "gentle"
+   ],
+   "goodsNo": 125,
+   "viewCount": 4183,
+   "categoryCode": "C003001002"
+  },
+  {
+   "name": "클리어랩 리페어 무기자차선크림 40ml",
+   "tags": [
+    "soothe",
+    "uv",
+    "bright"
+   ],
+   "goodsNo": 126,
+   "viewCount": 4331,
+   "categoryCode": "C004001001"
+  },
+  {
+   "name": "그레이스튜디오 프레시 톤업선스틱 20g",
+   "tags": [
+    "exfoliate",
+    "uv",
+    "firm"
+   ],
+   "goodsNo": 127,
+   "viewCount": 4479,
+   "categoryCode": "C004002001"
+  },
+  {
+   "name": "노르말킷 프로 고보습에센스 50ml",
+   "tags": [
+    "moisture",
+    "anti-aging",
+    "barrier"
+   ],
+   "goodsNo": 128,
+   "viewCount": 4627,
+   "categoryCode": "C001002001"
+  },
+  {
+   "name": "데일리베이스 캄 탈모케어샴푸 350ml",
+   "tags": [
+    "soothe",
+    "scalp",
+    "gentle"
+   ],
+   "goodsNo": 129,
+   "viewCount": 4775,
+   "categoryCode": "C003001001"
+  },
+  {
+   "name": "마인드스킨 모닝 무기자차선크림 50ml",
+   "tags": [
+    "soothe",
+    "uv",
+    "trouble"
+   ],
+   "goodsNo": 130,
+   "viewCount": 4923,
+   "categoryCode": "C004001001"
+  },
+  {
+   "name": "선데이랩 액티브 보습바디워시 450ml",
+   "tags": [
+    "exfoliate",
+    "bright",
+    "antioxidant"
+   ],
+   "goodsNo": 132,
+   "viewCount": 5219,
+   "categoryCode": "C003002002"
+  },
+  {
+   "name": "어센틱맨 실키 고보습에센스 40ml",
+   "tags": [
+    "bright",
+    "firm",
+    "antioxidant"
+   ],
+   "goodsNo": 133,
+   "viewCount": 5367,
+   "categoryCode": "C001002001"
+  },
+  {
+   "name": "발란스포뮬러 퓨어 클렌징밤 120g",
+   "tags": [
+    "cleanse",
+    "uv",
+    "firm"
+   ],
+   "goodsNo": 134,
+   "viewCount": 5515,
+   "categoryCode": "C002002002"
+  },
+  {
+   "name": "브라이트필드 저자극 데일리로션 100ml",
+   "tags": [
+    "anti-aging",
+    "barrier",
+    "gentle"
+   ],
+   "goodsNo": 135,
+   "viewCount": 5663,
+   "categoryCode": "C001003001"
+  },
+  {
+   "name": "스톤크래프트 인텐시브 필링패드 60매",
+   "tags": [
+    "cleanse",
+    "sebum",
+    "trouble"
+   ],
+   "goodsNo": 136,
+   "viewCount": 5811,
+   "categoryCode": "C002003001"
+  },
+  {
+   "name": "어반노트 리페어 스크럽젤 120ml",
+   "tags": [
+    "cleanse",
+    "moisture",
+    "barrier"
+   ],
+   "goodsNo": 137,
+   "viewCount": 5959,
+   "categoryCode": "C002003002"
+  },
+  {
+   "name": "클리어랩 프레시 미백세럼 30ml",
+   "tags": [
+    "uv",
+    "anti-aging",
+    "barrier"
+   ],
+   "goodsNo": 138,
+   "viewCount": 6107,
+   "categoryCode": "C001002002"
+  },
+  {
+   "name": "그레이스튜디오 프로 립밤 10g",
+   "tags": [
+    "soothe",
+    "bright",
+    "gentle"
+   ],
+   "goodsNo": 139,
+   "viewCount": 6255,
+   "categoryCode": "C006003001"
+  },
+  {
+   "name": "노르말킷 캄 진정토너 200ml",
+   "tags": [
+    "exfoliate",
+    "bright",
+    "firm"
+   ],
+   "goodsNo": 140,
+   "viewCount": 6403,
+   "categoryCode": "C001001002"
+  },
+  {
+   "name": "데일리베이스 모닝 유기자차선크림 50ml",
+   "tags": [
+    "exfoliate",
+    "moisture",
+    "uv"
+   ],
+   "goodsNo": 141,
+   "viewCount": 6551,
+   "categoryCode": "C004001002"
+  },
+  {
+   "name": "마인드스킨 젠틀 진정토너 180ml",
+   "tags": [
+    "moisture"
+   ],
+   "goodsNo": 142,
+   "viewCount": 6699,
+   "categoryCode": "C001001002"
+  },
+  {
+   "name": "퓨어그루브 액티브 클렌징오일 200ml",
+   "tags": [
+    "cleanse",
+    "moisture",
+    "gentle"
+   ],
+   "goodsNo": 143,
+   "viewCount": 6847,
+   "categoryCode": "C002002001"
+  },
+  {
+   "name": "선데이랩 실키 고영양크림 50ml",
+   "tags": [
+    "anti-aging",
+    "trouble",
+    "barrier"
+   ],
+   "goodsNo": 144,
+   "viewCount": 6995,
+   "categoryCode": "C001003002"
+  },
+  {
+   "name": "어센틱맨 퓨어 헤어왁스 80g",
+   "tags": [
+    "sebum",
+    "anti-aging",
+    "pore"
+   ],
+   "goodsNo": 145,
+   "viewCount": 7143,
+   "categoryCode": "C003003001"
+  },
+  {
+   "name": "발란스포뮬러 저자극 수분토너 180ml",
+   "tags": [
+    "soothe",
+    "bright",
+    "gentle"
+   ],
+   "goodsNo": 146,
+   "viewCount": 7293,
+   "categoryCode": "C001001001"
+  },
+  {
+   "name": "브라이트필드 인텐시브 애프터선로션 200ml",
+   "tags": [
+    "uv",
+    "bright",
+    "firm"
+   ],
+   "goodsNo": 147,
+   "viewCount": 7439,
+   "categoryCode": "C004003002"
+  },
+  {
+   "name": "스톤크래프트 리페어 미백세럼 40ml",
+   "tags": [
+    "exfoliate",
+    "bright",
+    "firm"
+   ],
+   "goodsNo": 148,
+   "viewCount": 7588,
+   "categoryCode": "C001002002"
+  },
+  {
+   "name": "어반노트 프레시 필링패드 70매",
+   "tags": [
+    "cleanse",
+    "bright",
+    "antioxidant"
+   ],
+   "goodsNo": 149,
+   "viewCount": 7735,
+   "categoryCode": "C002003001"
+  },
+  {
+   "name": "클리어랩 프로 데일리로션 100ml",
+   "tags": [
+    "firm",
+    "trouble",
+    "gentle"
+   ],
+   "goodsNo": 150,
+   "viewCount": 7883,
+   "categoryCode": "C001003001"
+  },
+  {
+   "name": "그레이스튜디오 캄 컨실러 3.5g",
+   "tags": [
+    "anti-aging",
+    "trouble",
+    "barrier"
+   ],
+   "goodsNo": 151,
+   "viewCount": 8031,
+   "categoryCode": "C006001002"
+  },
+  {
+   "name": "노르말킷 모닝 데일리로션 180ml",
+   "tags": [
+    "anti-aging",
+    "barrier",
+    "antioxidant"
+   ],
+   "goodsNo": 152,
+   "viewCount": 8179,
+   "categoryCode": "C001003001"
+  },
+  {
+   "name": "데일리베이스 젠틀 진정토너 150ml",
+   "tags": [
+    "sebum",
+    "pore",
+    "trouble"
+   ],
+   "goodsNo": 153,
+   "viewCount": 8327,
+   "categoryCode": "C001001002"
+  },
+  {
+   "name": "마인드스킨 액티브 데일리로션 150ml",
+   "tags": [
+    "moisture",
+    "firm",
+    "barrier"
+   ],
+   "goodsNo": 154,
+   "viewCount": 8475,
+   "categoryCode": "C001003001"
+  },
+  {
+   "name": "퓨어그루브 실키 진정토너 200ml",
+   "tags": [
+    "exfoliate",
+    "moisture",
+    "uv"
+   ],
+   "goodsNo": 155,
+   "viewCount": 8623,
+   "categoryCode": "C001001002"
+  },
+  {
+   "name": "선데이랩 퓨어 진정토너 150ml",
+   "tags": [
+    "soothe",
+    "bright",
+    "antioxidant"
+   ],
+   "goodsNo": 156,
+   "viewCount": 8771,
+   "categoryCode": "C001001002"
+  },
+  {
+   "name": "어센틱맨 저자극 쿨링젤 250ml",
+   "tags": [
+    "exfoliate",
+    "uv",
+    "firm"
+   ],
+   "goodsNo": 157,
+   "viewCount": 8919,
+   "categoryCode": "C004003001"
+  },
+  {
+   "name": "발란스포뮬러 인텐시브 면도날카트리지 10입",
+   "tags": [
+    "moisture",
+    "anti-aging",
+    "gentle"
+   ],
+   "goodsNo": 158,
+   "viewCount": 9067,
+   "categoryCode": "C005001001"
+  },
+  {
+   "name": "브라이트필드 리페어 고보습에센스 30ml",
+   "tags": [
+    "sebum",
+    "soothe",
+    "anti-aging"
+   ],
+   "goodsNo": 159,
+   "viewCount": 9217,
+   "categoryCode": "C001002001"
+  },
+  {
+   "name": "스톤크래프트 프레시 진정토너 180ml",
+   "tags": [
+    "uv",
+    "bright",
+    "trouble"
+   ],
+   "goodsNo": 160,
+   "viewCount": 363,
+   "categoryCode": "C001001002"
+  },
+  {
+   "name": "클리어랩 캄 데일리로션 100ml",
+   "tags": [
+    "bright",
+    "antioxidant",
+    "gentle"
+   ],
+   "goodsNo": 162,
+   "viewCount": 659,
+   "categoryCode": "C001003001"
+  },
+  {
+   "name": "그레이스튜디오 모닝 고영양크림 80ml",
+   "tags": [
+    "bright",
+    "firm",
+    "antioxidant"
+   ],
+   "goodsNo": 163,
+   "viewCount": 807,
+   "categoryCode": "C001003002"
+  },
+  {
+   "name": "노르말킷 젠틀 프레시바디워시 500ml",
+   "tags": [
+    "uv",
+    "firm",
+    "trouble"
+   ],
+   "goodsNo": 164,
+   "viewCount": 955,
+   "categoryCode": "C003002001"
+  },
+  {
+   "name": "데일리베이스 액티브 고보습에센스 30ml",
+   "tags": [
+    "moisture",
+    "anti-aging",
+    "gentle"
+   ],
+   "goodsNo": 165,
+   "viewCount": 1103,
+   "categoryCode": "C001002001"
+  },
+  {
+   "name": "마인드스킨 실키 무기자차선크림 50ml",
+   "tags": [
+    "sebum",
+    "trouble",
+    "gentle"
+   ],
+   "goodsNo": 166,
+   "viewCount": 1251,
+   "categoryCode": "C004001001"
+  },
+  {
+   "name": "퓨어그루브 퓨어 무기자차선크림 60ml",
+   "tags": [
+    "moisture",
+    "uv",
+    "barrier"
+   ],
+   "goodsNo": 167,
+   "viewCount": 1399,
+   "categoryCode": "C004001001"
+  },
+  {
+   "name": "선데이랩 저자극 수분토너 180ml",
+   "tags": [
+    "firm",
+    "anti-aging",
+    "barrier"
+   ],
+   "goodsNo": 168,
+   "viewCount": 1547,
+   "categoryCode": "C001001001"
+  },
+  {
+   "name": "어센틱맨 인텐시브 클렌징오일 200ml",
+   "tags": [
+    "cleanse",
+    "soothe",
+    "gentle"
+   ],
+   "goodsNo": 169,
+   "viewCount": 1695,
+   "categoryCode": "C002002001"
+  },
+  {
+   "name": "발란스포뮬러 리페어 유기자차선크림 50ml",
+   "tags": [
+    "exfoliate",
+    "uv",
+    "firm"
+   ],
+   "goodsNo": 170,
+   "viewCount": 1843,
+   "categoryCode": "C004001002"
+  },
+  {
+   "name": "브라이트필드 프레시 고영양크림 50ml",
+   "tags": [
+    "exfoliate",
+    "moisture",
+    "firm"
+   ],
+   "goodsNo": 171,
+   "viewCount": 1991,
+   "categoryCode": "C001003002"
+  },
+  {
+   "name": "스톤크래프트 프로 유기자차선크림 50ml",
+   "tags": [
+    "uv",
+    "anti-aging",
+    "barrier"
+   ],
+   "goodsNo": 172,
+   "viewCount": 2139,
+   "categoryCode": "C004001002"
+  },
+  {
+   "name": "어반노트 캄 고영양크림 100ml",
+   "tags": [
+    "moisture",
+    "trouble",
+    "gentle"
+   ],
+   "goodsNo": 173,
+   "viewCount": 2287,
+   "categoryCode": "C001003002"
+  },
+  {
+   "name": "클리어랩 모닝 립트리트먼트 15g",
+   "tags": [
+    "anti-aging",
+    "trouble",
+    "barrier"
+   ],
+   "goodsNo": 174,
+   "viewCount": 2435,
+   "categoryCode": "C006003002"
+  },
+  {
+   "name": "그레이스튜디오 젠틀 전기면도기 본체",
+   "tags": [
+    "sebum",
+    "anti-aging",
+    "pore"
+   ],
+   "goodsNo": 175,
+   "viewCount": 2583,
+   "categoryCode": "C005001002"
+  },
+  {
+   "name": "노르말킷 액티브 고영양크림 100ml",
+   "tags": [
+    "soothe",
+    "bright",
+    "gentle"
+   ],
+   "goodsNo": 176,
+   "viewCount": 2731,
+   "categoryCode": "C001003002"
+  },
+  {
+   "name": "데일리베이스 실키 고영양크림 50ml",
+   "tags": [
+    "exfoliate",
+    "uv",
+    "firm"
+   ],
+   "goodsNo": 177,
+   "viewCount": 2879,
+   "categoryCode": "C001003002"
+  },
+  {
+   "name": "마인드스킨 퓨어 고보습에센스 40ml",
+   "tags": [
+    "exfoliate",
+    "uv",
+    "bright"
+   ],
+   "goodsNo": 178,
+   "viewCount": 3027,
+   "categoryCode": "C001002001"
+  },
+  {
+   "name": "퓨어그루브 저자극 수분토너 180ml",
+   "tags": [
+    "moisture",
+    "bright",
+    "antioxidant"
+   ],
+   "goodsNo": 179,
+   "viewCount": 3176,
+   "categoryCode": "C001001001"
+  },
+  {
+   "name": "선데이랩 인텐시브 수분토너 180ml",
+   "tags": [
+    "firm",
+    "trouble",
+    "gentle"
+   ],
+   "goodsNo": 180,
+   "viewCount": 3323,
+   "categoryCode": "C001001001"
+  },
+  {
+   "name": "어센틱맨 리페어 유기자차선크림 50ml",
+   "tags": [
+    "uv",
+    "anti-aging",
+    "gentle"
+   ],
+   "goodsNo": 181,
+   "viewCount": 3471,
+   "categoryCode": "C004001002"
+  },
+  {
+   "name": "발란스포뮬러 프레시 고보습에센스 50ml",
+   "tags": [
+    "sebum",
+    "anti-aging",
+    "antioxidant"
+   ],
+   "goodsNo": 182,
+   "viewCount": 3620,
+   "categoryCode": "C001002001"
+  },
+  {
+   "name": "브라이트필드 프로 톤업크림 30ml",
+   "tags": [
+    "sebum",
+    "pore",
+    "trouble"
+   ],
+   "goodsNo": 183,
+   "viewCount": 3767,
+   "categoryCode": "C006001001"
+  },
+  {
+   "name": "스톤크래프트 캄 고보습에센스 40ml",
+   "tags": [
+    "moisture",
+    "firm",
+    "barrier"
+   ],
+   "goodsNo": 184,
+   "viewCount": 3915,
+   "categoryCode": "C001002001"
+  },
+  {
+   "name": "어반노트 모닝 미백세럼 50ml",
+   "tags": [
+    "moisture",
+    "gentle"
+   ],
+   "goodsNo": 185,
+   "viewCount": 4063,
+   "categoryCode": "C001002002"
+  },
+  {
+   "name": "클리어랩 젠틀 고영양크림 50ml",
+   "tags": [
+    "soothe",
+    "bright",
+    "antioxidant"
+   ],
+   "goodsNo": 186,
+   "viewCount": 4211,
+   "categoryCode": "C001003002"
+  },
+  {
+   "name": "그레이스튜디오 액티브 저자극폼 180ml",
+   "tags": [
+    "cleanse",
+    "exfoliate",
+    "firm"
+   ],
+   "goodsNo": 187,
+   "viewCount": 4359,
+   "categoryCode": "C002001001"
+  },
+  {
+   "name": "노르말킷 실키 클렌징오일 200ml",
+   "tags": [
+    "cleanse",
+    "moisture",
+    "anti-aging"
+   ],
+   "goodsNo": 188,
+   "viewCount": 4507,
+   "categoryCode": "C002002001"
+  },
+  {
+   "name": "데일리베이스 퓨어 수분토너 180ml",
+   "tags": [
+    "sebum",
+    "soothe",
+    "gentle"
+   ],
+   "goodsNo": 189,
+   "viewCount": 4655,
+   "categoryCode": "C001001001"
+  },
+  {
+   "name": "마인드스킨 저자극 고보습에센스 40ml",
+   "tags": [
+    "soothe",
+    "uv",
+    "trouble"
+   ],
+   "goodsNo": 190,
+   "viewCount": 4803,
+   "categoryCode": "C001002001"
+  }
+ ]
+}

@@ -26,3 +26,25 @@ export async function checkCompat(goodsNos: number[]): Promise<CompatCheckResult
   const response = await api.post<ApiEnvelope<CompatCheckResult>>('/compat/check', { goodsNos });
   return response.data.data;
 }
+
+/**
+ * GET /compat/verdicts — 기준 상품 1개 대 후보 여러 개의 **최악 verdict 배치 판정**
+ * (루틴 조합기 설계 §3.3). 메인의 체인이 단계 경계마다 1회 부른다.
+ *
+ * 서버는 `Map<Long, String>`을 내려주므로 JSON에서는 **키가 문자열**이다 — 조합기
+ * (`composeStep`의 `verdicts`)는 goodsNo로 조회하므로 여기서 숫자 키 Map으로 바꿔 넘긴다.
+ * 판정이 없는(=충돌 없는) 후보는 응답에 아예 없을 수 있어, 호출부는 `get`의 undefined를
+ * "통과"로 읽는다.
+ *
+ * 실패는 그대로 던진다 — 게이트 생략 여부(설계 §3.3 "실패하면 게이트 없이 진행")는
+ * 이 함수가 아니라 체인(useComposer)이 판단한다.
+ */
+export async function fetchVerdicts(
+  base: number,
+  candidates: number[],
+): Promise<Map<number, string>> {
+  const response = await api.get<ApiEnvelope<Record<string, string>>>('/compat/verdicts', {
+    params: { base, candidates: candidates.join(',') },
+  });
+  return new Map(Object.entries(response.data.data).map(([goodsNo, v]) => [Number(goodsNo), v]));
+}

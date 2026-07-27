@@ -91,6 +91,25 @@ describe('MyProfile — 마이페이지 프로필', () => {
     updateProfileSpy.mockRestore();
   });
 
+  it('고민과 사용감은 한 concerns 배열로 실려 저장된다', async () => {
+    registerHandlers();
+    const updateProfileSpy = vi.spyOn(memberApi, 'updateProfile');
+
+    renderMyProfile();
+
+    fireEvent.click(await screen.findByRole('button', { name: '보습' }));
+    fireEvent.click(screen.getByRole('button', { name: '산뜻함' }));
+    fireEvent.click(screen.getByRole('button', { name: '저장' }));
+
+    await waitFor(() =>
+      expect(updateProfileSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ concerns: ['moisture', 'fresh'] }),
+      ),
+    );
+
+    updateProfileSpy.mockRestore();
+  });
+
   it('배송지 수정은 바뀐 값으로 PUT /members/me/addresses/{id}를 부른다', async () => {
     registerHandlers();
     const updateAddressSpy = vi.spyOn(memberApi, 'updateAddress');

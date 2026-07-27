@@ -12,8 +12,27 @@ export { refreshSession, type RefreshSessionResult };
 /** 피부타입 — 백엔드 계약(Task 4·5)과 동일한 4종. */
 export type SkinType = 'DRY' | 'OILY' | 'COMBINATION' | 'SENSITIVE';
 
-/** 피부 고민 — 백엔드 계약과 동일한 값. */
-export type Concern = 'PORE' | 'TROUBLE' | 'WRINKLE' | 'DARK_SPOT';
+/** 프로필 고민 — tag.slug와 같은 어휘. 설계 §4.1의 9종. */
+export type ConcernSlug =
+  | 'exfoliate'
+  | 'sebum'
+  | 'pore'
+  | 'trouble'
+  | 'soothe'
+  | 'moisture'
+  | 'barrier'
+  | 'bright'
+  | 'anti-aging';
+
+/** 선호 사용감 — TEXTURE 태그 3종. 같은 concerns 컬럼에 함께 저장된다(설계 §4.1). */
+export type TextureSlug = 'fresh' | 'dewy' | 'matte';
+
+/**
+ * 서버 concerns 컬럼에 실려 가는 값의 합집합.
+ * 백엔드는 `List<String>`을 콤마로 이어 붙일 뿐 enum 검증이 없어 값 집합 교체에 DDL이
+ * 필요 없다(설계 §4). 구 어휘(PORE/TROUBLE/WRINKLE/DARK_SPOT)는 V81이 옮긴다.
+ */
+export type Concern = ConcernSlug | TextureSlug;
 
 /** 연령대 — 백엔드 계약과 동일한 값. */
 export type AgeBand = '10s' | '20s' | '30s' | '40s' | '50s+';

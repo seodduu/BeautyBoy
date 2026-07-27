@@ -77,6 +77,18 @@
   object-fit: cover;
 }
 
+/* 대안 3개 줄 — 기본 상품 그리드(4·5열)를 그대로 쓰면 오른쪽에 빈 칸이 남아 "덜 불러온 줄"로
+   읽힌다. 픽이 카드로 빠져나간 줄이므로 데스크톱에서도 3열로 고정한다(DESIGN.md). */
+.bb-routine__alternatives .bb-goods-grid {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+@media (min-width: 768px) {
+  .bb-routine__alternatives .bb-goods-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
 /* 섹션 단독 실패 문구. 이 섹션 안에서만 보여지고 다른 단계 진행을 막지 않는다.
    색만으로 의미를 전달하지 않도록 문구 자체로 오류임을 밝힌다. */
 .bb-routine__error {
