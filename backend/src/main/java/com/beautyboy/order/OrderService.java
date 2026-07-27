@@ -70,8 +70,8 @@ public class OrderService implements OrderQueryService {
                     goodsQueryService.findOrderSnapshot(item.goodsNo(), item.optionNo())
                             .orElseThrow(() -> new BusinessException(ErrorCode.GOODS_NOT_FOUND));
 
-            // 재고는 검증만 한다. 차감은 Wave 3(오늘드림 store_stock 조건부 차감)의 몫이며,
-            // 여기서 깎으면 두 벌의 재고 개념이 생겨 정합성이 무너진다.
+            // 재고는 여기서 검증만 한다(UX 게이트). 차감은 결제 승인 트랜잭션에서 한다
+            // — PaymentService.confirm (3).
             if (snapshot.stock() < item.quantity()) {
                 throw new BusinessException(ErrorCode.ORDER_OUT_OF_STOCK);
             }
