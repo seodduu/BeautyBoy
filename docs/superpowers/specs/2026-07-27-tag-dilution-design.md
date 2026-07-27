@@ -38,7 +38,8 @@
 |---|---|---|---|---|
 | 현재 | 5.18 | 127 (67%) | 0 | 0 |
 | 부형제만 `is_key` 요구 | 4.76 | 96 (51%) | 0 | 7 |
-| 부형제 제한 + 상한 3 | **2.84** | **72 (38%)** | 5 | 7 |
+| 부형제 제한 + 상한 3 (`sort_order` 순) | 2.84 | 72 (38%) | 5 | 7 |
+| **부형제 제한 + 상한 3 (희소 우선)** | **2.84** | **44 (23%)** | **0** | 7 |
 | `is_key`만 (단순 복구) | 2.03 | 33 (17%) | 10 | 14 |
 
 ## 3. 확정된 결정
@@ -46,8 +47,8 @@
 | 결정 | 선택 | 근거 |
 |---|---|---|
 | 파생 조건 | **부형제 6종만 `is_key` 요구** | 글리세린·판테놀은 제형 상수지 소구점이 아니다. BHA·레티노이드는 미량이어도 소구점이다 — 성분의 *성격*으로 가르는 것이 `is_key` 일괄 요구보다 정확하다 |
-| 상한 | **상품당 3개** | 상한이 희석의 실질 지렛대다(51%→38%). 3개면 카드에 표시되는 수(2개)보다 하나 많아 표시 손실이 없다 |
-| 순위 기준 | `is_key` DESC → 함량순 → `tag.sort_order` | 화장품 전성분은 함량 순 표기라 `goods_ingredient.sort_order`가 실제 관련도 신호다 |
+| 상한 | **상품당 3개** | 상한이 희석의 실질 지렛대다((a)만으로는 51%까지밖에 안 내려간다). 3개면 카드에 표시되는 수(2개)보다 하나 많아 표시 손실이 없다 |
+| 순위 기준 | `is_key` DESC → **희소한 태그 우선** → 함량순 | 전역 고정 순서로 자르면 순서가 뒤인 태그가 카탈로그 전체에서 일괄로 사라진다(§3.2). 희소할수록 변별력이 크므로 목적에도 부합한다 |
 | 후보 부족 대응 | **부분 채움** (§5) | "4개 미만이면 태그를 통째로 버린다"는 현재 규칙이 위 충돌을 강제한다. 이걸 풀면 태그를 마음껏 좁힐 수 있다 |
 | 정렬 | **태그 일치 우선** | 필터만으로는 인기순이 지배해 상위 4개가 안 바뀐다(§2에서 실측) |
 
@@ -67,6 +68,25 @@
 
 이 6종은 **`is_key=1`일 때만** 태그를 만든다. 나머지 성분(AHA·BHA·레티노이드·비타민C·
 히알루론산·세라마이드·병풀 등)은 지금처럼 위치와 무관하게 태그를 만든다.
+
+### 3.2 순위 기준을 `tag.sort_order`가 아니라 희소도로 잡는 이유
+
+**구현 중 실측으로 발견한 함정이다.** 처음에는 상한 순위를 `is_key → 함량순 → tag.sort_order`로
+잡았는데, 성분 하나가 태그 여럿을 만든다는 사실과 겹치면서 사고가 났다:
+
+- `BHA`·`SALICYLIC`은 한 성분이 `exfoliate`·`sebum`·`pore`·`trouble` **4개**를 만든다.
+- `tag.sort_order`는 전역 표시 순서라 모든 상품에서 같은 방향으로 작동한다.
+  `trouble`(12)은 `exfoliate`(2)·`sebum`(3)·`pore`(11)에 항상 진다.
+- 결과: **`trouble`이 190개 상품 중 0개가 됐다.** `concern_target_rule` 2행
+  (`trouble→C001002`, `trouble→C002001`)이 후보 0개인 죽은 행이 됐다.
+- 상한을 4로 올려도 `trouble`은 2개까지밖에 안 살아났다 — 상한 문제가 아니라 **순서의
+  전역 편향** 문제다.
+
+희소도(그 태그를 보유한 상품 수) 오름차순으로 바꾸면 이 편향이 사라진다. 그리고 이건 미봉책이
+아니라 목적에 직접 부합한다 — **보유 상품이 적은 태그일수록 변별력이 크므로**, 남길 태그를
+고를 때 희소한 쪽을 남기는 것이 "태그가 필터로 작동하게 한다"는 목표 그 자체다.
+
+`is_key`가 여전히 1순위라 제조사가 소구점으로 내세운 성분은 희소도와 무관하게 보호된다.
 
 ## 4. 마이그레이션 (V83)
 
@@ -88,34 +108,35 @@ JOIN goods_ingredient gi
 WHERE gt.source_ingredient_id IN (25, 26, 27, 28, 29, 30)
   AND gi.is_key = 0;
 
--- (b) 상품당 태그를 3개로 제한한다. 순위는 is_key 우선 → 함량순(전성분은 함량 순 표기라
---     goods_ingredient.sort_order가 관련도 신호) → 기존 sort_order(결정적 tie-break).
---     카테고리 기본 태그(source_ingredient_id IS NULL)는 is_key 취급해 맨 앞에 둔다 —
---     "클렌징폼이 세정"은 성분과 무관하게 참이다.
+-- (b) 상품당 태그를 3개로 제한한다.
+--     순위: is_key 우선 → 희소한 태그 우선(§3.2) → 함량순 → tag_id.
+--     카테고리 기본 태그(source_ingredient_id IS NULL)는 COALESCE로 is_key 취급해 맨 앞에 둔다.
 DELETE gt FROM goods_tag gt
 JOIN (
-  SELECT goods_id, tag_id,
+  SELECT x.goods_id, x.tag_id,
          ROW_NUMBER() OVER (
            PARTITION BY x.goods_id
            ORDER BY COALESCE(x.is_key, 1) DESC,
+                    f.freq ASC,
                     COALESCE(x.ing_sort, 0) ASC,
-                    x.tag_sort ASC,
                     x.tag_id ASC
          ) AS rn
   FROM (
-    SELECT gt2.goods_id, gt2.tag_id, gt2.sort_order AS tag_sort,
-           gi2.is_key, gi2.sort_order AS ing_sort
+    SELECT gt2.goods_id, gt2.tag_id, gi2.is_key, gi2.sort_order AS ing_sort
     FROM goods_tag gt2
     LEFT JOIN goods_ingredient gi2
       ON gi2.goods_id = gt2.goods_id AND gi2.ingredient_id = gt2.source_ingredient_id
   ) x
+  JOIN (SELECT tag_id, COUNT(*) AS freq FROM goods_tag GROUP BY tag_id) f
+    ON f.tag_id = x.tag_id
 ) r ON r.goods_id = gt.goods_id AND r.tag_id = gt.tag_id
 WHERE r.rn > 3;
 ```
 
 - `ORDER BY`에 `tag_id`를 마지막에 넣어 **완전 결정적**으로 만든다. 없으면 동점에서 옵티마이저
   재량이 되어 clean 로드마다 다른 태그가 살아남는다.
-- 예상 결과: 평균 5.18 → **2.84개**, `moisture` 127 → **72개(38%)**, 태그 0개 상품 7개.
+- `freq`는 (a)가 끝난 뒤의 `goods_tag`를 세므로 부형제 정리가 반영된 희소도다.
+- 실측 결과: 평균 5.18 → **2.84개**, `moisture` 127 → **44개(23%)**, 태그 0개 상품 7개, 죽은 규칙 0.
 
 ## 5. 부분 채움 — 태그를 좁힐 수 있게 만드는 짝
 
@@ -139,7 +160,7 @@ V82에서 지웠던 `gentle→C002001`도 되살릴 수 있지만, 그건 이 �
 
 ## 6. 검증 (DoD)
 
-### 마이그레이션 (실 MySQL, `V83PruneTagsIT`)
+### 마이그레이션 (실 MySQL, `PruneDilutedTagsIT`)
 
 - `부형제 6종이 보조 성분으로 만든 태그가 한 건도 남지 않는다`
 - `부형제라도 is_key=1이면 태그가 남는다`
@@ -147,9 +168,12 @@ V82에서 지웠던 `gentle→C002001`도 되살릴 수 있지만, 그건 이 �
 - `카테고리 기본 태그(source_ingredient_id IS NULL)는 지워지지 않는다` — 클렌징의 `cleanse`,
   선케어의 `uv`가 그대로 있다
 - `V71 수동 보정이 유지된다` — goods 1에 `exfoliate`·`anti-aging`이 없고 goods 5에 `anti-aging`이 없다
-- `희석도가 목표 구간에 든다` — 평균 태그 수 ≤ 3.2, `moisture` 보유 상품 ≤ 90개.
+- `어떤 태그도 카탈로그에서 통째로 사라지지 않는다` — EFFECT·PROPERTY 태그마다 보유 상품이
+  최소 1개는 있다(§3.2의 사고를 회귀 테스트로 고정한다)
+- `희석도가 목표 구간에 든다` — 평균 태그 수 ≤ 3.2, `moisture` 보유 상품 ≤ 60개.
   (수치는 시드가 바뀌면 같이 바뀌므로 **상한만** 단언하고 정확값은 출력한다)
-- `clean 로드가 결정적이다` — 같은 시드를 두 번 로드하면 `goods_tag`가 동일하다
+- `정리 결과가 결정적이다` — 같은 순위 계산을 다시 돌려 상한 초과 행이 하나도 없다
+  (`ORDER BY`에 `tag_id`가 없으면 동점에서 옵티마이저 재량이 된다)
 
 ### 부분 채움 (`RoutineSection.test.tsx`)
 
@@ -165,6 +189,10 @@ V82에서 지웠던 `gentle→C002001`도 되살릴 수 있지만, 그건 이 �
   부분 채움이 4개 요구를 없앴으므로 이 단언을 **"후보가 1개 이상"으로 완화**하고,
   실측 후보 수를 출력하도록 바꾼다. 임계 미달을 실패가 아니라 경고로 다루는 것은
   `NextStepSeedIT`의 커버리지 테스트와 같은 판단이다.
+- `NextStepSeedIT`의 대표 데모 케이스가 단언하던 `goods 4` 포함이 **깨진다.** goods 4의
+  `soothe`는 미량 병풀(`is_key=0`)에서 온 것이라 V83이 걷어냈고, 그 상품의 소구 성분은
+  나이아신아마이드(피지·모공)이므로 진정 세럼이 아닌 것이 맞다. 특정 id 대신 **"AHA와
+  CONFLICT인 goods 159·190이 빠졌다"**를 단언하도록 바꾼다 — 그것이 원래 보려던 것이다.
 - 상품 상세·목록의 태그 pill이 줄어드는 것은 **의도된 결과**다. 카드는 원래 2개까지만 보여준다.
 - **스크린샷**: 개인화된 메인(태그 일치분이 앞에 오는 것이 보이게), 상품 상세(태그가 줄어든 상태).
 

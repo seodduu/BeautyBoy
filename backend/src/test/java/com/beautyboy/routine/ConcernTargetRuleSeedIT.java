@@ -40,8 +40,19 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @Testcontainers
 class ConcernTargetRuleSeedIT {
 
-    /** 규칙 한 행이 최소한 이만큼의 후보를 가져야 한다. 이보다 적으면 화면에서 폴백만 유발한다. */
-    private static final int MIN_CANDIDATES = 4;
+    /**
+     * 규칙 한 행이 최소한 이만큼의 후보를 가져야 한다.
+     *
+     * <p>V83(태그 희석화 해소) 전에는 4였다 — 그때는 후보가 한 줄(4개)을 못 채우면 화면이
+     * 개인화를 통째로 버렸기 때문이다. 그 all-or-nothing 규칙이 "모든 (카테고리 × 태그) 칸에
+     * 4개 이상"을 태그 설계의 제약으로 만들었고, 상품 190개짜리 카탈로그에서 그 제약과
+     * "태그가 좁다"는 직접 충돌했다(태그 희석화 설계 §2.1).
+     *
+     * <p>이제 {@code RoutineSection}이 모자란 만큼을 인기순으로 채우므로 후보 1개짜리 목표도
+     * "1개는 겨냥, 3개는 인기"로 살아남는다. 따라서 여기서 볼 것은 <b>0개인 규칙이 없는가</b>뿐이다
+     * — 0개면 개인화가 아예 발동하지 않아 그 시드 행이 죽은 행이 된다.
+     */
+    private static final int MIN_CANDIDATES = 1;
 
     @Container
     static final MySQLContainer<?> MYSQL = new MySQLContainer<>(DockerImageName.parse("mysql:8.4"));
@@ -66,7 +77,7 @@ class ConcernTargetRuleSeedIT {
     EntityManager entityManager;
 
     @Test
-    void 모든_concern_target_rule_행에_후보가_4개_이상이다() {
+    void 모든_concern_target_rule_행에_후보가_최소_1개는_있다() {
         List<ConcernTargetRule> rules = ruleRepository.findAll();
         assertThat(rules).isNotEmpty();
 
@@ -82,7 +93,8 @@ class ConcernTargetRuleSeedIT {
         }
 
         assertThat(부족한_행)
-                .as("후보 %d개 미만인 규칙은 화면에서 폴백만 유발한다 — 시드에서 빼야 한다", MIN_CANDIDATES)
+                .as("후보가 %d개 미만인 규칙은 개인화가 아예 발동하지 않는 죽은 행이다 — 시드에서 빼야 한다",
+                        MIN_CANDIDATES)
                 .isEmpty();
     }
 
