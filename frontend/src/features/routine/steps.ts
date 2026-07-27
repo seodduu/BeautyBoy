@@ -32,7 +32,7 @@ export const ROUTINE_STEPS: readonly RoutineStep[] = [
     label: '클렌징',
     categoryCode: 'C002',
     copy: '하루 동안 쌓인 피지와 먼지를 씻어냅니다. 무엇을 바르든, 비우는 것이 먼저입니다.',
-    image: '/images/routine/01-cleansing.svg',
+    image: '/images/routine/01-cleansing.jpg',
   },
   {
     id: 'toner',
@@ -40,7 +40,7 @@ export const ROUTINE_STEPS: readonly RoutineStep[] = [
     label: '토너/스킨',
     categoryCode: 'C001001',
     copy: '세안 직후 흐트러진 피부 결을 정돈하고, 다음 단계가 잘 스며들 바탕을 만듭니다.',
-    image: '/images/routine/02-toner.svg',
+    image: '/images/routine/02-toner.jpg',
   },
   {
     id: 'serum',
@@ -48,7 +48,7 @@ export const ROUTINE_STEPS: readonly RoutineStep[] = [
     label: '에센스/세럼',
     categoryCode: 'C001002',
     copy: '고민을 정면으로 겨냥하는 단계입니다. 보습·미백·탄력 중 지금 필요한 하나를 고르세요.',
-    image: '/images/routine/03-serum.svg',
+    image: '/images/routine/03-serum.jpg',
   },
   {
     id: 'cream',
@@ -56,7 +56,7 @@ export const ROUTINE_STEPS: readonly RoutineStep[] = [
     label: '로션/크림',
     categoryCode: 'C001003',
     copy: '앞 단계에서 채운 수분이 날아가지 않게 덮어 잠급니다. 유분감은 취향껏 조절하세요.',
-    image: '/images/routine/04-cream.svg',
+    image: '/images/routine/04-cream.jpg',
   },
   {
     id: 'suncare',
@@ -64,7 +64,7 @@ export const ROUTINE_STEPS: readonly RoutineStep[] = [
     label: '선크림',
     categoryCode: 'C004001',
     copy: '아침 루틴의 마지막. 자외선 차단을 건너뛰면 앞의 네 단계가 하는 일이 절반으로 줄어듭니다.',
-    image: '/images/routine/05-suncare.svg',
+    image: '/images/routine/05-suncare.jpg',
   },
 ];
 

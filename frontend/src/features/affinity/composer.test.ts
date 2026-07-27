@@ -38,7 +38,7 @@ function stepOf(categoryCode: string): RoutineStep {
     label: '단계',
     categoryCode,
     copy: '설명',
-    image: '/images/routine/01-cleansing.svg',
+    image: '/images/routine/01-cleansing.jpg',
   };
 }
 

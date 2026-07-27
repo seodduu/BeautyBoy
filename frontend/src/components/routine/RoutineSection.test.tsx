@@ -84,7 +84,7 @@ describe('RoutineSection', () => {
     renderSection();
 
     const image = screen.getByRole('img', { name: /클렌징/ });
-    expect(image).toHaveAttribute('src', '/images/routine/01-cleansing.svg');
+    expect(image).toHaveAttribute('src', '/images/routine/01-cleansing.jpg');
   });
 
   it('조합이 미확정이면 스켈레톤을 유지한다 — 점진 렌더', () => {
