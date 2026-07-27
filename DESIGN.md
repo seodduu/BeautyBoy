@@ -318,6 +318,36 @@ components:
     typography: "{typography.body}"
     rounded: "{rounded.none}"
     padding: 12px
+  # --- 루틴 조합기 (메인 개인화 v2) ---
+  pick-card:
+    backgroundColor: "{colors.surface}"
+    textColor: "{colors.ink}"
+    typography: "{typography.body-tight}"
+    rounded: "{rounded.lg}"
+    padding: "{spacing.lg}"
+  pick-card-eyebrow:
+    backgroundColor: "{colors.surface}"
+    textColor: "{colors.stone}"
+    typography: "{typography.eyebrow}"
+  pick-card-name:
+    backgroundColor: "{colors.surface}"
+    textColor: "{colors.ink}"
+    typography: "{typography.heading-sm}"
+  pick-card-reason:
+    backgroundColor: "{colors.surface}"
+    textColor: "{colors.ink}"
+    typography: "{typography.body-strong}"
+  pick-card-soldout:
+    backgroundColor: "{colors.surface}"
+    textColor: "{colors.signal-muted}"
+    typography: "{typography.meta}"
+  routine-bulk-cta:
+    backgroundColor: "{colors.canvas}"
+    textColor: "{colors.ink}"
+    typography: "{typography.button}"
+    rounded: "{rounded.full}"
+    padding: 12px
+    height: 48px
 ---
 
 ## Overview
@@ -701,6 +731,61 @@ The system avoids drop shadows entirely. Depth is created by photographic layeri
 
 **상품 그리드** — 1440px 5열 / 1024px 4열 / 768px 3열 / 640px 2열. 열 간격 `{spacing.lg}`,
 행 간격 `{spacing.xl}`. 구분선 없음.
+
+### 루틴 조합기 컴포넌트 (메인 개인화 v2)
+
+메인의 각 루틴 단계는 "인기순 4칸"에서 **대표 픽 1개 + 대안 3개**로 바뀐다. 픽에는 왜 그것이
+뽑혔는지가 함께 붙고(근거), 카드에서 바로 장바구니로 갈 수 있다.
+
+**`pick-card`** — 단계당 1개. 그 단계에서 이 사용자에게 뽑힌 대표 상품.
+
+- **배치: 대안 그리드 위에 놓는 가로형 별도 카드** (그리드 첫 칸을 2칸 폭으로 넓히지 않는다).
+  그리드는 1440px 5열 / 1024px 4열이라 첫 칸을 2칸으로 늘리면 한 줄이 픽1(2칸)+대안3 = 5칸이
+  되어 4열에서 대안 하나가 다음 줄로 밀리고, 5열에서는 정확히 차되 1024px에서만 깨진다 —
+  **열 수에 따라 리듬이 무너진다.** 별도 카드는 어느 폭에서도 "픽 한 장 → 대안 한 줄"로 읽히고,
+  섹션 헤드(타이포↔이미지 비대칭)와 같은 가로 2분할이라 섹션 안에서 형태가 반복된다.
+- 배경 `{colors.surface}`, 라운딩 `{rounded.lg}`, 안쪽 여백 `{spacing.lg}`.
+  **테두리·그림자 없음** — `{goods-card}`와 같은 규칙이다. 픽 카드가 더 중요하다는 신호는
+  **면적과 위치**가 내지, 테두리나 액센트 색이 내지 않는다.
+- 좌우 2분할: 썸네일(1:1, `{rounded.md}`, `{colors.surface-cool}` 플레이스홀더) **320px 고정** +
+  정보 열이 나머지. 비율로 나누면 넓은 화면에서 1:1 썸네일이 함께 커져 카드 하나가 480px를 넘고
+  대안 세 개가 화면 밖으로 밀린다 — **픽과 대안이 한 화면에 보이는 것이 이 섹션의 요점**이다.
+  900px 이하에서 세로 스택(썸네일 위, 정보 아래)으로 접힌다.
+- 정보 열 스택(위→아래): `{pick-card-eyebrow}`(단계 안에서의 역할 라벨) → 브랜드명
+  (`{typography.meta}` / `{colors.slate}`) → `{pick-card-name}`(2줄 고정 말줄임) →
+  **근거 블록** → 가격 줄(`{price-*}` 3종, `{goods-card}`와 동일) → `[바로 담기]`.
+- **근거 블록**(설계 §5)은 두 층이다:
+  1. **reason 문장** — `{pick-card-reason}`. 좌측 2px `{colors.ink}` 규칙선 + `{spacing.sm}`
+     들여쓰기. 단계 설명(`{typography.body-lg}` / `{colors.graphite}`)은 누구에게나 같은 문장이고
+     이 줄만 "당신에게" 달린 문장이라, 잉크색·두께·규칙선으로 한 단계 앞세운다.
+     **문구는 규칙 테이블(reason)이 유일한 출처다 — 화면이 만들지 않는다.** 발동한 규칙이 없으면
+     이 줄 자체를 렌더하지 않는다(빈 자리를 문구로 메우지 않는다).
+  2. **근거 칩** — 점수에 실제 기여한 태그만 `{Tag}` pill로 낸다. 칩은 문구가 아니라 **태그 데이터**라
+     "태그 컬러" 절의 팔레트를 그대로 쓴다(이 화면에서 색이 허용되는 유일한 자리다).
+     한 카드에 최대 4개, 넘치면 자른다.
+- **`[바로 담기]`는 `{button-primary}` 파생** — 같은 검정 알약, 정보 열 폭을 꽉 채운다(`width: 100%`).
+  라운딩·타이포·높이는 `{button-primary}` 그대로이고 폭만 다르다.
+- **전 옵션 품절이면 버튼을 `disabled`로 두고** 그 아래 `{pick-card-soldout}`으로 "일시품절"을 낸다.
+  색만으로 알리지 않는다(비활성 + 문구 두 단서) — `{goods-card}` 품절 규칙과 같은 원칙이다.
+
+**대안 그리드** — 픽 카드 아래 `{goods-card}` 3개. 상품 그리드 사양을 따르되 **데스크톱에서 3열로
+고정**한다(1024px↑ 3열 / 768px↑ 3열 / 640px 2열). 기본 그리드의 4·5열을 그대로 쓰면 3개짜리 줄이
+오른쪽에 빈 칸을 남겨 "덜 불러온 줄"로 읽힌다.
+
+**`routine-bulk-cta`** — STEP 05 아래 "루틴 전체 담기" 한 개(설계 §4.3).
+
+- 위에 1px `{colors.hairline}` 구분선을 두고 `{spacing.section}` 여백 안에 가운데 정렬.
+- **`{button-ghost}` 계열**(흰 배경 + 1px `{colors.ink}` 테두리 + `{rounded.full}`, 높이 48px)로
+  두고 **검정 채움을 쓰지 않는다.** Iteration Guide 6의 "한 뷰포트에 검정 알약은 하나" 규칙 때문이다 —
+  스크롤 위치에 따라 STEP 05의 픽 카드 `[바로 담기]`(검정 채움)와 같은 화면에 들어올 수 있고,
+  그때 검정이 둘이면 어느 쪽이 그 화면의 행동인지 흐려진다. 개별 담기가 원자적 행동이고
+  전체 담기는 그것의 묶음이므로, 채움을 갖는 쪽은 개별 담기다.
+- 결과는 토스트로만 알린다(UX 계약 "비치명 알림은 토스트"). 일부 실패해도 성공분은 유지하고
+  집계를 알린다 — 장바구니는 되돌릴 수 있는 중간 상태라 전부 롤백하지 않는다.
+
+**스켈레톤(점진 렌더)** — 체인은 위 단계 픽이 확정돼야 아래 단계가 확정된다(설계 §3.4). 미확정
+섹션은 픽 카드 자리를 비워 두지 않고 **`{goods-card}` 스켈레톤 한 줄**을 유지한다. 확정 순서가
+스크롤 방향과 같아 사용자는 "위에서부터 채워지는" 것으로 읽고 지연을 기다림으로 체감하지 않는다.
 
 ### Signature Components
 

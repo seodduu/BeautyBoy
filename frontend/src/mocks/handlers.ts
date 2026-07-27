@@ -318,6 +318,20 @@ const flowRulesFixture: FlowRulesResponse = {
   ],
 };
 
+/**
+ * 궁합 배치 판정 mock 픽스처(GET /compat/verdicts) — 루틴 조합기 궁합 게이트(설계 §3.3).
+ *
+ * `base goodsNo → (후보 goodsNo → verdict)`. 실 서버는 compat_rule 시드로 성분 축을 비교하지만,
+ * mock은 **체인이 실제로 후보를 걸러내는지 눈으로 확인할 수 있을 만큼**만 고정한다.
+ * 판정이 없는 후보는 응답에서 빠진다(= 충돌 없음) — 실 서버 `worstVerdicts`도 같은 형태다.
+ *
+ * 1(클렌징폼) × 9(수분토너)를 CONFLICT로 두면 클렌징 픽이 1일 때 토너 단계의 픽이 인기 1위(9)가
+ * 아니라 그다음 후보로 밀린다. 게이트가 걸렸다는 사실이 화면에서 바로 드러나는 최소 조합이다.
+ */
+const compatVerdictsFixture: Record<number, Record<number, string>> = {
+  1: { 9: 'CONFLICT', 12: 'CAUTION' },
+};
+
 /** 이미 승인된 주문번호(mock 전용). 실 서버의 결제 상태 대신 중복 승인만 흉내낸다. */
 const confirmedOrderNos = new Set<string>();
 
@@ -904,6 +918,31 @@ export const handlers = [
       : { overall: 'OK', findings: [] };
 
     return HttpResponse.json({ code: 'OK', message: 'success', data: result });
+  }),
+
+  /* 궁합 배치 판정 — 조합기 체인이 단계 경계마다 1회 부른다(설계 §3.3).
+     응답은 Map<Long, String>이라 JSON 키가 문자열이다(Record<string, string>) — 프론트
+     계약(api/compat.ts fetchVerdicts)이 이 형태를 그대로 받는다. */
+  http.get('/api/v1/compat/verdicts', ({ request }) => {
+    const url = new URL(request.url);
+    const base = Number(url.searchParams.get('base'));
+    // 서버는 List<Long>을 csv로도 반복 파라미터로도 받는다 — mock은 둘 다 받아 둔다.
+    const candidates = url.searchParams
+      .getAll('candidates')
+      .flatMap((value) => value.split(','))
+      .filter((value) => value !== '')
+      .map(Number);
+
+    const table = compatVerdictsFixture[base] ?? {};
+    const data: Record<string, string> = {};
+    for (const candidate of candidates) {
+      const verdict = table[candidate];
+      if (verdict) {
+        data[String(candidate)] = verdict;
+      }
+    }
+
+    return HttpResponse.json({ code: 'OK', message: 'success', data });
   }),
 
   // 루틴 가이드 — Task 4-12. skinType×time 단순 룩업(설계 8장 "1차: 템플릿 매칭").
