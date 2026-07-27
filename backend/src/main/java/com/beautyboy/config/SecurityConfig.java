@@ -61,6 +61,8 @@ public class SecurityConfig {
                                 "/api/v1/search", "/api/v1/search/**",
                                 "/api/v1/rankings",
                                 "/api/v1/routines",
+                                // 규칙 배포(설계 §5.2). 기존 /api/v1/goods/** 패턴에 안 걸리는 새 경로다.
+                                "/api/v1/routine/flow-rules",
                                 "/api/v1/qna",
                                 "/api/v1/delivery/stores/nearby").permitAll()
                         // 궁합 진단은 상품ID 배열을 받아 판정만 하므로 비로그인도 쓸 수 있다(설계 7장).
