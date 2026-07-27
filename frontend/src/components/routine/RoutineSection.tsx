@@ -58,28 +58,44 @@ export function RoutineSection({
       }),
   });
 
-  // 후보가 한 줄도 못 채우면 개인화를 버린다. 반쯤 빈 줄을 보여주느니 기준선으로 돌아가는 편이
-  // 낫다 — 폴백이 곧 현재 화면이라 사용자에게는 빈 슬롯이 생기지 않는다(설계 §6.5).
-  const overrideRejected =
-    overrideTag !== null &&
-    primaryQuery.isSuccess &&
-    primaryQuery.data.content.length < ROUTINE_SECTION_SIZE;
+  const primaryItems = primaryQuery.data?.content ?? [];
+
+  // "태그 일치분"이라는 개념은 tag가 붙은 경우에만 있다. tag가 null이면 primaryItems가 곧
+  // 기본 목록이라 채울 것도, 앞으로 당길 것도 없다.
+  const taggedItems = overrideTag ? primaryItems : [];
+
+  // 태그 일치분이 한 줄을 못 채우면 같은 카테고리 인기순으로 뒤를 채운다(설계 §5).
+  //
+  // 예전에는 4개 미만이면 개인화를 통째로 버렸는데, 그 all-or-nothing 규칙이 "모든
+  // (카테고리 × 태그) 칸에 4개 이상"을 태그 설계의 제약으로 만들었다. 상품 190개짜리
+  // 카탈로그에서 그 제약과 "태그가 좁다"는 직접 충돌한다(태그 희석화 설계 §2.1).
+  // 채워 넣으면 후보가 1개뿐인 목표도 "1개는 겨냥, 3개는 인기"로 살아남는다.
+  const needsFill =
+    overrideTag !== null && primaryQuery.isSuccess && taggedItems.length < ROUTINE_SECTION_SIZE;
 
   // 쿼리키가 기본 쿼리와 같아, 그 섹션을 기본으로 이미 받아 둔 적이 있으면 캐시 히트다.
-  const fallbackQuery = useQuery({
+  const fillQuery = useQuery({
     queryKey: ['routine-goods', step.categoryCode, null],
     queryFn: () =>
       fetchGoodsList({ page: 0, size: ROUTINE_SECTION_SIZE, categoryCode: step.categoryCode }),
-    enabled: overrideRejected,
+    enabled: needsFill,
   });
 
-  const activeQuery = overrideRejected ? fallbackQuery : primaryQuery;
+  // 태그 일치분이 하나도 없으면 개인화라고 부를 근거가 없다 — 이유 문장도 감춘다.
+  // 채움만으로 채워진 줄에 "각질 케어를 많이 보셨네요"가 붙으면 그건 거짓말이 된다.
+  const overrideRejected =
+    overrideTag !== null && primaryQuery.isSuccess && taggedItems.length === 0;
   const personalized = override !== undefined && !overrideRejected;
 
-  const candidates = activeQuery.data?.content ?? [];
-  const items = (
-    personalized && overrideTag ? rankByTexture(candidates, preferredTextures) : candidates
-  ).slice(0, ROUTINE_SECTION_SIZE);
+  // 태그 일치분을 사용감 tie-break로 정렬해 앞에 세우고, 모자란 만큼만 인기순으로 잇는다.
+  // 앞자리를 태그 일치분이 차지하는 것이 개인화가 눈에 보이는 유일한 이유다 — 필터만으로는
+  // 인기순이 지배해 상위 4개가 필터 없을 때와 대부분 겹친다(태그 희석화 설계 §2).
+  const ranked = overrideTag ? rankByTexture(taggedItems, preferredTextures) : primaryItems;
+  const alreadyShown = new Set(ranked.map((item) => item.goodsNo));
+  const items = [
+    ...ranked,
+    ...(fillQuery.data?.content ?? []).filter((item) => !alreadyShown.has(item.goodsNo)),
+  ].slice(0, ROUTINE_SECTION_SIZE);
 
   const orderLabel = String(step.order).padStart(2, '0');
   const sideClass = index % 2 === 0 ? 'bb-routine--text-left' : 'bb-routine--text-right';
@@ -103,12 +119,14 @@ export function RoutineSection({
         </div>
       </div>
 
-      {activeQuery.isError ? (
+      {/* 채움 쿼리가 실패해도 에러로 처리하지 않는다 — 태그 일치분은 이미 손에 있고,
+          한 줄이 덜 찬 것보다 "불러오지 못했어요"가 더 나쁘다. */}
+      {primaryQuery.isError ? (
         <p className="bb-routine__error">상품을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.</p>
       ) : (
         <GoodsGrid
           items={items}
-          loading={activeQuery.isLoading}
+          loading={primaryQuery.isLoading || (needsFill && fillQuery.isLoading)}
           skeletonCount={ROUTINE_SECTION_SIZE}
           categoryCode={step.categoryCode}
         />

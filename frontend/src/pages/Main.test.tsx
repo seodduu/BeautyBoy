@@ -251,26 +251,69 @@ describe('Main — 개인화', () => {
     expect(goodsCalls.find((call) => call.tag !== null)?.tag).toBe('moisture');
   });
 
-  it('개인화 후보가 4개 미만이면 그 섹션만 기본 쿼리로 폴백하고 reason이 사라진다', async () => {
+  it('태그 후보가 모자라면 앞에 태그 일치분을 두고 뒤를 인기순으로 채운다', async () => {
     serveMe({ skinType: 'COMBINATION', concerns: ['pore'] });
-    // 태그가 붙은 쿼리만 후보가 모자란 상황.
-    serveGoods((tag) => (tag === null ? 4 : 3));
+    // 태그가 붙은 쿼리만 후보가 모자란 상황(2개). 예전엔 이러면 개인화를 통째로 버렸다.
+    serveGoods((tag) => (tag === null ? 4 : 2));
 
     renderMain();
 
-    // 개인화 쿼리(tag=pore, size=8)가 나갔고, 후보 3개라 같은 카테고리의 기본 쿼리로 되돌아온다.
-    // (첫 렌더는 프로필이 아직 없어 기본 쿼리로 시작하므로 이 카테고리만 요청이 셋이 된다.)
-    await waitFor(() =>
-      expect(goodsCalls.filter((call) => call.categoryCode === 'C001002')).toHaveLength(3),
-    );
-    const serumCalls = goodsCalls.filter((call) => call.categoryCode === 'C001002');
-    expect(serumCalls[1]).toEqual({ categoryCode: 'C001002', tag: 'pore', size: '8' });
-    expect(serumCalls[2]).toEqual({ categoryCode: 'C001002', tag: null, size: '4' });
+    const serum = sectionOf('에센스/세럼');
+    // 채움이 일어나도 개인화는 유지된다 — 부분 개인화도 개인화다.
+    expect(
+      await within(serum).findByText('모공은 세럼 단계에서 정면으로 잡는 게 효율적이에요'),
+    ).toBeInTheDocument();
 
+    // 한 줄(4개)이 다 찬다. 그리고 태그 일치분이 앞자리를 차지한다 —
+    // 앞자리를 차지하는 것이 개인화가 눈에 보이는 유일한 이유다(태그 희석화 설계 §5).
+    await waitFor(() =>
+      expect(within(serum).getAllByRole('link', { name: /상품 \d/ })).toHaveLength(4),
+    );
+    const names = within(serum)
+      .getAllByRole('link', { name: /상품 \d/ })
+      .map((link) => link.textContent ?? '');
+    expect(names[0]).toContain('pore 상품');
+    expect(names[1]).toContain('pore 상품');
+    expect(names[2]).toContain('기본 상품');
+    expect(names[3]).toContain('기본 상품');
+  });
+
+  it('채움 상품이 태그 일치분과 겹치지 않는다', async () => {
+    serveMe({ skinType: 'COMBINATION', concerns: ['pore'] });
+    // 목 데이터는 태그 유무와 무관하게 goodsNo를 1000부터 매긴다 — 즉 태그 일치분 2개와
+    // 인기 목록 앞 2개가 같은 상품이다. 실제로도 태그가 붙은 상품이 인기 목록에 함께 있는 것이
+    // 정상이므로, 중복 제거가 없으면 같은 카드가 두 번 그려진다.
+    serveGoods((tag) => (tag === null ? 4 : 2));
+
+    renderMain();
+
+    // 섹션 노드를 미리 잡아두면 리렌더 뒤 낡은 참조가 된다 — 단언을 한 시점 안에서 끝낸다.
+    await waitFor(() => {
+      const names = within(sectionOf('에센스/세럼'))
+        .getAllByRole('link', { name: /상품 \d/ })
+        .map((link) => link.textContent ?? '');
+
+      expect(names).toHaveLength(4);
+      // 겹치는 앞 2개(goodsNo 1000·1001)는 채움에서 빠지고 뒤 2개만 들어온다.
+      expect(names.some((n) => n.includes('기본 상품 1'))).toBe(false);
+      expect(names.some((n) => n.includes('기본 상품 2'))).toBe(false);
+      expect(names.some((n) => n.includes('기본 상품 3'))).toBe(true);
+      expect(names.some((n) => n.includes('기본 상품 4'))).toBe(true);
+    });
+  });
+
+  it('태그 후보가 하나도 없으면 개인화를 버리고 reason도 사라진다', async () => {
+    serveMe({ skinType: 'COMBINATION', concerns: ['pore'] });
+    serveGoods((tag) => (tag === null ? 4 : 0));
+
+    renderMain();
+
+    // 채움만으로 채워진 줄에 이유 문장이 붙으면 그건 거짓말이 된다.
     await waitFor(() => expect(screen.queryByText(/모공은 세럼 단계에서/)).not.toBeInTheDocument());
-    // 폴백된 섹션도 상품은 정상적으로 4개가 그려진다 — 빈 슬롯이 생기지 않는다.
-    expect(within(sectionOf('에센스/세럼')).getAllByRole('link', { name: /기본 상품/ })).toHaveLength(
-      4,
+
+    const serum = sectionOf('에센스/세럼');
+    await waitFor(() =>
+      expect(within(serum).getAllByRole('link', { name: /기본 상품/ })).toHaveLength(4),
     );
   });
 

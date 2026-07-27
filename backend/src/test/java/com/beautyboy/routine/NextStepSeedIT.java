@@ -96,17 +96,26 @@ class NextStepSeedIT {
 
     @Test
     void 대표_데모_케이스가_시드에서_성립한다() {
-        // goods 2(AHA 딥모이스처 토너): V72 태그 확장 이후 soothe 세럼이 이미 4개 이상이라
-        // 태그 매칭만으로 폴백 없이 블록이 채워진다. 후보 중 RETINOID/BHA 함유 세럼은
-        // AHA와 CONFLICT라 게이트에서 빠지고, goods 5(RETINOID, soothe 태그 없음)는 애초에
-        // 태그 매칭 후보에도 오르지 않는다 — 둘 다 "게이트가 CONFLICT 후보를 제거했다"는
-        // 결론은 같으므로 goods 4 포함 여부와 goods 5 부재만 실데이터에 강하게 단언한다.
+        // goods 2(AHA 딥모이스처 토너) → BUFFER 블록(진정 세럼).
+        //
+        // 이 테스트가 보려는 것은 "궁합 게이트가 CONFLICT 후보를 걷어냈는가"다. 어떤 상품이
+        // 카드로 뽑히는지는 태그 파생 규칙이 바뀔 때마다 달라지므로 특정 id 포함을 단언하지
+        // 않는다 — V83(태그 희석화 해소) 전에는 goods 4를 단언했는데, goods 4의 soothe는
+        // 미량 병풀(is_key=0)에서 온 것이라 V83이 걷어냈다. 그 상품의 소구 성분은
+        // 나이아신아마이드(피지·모공)이므로 진정 세럼이 아닌 것이 맞다.
+        //
+        // 대신 "AHA와 CONFLICT인 후보가 빠졌다"를 직접 단언한다:
+        //   goods 159(RETINOID 함유)·190(BHA 함유) — 둘 다 soothe 태그를 갖고 있어 후보에는
+        //   오르지만 AHA와 CONFLICT라 게이트에서 제거돼야 한다.
+        //   goods 5(RETINOID)는 soothe 태그가 없어 애초에 후보에도 오르지 않는다.
         NextStepResponse res = nextStepService.find(2L, null);
         assertThat(res.blocks()).isNotEmpty();
         assertThat(res.blocks().get(0).edgeKind()).isEqualTo("BUFFER");
+        assertThat(res.blocks().get(0).items())
+                .as("게이트를 통과한 후보가 하나도 없으면 이 테스트는 아무것도 증명하지 못한다")
+                .isNotEmpty();
         assertThat(res.blocks().get(0).items()).extracting(GoodsListItem::goodsNo)
-                .contains(4L)
-                .doesNotContain(5L);
+                .doesNotContain(159L, 190L, 5L);
 
         // goods 21(무기자차 선크림): 순방향(애프터선 soothe) + PAIRED_REMOVAL(클렌징오일/밤) 2블록.
         // 어느 상품이 각 블록의 카드로 뽑히는지는 V65 벌크 인기 순위에 따라 바뀔 수 있으므로
