@@ -18,10 +18,10 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * V78 — member_profile.concerns 구 어휘 → tag.slug 마이그레이션 검증.
+ * V81 — member_profile.concerns 구 어휘 → tag.slug 마이그레이션 검증.
  *
- * <p>왜 실 MySQL인가: V78은 DDL이 아니라 데이터 UPDATE라 H2 + {@code create-drop}에서는
- * 아예 실행되지 않는다(테스트 프로필은 Flyway off). 시드(V64)와 마이그레이션(V78)이 같은
+ * <p>왜 실 MySQL인가: V81은 DDL이 아니라 데이터 UPDATE라 H2 + {@code create-drop}에서는
+ * 아예 실행되지 않는다(테스트 프로필은 Flyway off). 시드(V64)와 마이그레이션(V81)이 같은
  * 순서로 얹힌 clean 로드에서만 "구 어휘가 한 건도 안 남았다"를 말할 수 있다.
  *
  * <p>Docker가 필요하므로 {@code @Tag("integration")} — 실행: {@code ./gradlew integrationTest}
@@ -49,12 +49,12 @@ class ConcernSlugMigrationIT {
     JdbcTemplate jdbcTemplate;
 
     @Test
-    void V78이_clean_로드에_적용된다() {
+    void V81이_clean_로드에_적용된다() {
         List<String> 적용된_버전 = jdbcTemplate.queryForList(
                 "SELECT version FROM flyway_schema_history WHERE success = TRUE AND version IS NOT NULL",
                 String.class);
 
-        assertThat(적용된_버전).contains("64", "78");
+        assertThat(적용된_버전).contains("64", "81");
     }
 
     @Test

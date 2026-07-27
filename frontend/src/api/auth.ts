@@ -30,7 +30,7 @@ export type TextureSlug = 'fresh' | 'dewy' | 'matte';
 /**
  * 서버 concerns 컬럼에 실려 가는 값의 합집합.
  * 백엔드는 `List<String>`을 콤마로 이어 붙일 뿐 enum 검증이 없어 값 집합 교체에 DDL이
- * 필요 없다(설계 §4). 구 어휘(PORE/TROUBLE/WRINKLE/DARK_SPOT)는 V78이 옮긴다.
+ * 필요 없다(설계 §4). 구 어휘(PORE/TROUBLE/WRINKLE/DARK_SPOT)는 V81이 옮긴다.
  */
 export type Concern = ConcernSlug | TextureSlug;
 

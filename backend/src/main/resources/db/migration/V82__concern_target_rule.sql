@@ -1,4 +1,4 @@
--- V79__concern_target_rule.sql — 고민(프로필 태그) → 목표 단계 규칙. 설계 §5.1.
+-- V82__concern_target_rule.sql — 고민(프로필 태그) → 목표 단계 규칙. 설계 §5.1.
 -- 프로필만 있는 티어1에는 앵커 상품이 없어 routine_flow_rule의 from이 성립하지 않는다.
 -- reason은 DB가 유일한 출처라는 원칙(next-step 설계 §3)을 지키려고 문구까지 데이터로 둔다.
 -- tag slug·category code에 물리 FK를 걸지 않는다(패키지 경계 너머 물리 FK 금지 관례) —
@@ -17,7 +17,7 @@ CREATE TABLE concern_target_rule (
 -- 피부타입의 파생 태그(설계 §6.2)라 규칙이 없으면 파생 태그 하나가 통째로 무효가 된다.
 --
 -- 이 행들은 카테고리 의미(V12)와 태그 파생 규칙(V72)에서 유도한 뒤, ConcernTargetRuleSeedIT를
--- 실 MySQL(V1~V79 clean 로드)에 돌려 "(to_category_code 접두사 × to_tag_slug) 비HIDDEN 상품 4개 이상"을
+-- 실 MySQL(V1~V82 clean 로드)에 돌려 "(to_category_code 접두사 × to_tag_slug) 비HIDDEN 상품 4개 이상"을
 -- 실측으로 확인해 확정했다. 후보가 4개 미만이던 행은 태그를 끼워 맞추지 않고 삭제했다 —
 -- 후보가 안 나오는 규칙은 화면에서 폴백만 유발한다. 삭제 내역은 gentle 행 위 주석에 남겼다.
 -- 실측 최소는 trouble→C001002/trouble의 4개, 최대는 bright→C004001/uv의 23개다.

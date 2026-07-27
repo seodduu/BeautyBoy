@@ -1,4 +1,4 @@
--- V78__migrate_concerns_to_tag_slug.sql
+-- V81__migrate_concerns_to_tag_slug.sql
 -- member_profile.concerns의 구 어휘(PORE/TROUBLE/WRINKLE/DARK_SPOT)를 tag.slug 체계로 옮긴다.
 -- 값 집합만 바뀌고 컬럼 타입·제약은 그대로다(설계 §4).
 -- WRINKLE→anti-aging, DARK_SPOT→bright: 구 어휘가 증상명이고 신 어휘가 효과명이라 1:1이 아니지만,

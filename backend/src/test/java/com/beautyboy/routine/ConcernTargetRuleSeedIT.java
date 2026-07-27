@@ -24,7 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
- * V79 시드 검증 — 실 MySQL + Flyway 전체 로드(V1~V79). H2 create-drop은 스키마 불일치를 가리고,
+ * V82 시드 검증 — 실 MySQL + Flyway 전체 로드(V1~V82). H2 create-drop은 스키마 불일치를 가리고,
  * 무엇보다 시드 SQL 자체가 돌지 않아 "규칙이 실제 상품을 겨냥하는가"를 물을 수 없다.
  *
  * <p>이 클래스는 예외적으로 goods·goods_tag·tag를 직접 조회한다. routine 패키지는 자기 테이블만

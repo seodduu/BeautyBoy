@@ -19,11 +19,20 @@ git status               # 깨끗한지 확인
 | 웨이브 | 터미널 | 브랜치 | 범위 | 모델 |
 |---|---|---|---|---|
 | A | T1 | `feature/profile-tag-slugs` | 프로필 태그 교체 + 팔레트 토큰화 + 색·선택 반전 | sonnet |
-| A | T2 | `feature/flow-rules-api` | V79 `concern_target_rule` + 규칙 배포 API | sonnet |
+| A | T2 | `feature/flow-rules-api` | V82 `concern_target_rule` + 규칙 배포 API | sonnet |
 | B | T3 | `feature/main-personalization` | `features/affinity/` + 메인 배선 | sonnet |
 
 - **T1·T2는 완전 병렬**이다. 파일이 하나도 겹치지 않고, Flyway 번호를 아래에서 못 박아
-  (T1=**V78**, T2=**V79**) 마이그레이션 충돌도 없다. **번호를 즉흥으로 바꾸지 않는다 — 공유 계약이다.**
+  (T1=**V81**, T2=**V82**) 마이그레이션 충돌도 없다. **번호를 즉흥으로 바꾸지 않는다 — 공유 계약이다.**
+
+> **번호 재부여 이력(2026-07-27).** 이 계획은 처음 V77/V78, 이어 V78/V79로 적었다가 최종
+> **V81/V82**가 됐다. 계획을 쓰는 동안 다른 브랜치가 V77(썸네일)·V80(admin 시드)을 먼저
+> 가져갔기 때문이다. 마지막 이동은 웨이브 A 머지 **뒤**에 했다 — 이미 V80까지 적용된 로컬 DB에
+> 그보다 낮은 V78·V79를 넣으면 Flyway가 out-of-order로 기동을 거부한다(기본
+> `out-of-order=false`, 프로젝트에 예외 설정 없음). **통합 테스트는 이 사고를 영영 못 잡는다** —
+> Testcontainers가 매번 빈 DB에 clean 로드하므로 번호 역전 상황 자체가 만들어지지 않는다.
+> 교훈: **마이그레이션 번호는 브랜치를 딸 때가 아니라 머지 직전에 확정한다.** 계획서에 번호를
+> 고정하는 것은 병렬 터미널끼리의 충돌만 막아 줄 뿐, 그 사이 main이 움직이는 것은 못 막는다.
 - **T3는 웨이브 A 두 브랜치가 모두 `main`에 머지된 뒤** 시작한다. T2의 API 계약과 T1의 슬러그
   집합에 동시에 의존한다.
 - 모델은 셋 다 sonnet. 설계서가 우선순위·상한·가중치를 값으로 못 박았고, 틀려도 돈·재고 사고가
@@ -33,8 +42,8 @@ git status               # 깨끗한지 확인
 
 | 터미널 | 소유 파일 |
 |---|---|
-| T1 | `backend/…/migration/V78__migrate_concerns_to_tag_slug.sql`(신규), `frontend/src/index.css`, `frontend/src/components/ui/Tag.css`, `frontend/src/components/skin-profile/SkinProfileFields.tsx`·`.css`, `frontend/src/api/auth.ts`, `frontend/src/pages/Signup.tsx`, `frontend/src/pages/mypage/MyProfile.tsx`, 각 대응 테스트, `DESIGN.md` |
-| T2 | `backend/…/migration/V79__concern_target_rule.sql`(신규), `backend/…/routine/ConcernTargetRule.java`·`ConcernTargetRuleRepository.java`·`FlowRuleController.java`·`FlowRuleService.java`·`dto/*`(신규), `backend/…/config/SecurityConfig.java`, 대응 테스트 |
+| T1 | `backend/…/migration/V81__migrate_concerns_to_tag_slug.sql`(신규), `frontend/src/index.css`, `frontend/src/components/ui/Tag.css`, `frontend/src/components/skin-profile/SkinProfileFields.tsx`·`.css`, `frontend/src/api/auth.ts`, `frontend/src/pages/Signup.tsx`, `frontend/src/pages/mypage/MyProfile.tsx`, 각 대응 테스트, `DESIGN.md` |
+| T2 | `backend/…/migration/V82__concern_target_rule.sql`(신규), `backend/…/routine/ConcernTargetRule.java`·`ConcernTargetRuleRepository.java`·`FlowRuleController.java`·`FlowRuleService.java`·`dto/*`(신규), `backend/…/config/SecurityConfig.java`, 대응 테스트 |
 | T3 | `frontend/src/features/affinity/*`(신규), `frontend/src/api/routine.ts`, `frontend/src/types/routine.ts`, `frontend/src/pages/Main.tsx`, `frontend/src/components/routine/RoutineSection.tsx`·`.css`, `frontend/src/components/goods/GoodsCard.tsx`, `frontend/src/pages/Detail.tsx`, `frontend/src/pages/GoodsList.tsx`, `frontend/src/mocks/handlers.ts`, 각 대응 테스트 |
 
 목록 밖 파일은 수정하지 않는다. 안 맞으면 **고치지 말고 보고**한다.
@@ -228,12 +237,12 @@ export const TEXTURES: { value: TextureSlug; label: string }[] = [
   튀지 않는 것을 스크린샷으로 확인한다).
 - `word-break: keep-all` 적용(한글 규칙).
 
-### Task 1-5 — V78 마이그레이션
+### Task 1-5 — V81 마이그레이션
 
-`backend/src/main/resources/db/migration/V78__migrate_concerns_to_tag_slug.sql` —
+`backend/src/main/resources/db/migration/V81__migrate_concerns_to_tag_slug.sql` —
 설계 §4.2의 SQL을 **그대로** 넣는다(주석 포함).
 
-**테스트:** 실 MySQL clean 로드(V1~V78) 후 `member_profile.concerns`에 대문자 구 어휘가
+**테스트:** 실 MySQL clean 로드(V1~V81) 후 `member_profile.concerns`에 대문자 구 어휘가
 한 건도 남지 않고, V64 시드 4건이 새 슬러그로 조회된다.
 
 ### T1 완료 조건
@@ -267,7 +276,7 @@ docs/superpowers/specs/2026-07-27-main-personalization-design.md §5를 본다.
 
 규칙:
 - 테스트를 먼저 쓰고 실패를 확인한 뒤 구현한다.
-- Flyway 번호는 V79로 고정이다. 바꾸지 마라(다른 터미널이 V78을 쓴다).
+- Flyway 번호는 V82로 고정이다. 바꾸지 마라(다른 터미널이 V81을 쓴다).
 - routine 패키지는 자기 테이블만 직접 접근한다. tag·goods 테이블을 직접 조인하지 않는다
   (Task 2-2의 시드 검증 테스트는 예외 — 테스트 코드이고, 시드 정합을 보는 것이 목적이다).
 - H2 create-drop은 스키마 불일치를 가린다. 반드시 실 MySQL clean 로드 + ddl-auto=validate로
@@ -276,14 +285,14 @@ docs/superpowers/specs/2026-07-27-main-personalization-design.md §5를 본다.
 완료하면 커밋하고, 시드 검증 테스트가 출력한 후보 수와 조정 내역을 보고해라.
 ```
 
-### Task 2-1 — V79 테이블
+### Task 2-1 — V82 테이블
 
-`V79__concern_target_rule.sql` — 설계 §5.1의 DDL을 **그대로** 넣는다. 엔티티
+`V82__concern_target_rule.sql` — 설계 §5.1의 DDL을 **그대로** 넣는다. 엔티티
 `ConcernTargetRule`(`@Immutable` 불필요, 읽기 전용으로만 쓴다)과
 `ConcernTargetRuleRepository extends JpaRepository<ConcernTargetRule, Long>`을 만든다.
 리포지토리는 `findAll()`만 쓰므로 메서드를 추가하지 않는다.
 
-### Task 2-2 — 시드 20행 (같은 V79 파일 하단)
+### Task 2-2 — 시드 20행 (같은 V82 파일 하단)
 
 **슬러그 10개 × 2행.** `gentle`은 프로필에서 직접 못 고르지만 `SENSITIVE` 파생 태그이므로
 반드시 포함한다(설계 §6.2).
@@ -374,7 +383,7 @@ void loadRules() {
 
 ### T2 완료 조건
 
-- 백엔드 테스트 전량 통과, 실 MySQL clean 로드(V1~V79) + `ddl-auto=validate` 기동
+- 백엔드 테스트 전량 통과, 실 MySQL clean 로드(V1~V82) + `ddl-auto=validate` 기동
 - curl 스모크: `-H 'If-None-Match: <version>'`으로 **304**를 눈으로 확인
 - 삭제한 시드 행과 실측 후보 수를 보고
 
@@ -395,7 +404,7 @@ main에 머지돼 있는지 확인해라. 하나라도 없으면 중단하고 �
   - pwd가 ../뷰티보이-메인개인화 인지
   - git log --oneline -1 이 루트에서 본 기점 커밋과 같은지
   - docs/plans/2026-07-27-main-personalization.md 가 존재하는지
-  - backend/src/main/resources/db/migration/V79__concern_target_rule.sql 이 존재하는지
+  - backend/src/main/resources/db/migration/V82__concern_target_rule.sql 이 존재하는지
   - git status가 깨끗한지
 
 [2단계 — 실행]
