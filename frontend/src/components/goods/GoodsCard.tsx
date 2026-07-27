@@ -4,6 +4,7 @@ import { Badge, TodayDreamBadge } from '../ui/Badge';
 import { Price } from '../ui/Price';
 import { Rating } from '../ui/Rating';
 import { Tag } from '../ui/Tag';
+import { WEIGHT, recordEvent, toCat3 } from '../../features/affinity/events';
 import './GoodsCard.css';
 
 interface GoodsCardProps {
@@ -19,6 +20,15 @@ interface GoodsCardProps {
    * Wave 2 이후 서버가 재고/판매상태를 내려주면 이 prop을 GoodsListItem 파생값으로 채운다.
    */
   soldOut?: boolean;
+  /**
+   * 이 카드가 놓인 화면 문맥의 카테고리 코드. 찜을 관심 이벤트로 기록할 때만 쓴다.
+   *
+   * GoodsListItem에는 categoryCode가 없고 **이 타입은 동결 계약이라 필드를 추가하지 않는다.**
+   * 대신 카테고리를 아는 화면(루틴 섹션=step.categoryCode, 목록=필터 카테고리)만 문맥으로
+   * 넘긴다. 검색 결과·추천 레일처럼 문맥이 없는 곳의 찜은 기록하지 않는다 — 태그만으로 기록하면
+   * "각질 클렌징"과 "각질 토너"를 구분할 수 없어 단계 축이 무너진다(설계 §6.1).
+   */
+  categoryCode?: string;
 }
 
 /**
@@ -26,10 +36,26 @@ interface GoodsCardProps {
  * 목록·검색·랭킹·추천·루틴이 전부 재사용하는 단일 상품 카드.
  * 테두리·그림자·라운딩 없음 — 카드 구분은 여백뿐.
  */
-export function GoodsCard({ item, onWishToggle, soldOut = false }: GoodsCardProps) {
+export function GoodsCard({
+  item,
+  onWishToggle,
+  soldOut = false,
+  categoryCode,
+}: GoodsCardProps) {
   const handleWishClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
     event.stopPropagation();
+    // 찜은 관심 신호(2점)다. 카테고리 문맥이 있을 때만 기록한다 — 없으면 조용히 건너뛴다.
+    // 찜 해제도 그대로 기록한다: "이 상품을 두 번 건드렸다"는 관심의 신호라는 점은 변하지 않고,
+    // 해제까지 되돌리려면 이벤트 로그가 아니라 상태 저장소가 되어 링버퍼 설계가 무너진다.
+    if (categoryCode) {
+      recordEvent({
+        goodsNo: item.goodsNo,
+        cat3: toCat3(categoryCode),
+        tags: (item.tags ?? []).map((tag) => tag.slug),
+        w: WEIGHT.wish,
+      });
+    }
     onWishToggle(item.goodsNo);
   };
 

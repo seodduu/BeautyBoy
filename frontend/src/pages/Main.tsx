@@ -1,6 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { RoutineSection } from '../components/routine/RoutineSection';
 import { ROUTINE_STEPS } from '../features/routine/steps';
+import { fetchMe } from '../api/member';
+import { readEvents } from '../features/affinity/events';
+import { loadFlowRules } from '../features/affinity/flowRules';
+import { effectiveConcerns, preferredTextures, tierOf } from '../features/affinity/profile';
+import { matchByBehavior, matchByProfile, type Target } from '../features/affinity/match';
+import { useAuthStore } from '../stores/authStore';
+import type { SkinType } from '../api/routine';
 import './Main.css';
 
 /**
@@ -11,9 +19,43 @@ import './Main.css';
  *
  * 5섹션은 스크롤이 길어지므로 sticky 앵커 네비로 현재 위치를 계속 알려주고
  * 원하는 단계로 바로 건너뛸 수 있게 한다.
+ *
+ * 개인화(설계 §6)는 이 페이지가 계산하고 섹션은 결과만 받는다 — 섹션 다섯이 각자 프로필을 읽으면
+ * "최대 2섹션"이라는 전역 상한을 아무도 못 지킨다. 규칙·프로필을 못 받아도 화면은 그대로 뜬다:
+ * 개인화가 없는 상태가 곧 기존 화면이라 빈 슬롯이 생기지 않는다.
  */
 export function Main() {
   const [activeId, setActiveId] = useState<string>(ROUTINE_STEPS[0].id);
+  const accessToken = useAuthStore((state) => state.accessToken);
+
+  // 마운트 시점 스냅샷. localStorage는 이벤트를 발생시키지 않으므로 렌더 중에 다시 읽어봐야
+  // 얻을 것이 없고, 스크롤 도중 섹션이 바뀌는 것은 오히려 혼란스럽다(Routine.tsx와 같은 판단).
+  const [events] = useState(() => readEvents());
+
+  const meQuery = useQuery({ queryKey: ['me'], queryFn: fetchMe, enabled: !!accessToken });
+  const rulesQuery = useQuery({ queryKey: ['flow-rules'], queryFn: loadFlowRules });
+
+  const { targets, textures } = useMemo(() => {
+    const rules = rulesQuery.data;
+    const profileConcerns = meQuery.data?.concerns ?? [];
+    const concerns = effectiveConcerns(
+      profileConcerns,
+      (meQuery.data?.skinType ?? null) as SkinType | null,
+    );
+    const textures = preferredTextures(profileConcerns);
+
+    if (!rules) {
+      return { targets: [] as Target[], textures };
+    }
+    const tier = tierOf(events, concerns);
+    if (tier === 2) {
+      return { targets: matchByBehavior(events, rules.flowRules, concerns), textures };
+    }
+    if (tier === 1) {
+      return { targets: matchByProfile(concerns, rules.concernRules), textures };
+    }
+    return { targets: [] as Target[], textures };
+  }, [events, meQuery.data, rulesQuery.data]);
 
   useEffect(() => {
     // 화면 상단 1/3 지점을 지나는 섹션을 "현재 단계"로 본다.
@@ -74,9 +116,18 @@ export function Main() {
           </ol>
         </nav>
 
-        {ROUTINE_STEPS.map((step, index) => (
-          <RoutineSection key={step.id} step={step} index={index} />
-        ))}
+        {ROUTINE_STEPS.map((step, index) => {
+          const target = targets.find((t) => t.stepId === step.id);
+          return (
+            <RoutineSection
+              key={step.id}
+              step={step}
+              index={index}
+              override={target && { tag: target.tag, reason: target.reason }}
+              preferredTextures={textures}
+            />
+          );
+        })}
       </div>
     </div>
   );

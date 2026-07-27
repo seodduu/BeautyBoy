@@ -54,6 +54,22 @@
   color: var(--color-ink);
 }
 
+/* 개인화 이유 한 줄 — 제목 바로 아래, 단계 설명(copy) 위.
+   단계 설명은 누구에게나 같은 문장(graphite)이고 이 줄만 "당신에게" 달린 문장이라, 잉크색과
+   두께로 한 단계 앞세운다. 색만으로 구분하지 않도록 왼쪽 규칙선을 함께 둔다.
+   한국어 문장이 어절 중간에서 끊기지 않게 keep-all(NextStepSection의 reason과 같은 처리). */
+.bb-routine__reason {
+  margin-top: var(--space-md);
+  padding-left: var(--space-sm);
+  border-left: 2px solid var(--color-ink);
+  max-width: 34em;
+  font-size: var(--fs-body-strong);
+  font-weight: var(--fw-body-strong);
+  line-height: var(--lh-body-strong);
+  color: var(--color-ink);
+  word-break: keep-all;
+}
+
 .bb-routine__copy {
   margin-top: var(--space-md);
   max-width: 34em;

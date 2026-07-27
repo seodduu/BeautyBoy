@@ -49,7 +49,14 @@ export function GoodsList() {
       {isError ? (
         <p className="bb-goods-list__error">상품을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.</p>
       ) : (
-        <GoodsGrid items={data?.content ?? []} loading={isLoading} skeletonCount={10} />
+        /* 카테고리로 들어온 목록만 문맥을 안다 — `/goods?tag=` 진입은 categoryCode가 null이라
+           카드가 찜을 기록하지 않는다(설계 §6.1의 "문맥 없는 찜은 버린다"). */
+        <GoodsGrid
+          items={data?.content ?? []}
+          loading={isLoading}
+          skeletonCount={10}
+          categoryCode={category ?? undefined}
+        />
       )}
     </div>
   );

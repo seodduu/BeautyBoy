@@ -1,7 +1,8 @@
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { GoodsCard } from './GoodsCard';
+import { WEIGHT, readEvents } from '../../features/affinity/events';
 import type { GoodsListItem } from '../../types/goods';
 
 const baseItem: GoodsListItem = {
@@ -128,5 +129,47 @@ describe('GoodsCard', () => {
 
     expect(container.querySelector('.bb-goods-card__tags')).not.toBeInTheDocument();
     expect(screen.getByText('상품명')).toBeInTheDocument();
+  });
+
+  describe('찜 → 관심 이벤트 기록(설계 §6.1)', () => {
+    beforeEach(() => {
+      localStorage.clear();
+    });
+
+    it('categoryCode를 받으면 찜 클릭을 2점 이벤트로 기록한다', () => {
+      const item = {
+        ...baseItem,
+        tags: [{ name: '보습', kind: 'EFFECT', slug: 'moisture' } as const],
+      };
+      render(
+        <MemoryRouter>
+          <GoodsCard item={item} onWishToggle={vi.fn()} categoryCode="C001002001" />
+        </MemoryRouter>,
+      );
+
+      fireEvent.click(screen.getByRole('button', { name: '찜하기' }));
+
+      // leaf 10자가 중분류 7자로 절단돼 규칙의 category_code와 같은 축이 된다.
+      expect(readEvents()).toEqual([
+        { goodsNo: 1, cat3: 'C001002', tags: ['moisture'], w: WEIGHT.wish },
+      ]);
+    });
+
+    it('categoryCode가 없으면 기록하지 않는다 — 문맥 없는 찜(검색·추천 레일)', () => {
+      renderCard(baseItem);
+
+      fireEvent.click(screen.getByRole('button', { name: '찜하기' }));
+
+      expect(readEvents()).toEqual([]);
+    });
+
+    it('기록 여부와 무관하게 onWishToggle은 항상 호출된다', () => {
+      const onWishToggle = vi.fn();
+      renderCard(baseItem, onWishToggle);
+
+      fireEvent.click(screen.getByRole('button', { name: '찜하기' }));
+
+      expect(onWishToggle).toHaveBeenCalledWith(1);
+    });
   });
 });

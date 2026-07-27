@@ -13,6 +13,11 @@ interface GoodsGridProps {
   onWishToggle?: (goodsNo: number) => void;
   loading?: boolean;
   skeletonCount?: number;
+  /**
+   * 화면 문맥의 카테고리 코드 — 카드에 그대로 통과시킨다(GoodsCard.categoryCode 주석 참고).
+   * 그리드 자체는 이 값을 쓰지 않는다. 찜 버튼이 카드 안에만 있어 전달 통로가 여기뿐이다.
+   */
+  categoryCode?: string;
 }
 
 /**
@@ -24,6 +29,7 @@ export function GoodsGrid({
   onWishToggle = () => {},
   loading = false,
   skeletonCount = 10,
+  categoryCode,
 }: GoodsGridProps) {
   if (loading) {
     return (
@@ -42,7 +48,12 @@ export function GoodsGrid({
   return (
     <div className="bb-goods-grid">
       {items.map((item) => (
-        <GoodsCard key={item.goodsNo} item={item} onWishToggle={onWishToggle} />
+        <GoodsCard
+          key={item.goodsNo}
+          item={item}
+          onWishToggle={onWishToggle}
+          categoryCode={categoryCode}
+        />
       ))}
     </div>
   );
