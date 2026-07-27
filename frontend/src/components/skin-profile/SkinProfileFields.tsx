@@ -1,5 +1,5 @@
 import { useId } from 'react';
-import type { AgeBand, Concern, SkinType } from '../../api/auth';
+import type { AgeBand, Concern, ConcernSlug, SkinType, TextureSlug } from '../../api/auth';
 import './SkinProfileFields.css';
 
 /**
@@ -13,11 +13,32 @@ export const SKIN_TYPES: { value: SkinType; label: string; desc: string }[] = [
   { value: 'SENSITIVE', label: '민감성', desc: '자극·트러블에 예민한 편' },
 ];
 
-export const CONCERNS: { value: Concern; label: string }[] = [
-  { value: 'PORE', label: '모공' },
-  { value: 'TROUBLE', label: '트러블' },
-  { value: 'WRINKLE', label: '주름' },
-  { value: 'DARK_SPOT', label: '색소침착' },
+/**
+ * 고민 9종 — 값은 `tag.slug`, 표시명은 `tag.name`과 같게 맞춘다(설계 §4.1).
+ * 프로필에서 고른 "모공"과 상품 카드의 "모공" 태그가 같은 어휘·같은 색이 되어
+ * 프로필과 상품이 시각적으로 이어진다.
+ */
+export const CONCERNS: { value: ConcernSlug; label: string }[] = [
+  { value: 'exfoliate', label: '각질' },
+  { value: 'sebum', label: '피지' },
+  { value: 'pore', label: '모공' },
+  { value: 'trouble', label: '트러블' },
+  { value: 'soothe', label: '진정' },
+  { value: 'moisture', label: '보습' },
+  { value: 'barrier', label: '장벽' },
+  { value: 'bright', label: '브라이트닝' },
+  { value: 'anti-aging', label: '안티에이징' },
+];
+
+/**
+ * 선호 사용감 3종 — 화면에서는 별도 `fieldset`이지만 값은 고민과 **같은 `concerns` 배열**에
+ * 담긴다. 서버가 문자열 리스트로만 다루므로 컬럼을 더 만들 이유가 없고, 그룹 구분은
+ * 이 상수 두 벌이 맡는다(설계 §4.1).
+ */
+export const TEXTURES: { value: TextureSlug; label: string }[] = [
+  { value: 'fresh', label: '산뜻함' },
+  { value: 'dewy', label: '촉촉함' },
+  { value: 'matte', label: '매트' },
 ];
 
 export const AGE_BANDS: AgeBand[] = ['10s', '20s', '30s', '40s', '50s+'];
@@ -62,6 +83,31 @@ export function SkinProfileFields({
 }: SkinProfileFieldsProps) {
   const idPrefix = useId();
 
+  /**
+   * 고민·사용감 칩은 마크업이 완전히 같고 값 집합만 다르다 — 한 곳에서 그린다.
+   * `onToggleConcern` 하나로 두 그룹을 모두 처리하므로 상위는 배열 하나만 다룬다.
+   */
+  const renderChip = (value: Concern, label: string) => {
+    const active = concerns.includes(value);
+    return (
+      <button
+        key={value}
+        type="button"
+        className={`bb-chip bb-chip--${value}${active ? ' bb-chip--active bb-chip--on' : ''}`}
+        aria-pressed={active}
+        onClick={() => onToggleConcern(value)}
+      >
+        {/* ✓는 색에 얹는 보강 단서다. 상태는 aria-pressed가 이미 알리므로 이름에서 감춘다. */}
+        {active && (
+          <span className="bb-chip__check" aria-hidden="true">
+            ✓
+          </span>
+        )}
+        {label}
+      </button>
+    );
+  };
+
   return (
     <div className={`bb-skin-fields${className ? ` ${className}` : ''}`}>
       <fieldset className="bb-skin-fields__group">
@@ -73,7 +119,9 @@ export function SkinProfileFields({
             return (
               <label
                 key={type.value}
-                className={`bb-skin-type-card${skinType === type.value ? ' bb-skin-type-card--active' : ''}`}
+                className={`bb-skin-type-card bb-skin-type-card--${type.value.toLowerCase()}${
+                  skinType === type.value ? ' bb-skin-type-card--active' : ''
+                }`}
               >
                 <input
                   type="radio"
@@ -90,6 +138,11 @@ export function SkinProfileFields({
                 <span id={descId} className="bb-skin-type-card__desc">
                   {type.desc}
                 </span>
+                {skinType === type.value && (
+                  <span className="bb-skin-type-card__check" aria-hidden="true">
+                    ✓
+                  </span>
+                )}
               </label>
             );
           })}
@@ -99,20 +152,14 @@ export function SkinProfileFields({
       <fieldset className="bb-skin-fields__group">
         <legend className="bb-skin-fields__legend">고민 (중복 선택 가능)</legend>
         <div className="bb-skin-fields__chip-row">
-          {CONCERNS.map((concern) => {
-            const active = concerns.includes(concern.value);
-            return (
-              <button
-                key={concern.value}
-                type="button"
-                className={`bb-chip${active ? ' bb-chip--active' : ''}`}
-                aria-pressed={active}
-                onClick={() => onToggleConcern(concern.value)}
-              >
-                {concern.label}
-              </button>
-            );
-          })}
+          {CONCERNS.map((concern) => renderChip(concern.value, concern.label))}
+        </div>
+      </fieldset>
+
+      <fieldset className="bb-skin-fields__group">
+        <legend className="bb-skin-fields__legend">선호하는 사용감 (중복 선택 가능)</legend>
+        <div className="bb-skin-fields__chip-row">
+          {TEXTURES.map((texture) => renderChip(texture.value, texture.label))}
         </div>
       </fieldset>
 
