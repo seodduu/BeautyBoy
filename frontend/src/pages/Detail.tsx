@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { fetchGoodsDetail } from '../api/goods';
@@ -18,6 +18,7 @@ import { NextStepSection } from '../components/goods/NextStepSection';
 import { QuantityStepper } from '../components/goods/QuantityStepper';
 import { RecommendedSection } from '../components/goods/RecommendedSection';
 import { useToast } from '../components/ui/useToast';
+import { WEIGHT, recordEvent, toCat3 } from '../features/affinity/events';
 import './Detail.css';
 
 // 태그 표시 정렬 순서(태그확장) — 렌더마다 새로 만들 필요가 없는 고정 상수라 모듈 스코프로 뺀다.
@@ -50,6 +51,23 @@ export function Detail() {
     enabled: hasValidGoodsNo,
   });
 
+  // 조회 이벤트(1점) — PDP가 실제로 그려졌을 때 한 번만. 주 신호가 이것이다(설계 §6.1).
+  // StrictMode의 이중 마운트와 리렌더가 같은 상품을 여러 번 세지 않도록 goodsNo로 가드한다.
+  const viewedGoodsNoRef = useRef<number | null>(null);
+  useEffect(() => {
+    const goods = detailQuery.data;
+    if (!goods || viewedGoodsNoRef.current === goods.goodsNo) {
+      return;
+    }
+    viewedGoodsNoRef.current = goods.goodsNo;
+    recordEvent({
+      goodsNo: goods.goodsNo,
+      cat3: toCat3(goods.categoryCode),
+      tags: goods.tags.map((tag) => tag.slug),
+      w: WEIGHT.view,
+    });
+  }, [detailQuery.data]);
+
   const options = detailQuery.data?.options ?? [];
   // 옵션이 하나뿐이면 고를 것이 없다 — 선택을 강요하면 클릭만 늘어나므로 자동 선택한다.
   // 옵션이 0개(없음)이거나 2개 이상이면 사용자가 고르기 전까지는 미선택 상태를 유지한다.
@@ -67,6 +85,13 @@ export function Detail() {
     setAdding(true);
     try {
       await addCartItem(goodsNo, effectiveOptionNo, quantity);
+      // 담기 이벤트(3점) — 성공한 뒤에만 기록한다. 실패한 담기는 구매 의도의 증거가 아니다.
+      recordEvent({
+        goodsNo,
+        cat3: toCat3(detailQuery.data.categoryCode),
+        tags: detailQuery.data.tags.map((tag) => tag.slug),
+        w: WEIGHT.cart,
+      });
       // Header.tsx의 ['cart'] 쿼리(장바구니 배지)를 무효화해, 새로고침 없이 즉시 갱신되게 한다
       // (Routine.tsx:94와 같은 패턴).
       queryClient.invalidateQueries({ queryKey: ['cart'] });
