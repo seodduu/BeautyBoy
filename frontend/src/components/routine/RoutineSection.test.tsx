@@ -1,31 +1,72 @@
-import { describe, expect, it } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { beforeAll, describe, expect, it } from 'vitest';
+import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { http, HttpResponse } from 'msw';
-import { server } from '../../mocks/server';
+import { ToastProvider } from '../ui/ToastProvider';
 import { RoutineSection } from './RoutineSection';
 import { ROUTINE_STEPS } from '../../features/routine/steps';
+import type { StepComposition } from '../../features/affinity/composer';
+import type { GoodsListItem } from '../../types/goods';
+
+// PickCard가 useToast를 쓰고, ToastProvider는 prefers-reduced-motion 판정에 matchMedia를 쓴다.
+beforeAll(() => {
+  Object.defineProperty(window, 'matchMedia', {
+    writable: true,
+    value: (query: string) => ({
+      matches: false,
+      media: query,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+    }),
+  });
+});
 
 const cleansing = ROUTINE_STEPS[0];
 
-function renderSection(index = 0, step = cleansing) {
-  // 테스트마다 새 QueryClient — 캐시가 테스트 간에 새지 않게. retry는 끈다(실패를 즉시 드러낸다).
-  const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false } },
-  });
+function goods(goodsNo: number): GoodsListItem {
+  return {
+    goodsNo,
+    brandName: '브랜드',
+    name: `상품 ${goodsNo}`,
+    thumbnailUrl: '',
+    listPrice: 10000,
+    salePrice: 10000,
+    discountRate: 0,
+    badges: [],
+    rating: 0,
+    reviewCount: 0,
+    wished: false,
+    todayDreamAvailable: false,
+    tags: [],
+  };
+}
+
+function composition(partial: Partial<StepComposition> = {}): StepComposition {
+  return {
+    pick: goods(1),
+    alternatives: [goods(2), goods(3), goods(4)],
+    reason: null,
+    matched: { concerns: [], behaviors: [] },
+    ...partial,
+  };
+}
+
+function renderSection(props: Partial<React.ComponentProps<typeof RoutineSection>> = {}) {
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
 
   return render(
     <QueryClientProvider client={queryClient}>
-      <MemoryRouter>
-        <RoutineSection step={step} index={index} />
-      </MemoryRouter>
+      <ToastProvider>
+        <MemoryRouter>
+          <RoutineSection step={cleansing} index={0} {...props} />
+        </MemoryRouter>
+      </ToastProvider>
     </QueryClientProvider>,
   );
 }
 
 describe('RoutineSection', () => {
-  it('단계 순번·이름·카피를 보여준다', async () => {
+  it('단계 순번·이름·카피를 보여준다', () => {
     renderSection();
 
     expect(screen.getByText('STEP 01')).toBeInTheDocument();
@@ -46,13 +87,31 @@ describe('RoutineSection', () => {
     expect(image).toHaveAttribute('src', '/images/routine/01-cleansing.svg');
   });
 
-  it('해당 카테고리 상품을 4개까지 보여준다', async () => {
-    renderSection();
+  it('조합이 미확정이면 스켈레톤을 유지한다 — 점진 렌더', () => {
+    const { container } = renderSection({ composition: undefined });
 
-    // C002(클렌징)는 fixture에 8건 있지만 섹션은 4개만 노출한다.
-    await waitFor(() => {
-      expect(screen.getAllByRole('link', { name: /No\./ })).toHaveLength(4);
+    expect(container.querySelectorAll('.bb-goods-card-skeleton').length).toBeGreaterThan(0);
+    expect(screen.queryByRole('heading', { level: 3 })).not.toBeInTheDocument();
+  });
+
+  it('픽이 있으면 픽 카드와 대안 3개를 그린다', () => {
+    renderSection({ composition: composition() });
+
+    expect(screen.getByRole('heading', { level: 3 })).toHaveTextContent('상품 1');
+    for (const goodsNo of [2, 3, 4]) {
+      expect(screen.getByText(`상품 ${goodsNo}`)).toBeInTheDocument();
+    }
+  });
+
+  it('픽이 null이면(풀 비었음·게이트 전원 탈락) 기준선 그리드로 폴백한다', () => {
+    renderSection({
+      composition: composition({ pick: null, alternatives: [] }),
+      pool: [goods(7), goods(8)],
     });
+
+    expect(screen.queryByRole('heading', { level: 3 })).not.toBeInTheDocument();
+    expect(screen.getByText('상품 7')).toBeInTheDocument();
+    expect(screen.getByText('상품 8')).toBeInTheDocument();
   });
 
   it('더보기가 해당 카테고리 목록으로 연결된다', () => {
@@ -62,22 +121,20 @@ describe('RoutineSection', () => {
     expect(more).toHaveAttribute('href', '/goods?category=C002');
   });
 
-  it('상품 조회가 실패하면 에러 문구를 보여주고 빈 상태 문구는 보여주지 않는다', async () => {
-    server.use(http.get('/api/v1/goods', () => new HttpResponse(null, { status: 500 })));
-
-    renderSection();
+  it('풀 조회가 실패하면 에러 문구를 보여주고 빈 상태 문구는 보여주지 않는다', () => {
+    renderSection({ isError: true });
 
     expect(
-      await screen.findByText('상품을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.'),
+      screen.getByText('상품을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.'),
     ).toBeInTheDocument();
     expect(screen.queryByText('표시할 상품이 없어요')).not.toBeInTheDocument();
   });
 
   it('짝수 index는 타이포가 왼쪽, 홀수 index는 오른쪽에 온다', () => {
-    const { container: even } = renderSection(0);
+    const { container: even } = renderSection({ index: 0 });
     expect(even.querySelector('section')).toHaveClass('bb-routine--text-left');
 
-    const { container: odd } = renderSection(1, ROUTINE_STEPS[1]);
+    const { container: odd } = renderSection({ index: 1, step: ROUTINE_STEPS[1] });
     expect(odd.querySelector('section')).toHaveClass('bb-routine--text-right');
   });
 });

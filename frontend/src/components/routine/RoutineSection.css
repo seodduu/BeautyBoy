@@ -54,22 +54,6 @@
   color: var(--color-ink);
 }
 
-/* 개인화 이유 한 줄 — 제목 바로 아래, 단계 설명(copy) 위.
-   단계 설명은 누구에게나 같은 문장(graphite)이고 이 줄만 "당신에게" 달린 문장이라, 잉크색과
-   두께로 한 단계 앞세운다. 색만으로 구분하지 않도록 왼쪽 규칙선을 함께 둔다.
-   한국어 문장이 어절 중간에서 끊기지 않게 keep-all(NextStepSection의 reason과 같은 처리). */
-.bb-routine__reason {
-  margin-top: var(--space-md);
-  padding-left: var(--space-sm);
-  border-left: 2px solid var(--color-ink);
-  max-width: 34em;
-  font-size: var(--fs-body-strong);
-  font-weight: var(--fw-body-strong);
-  line-height: var(--lh-body-strong);
-  color: var(--color-ink);
-  word-break: keep-all;
-}
-
 .bb-routine__copy {
   margin-top: var(--space-md);
   max-width: 34em;
@@ -91,6 +75,18 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+/* 대안 3개 줄 — 기본 상품 그리드(4·5열)를 그대로 쓰면 오른쪽에 빈 칸이 남아 "덜 불러온 줄"로
+   읽힌다. 픽이 카드로 빠져나간 줄이므로 데스크톱에서도 3열로 고정한다(DESIGN.md). */
+.bb-routine__alternatives .bb-goods-grid {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+@media (min-width: 768px) {
+  .bb-routine__alternatives .bb-goods-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 
 /* 섹션 단독 실패 문구. 이 섹션 안에서만 보여지고 다른 단계 진행을 막지 않는다.
