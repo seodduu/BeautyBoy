@@ -196,6 +196,12 @@ class StockConcurrencyMysqlIntegrationTest {
 
         List<Object> 결과 = 동시에_승인한다(주문_갑, 주문_을);
 
+        // 배리어가 실제로 관여했는지부터 본다. 차감 경로가 바뀌어 doAnswer 스텁이 죽은 코드가 되면
+        // 두 스레드가 순차 실행돼도 아래 단언들은 전부 통과한다 — 그 거짓 녹색을 여기서 잡는다.
+        assertThat(차감_시도_횟수.get())
+                .as("배리어가 실제로 두 스레드를 차감 직전에 만나게 했는가")
+                .isEqualTo(2);
+
         assertThat(성공만(결과))
                 .as("마지막 1개는 정확히 한쪽만 가져간다. 실제: %s", 결과)
                 .hasSize(1);
@@ -222,6 +228,11 @@ class StockConcurrencyMysqlIntegrationTest {
         Order 주문_을 = 주문_저장(회원_을, 옵션, 2);
 
         List<Object> 결과 = 동시에_승인한다(주문_갑, 주문_을);
+
+        // 스텁이 죽은 코드가 되면(차감 경로 변경) 배리어 없이 순차 실행돼도 나머지 단언은 통과한다.
+        assertThat(차감_시도_횟수.get())
+                .as("배리어가 실제로 두 스레드를 차감 직전에 만나게 했는가")
+                .isEqualTo(2);
 
         assertThat(성공만(결과))
                 .as("재고 3에서 수량 2를 둘 다 가져갈 수는 없다. 실제: %s", 결과)
