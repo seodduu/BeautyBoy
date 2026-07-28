@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { http, HttpResponse } from 'msw';
@@ -214,5 +214,44 @@ describe('AdminQna — 관리자 문의 관리', () => {
     expect(screen.queryByText(PUBLIC_QUESTION.question)).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: '이전' })).not.toBeDisabled();
     expect(screen.getByRole('button', { name: '다음' })).toBeDisabled();
+  });
+
+  it('문의 목록 아래에 번호 페이저를 렌더한다 — 이전/다음만으로는 오래된 문의에 닿지 못한다', async () => {
+    loginAs('ADMIN');
+    server.use(
+      http.get('/api/v1/admin/qna', () =>
+        HttpResponse.json(
+          envelope({ content: [PUBLIC_QUESTION], page: 0, size: 20, totalElements: 41, totalPages: 3, hasNext: true }),
+        ),
+      ),
+    );
+
+    renderAt('/admin/qna');
+
+    const pager = await screen.findByRole('navigation', { name: '페이지 이동' });
+    expect(within(pager).getByRole('button', { name: '1' })).toHaveAttribute('aria-current', 'page');
+    expect(within(pager).getByRole('button', { name: '3' })).toBeInTheDocument();
+  });
+
+  it('번호를 누르면 0-based page로 변환해 그 페이지를 조회한다', async () => {
+    loginAs('ADMIN');
+    let capturedSearchParams: URLSearchParams | undefined;
+    server.use(
+      http.get('/api/v1/admin/qna', ({ request }) => {
+        capturedSearchParams = new URL(request.url).searchParams;
+        return HttpResponse.json(
+          envelope({ content: [PUBLIC_QUESTION], page: 0, size: 20, totalElements: 41, totalPages: 3, hasNext: true }),
+        );
+      }),
+    );
+
+    renderAt('/admin/qna');
+
+    const pager = await screen.findByRole('navigation', { name: '페이지 이동' });
+    fireEvent.click(within(pager).getByRole('button', { name: '2' }));
+
+    await waitFor(() => {
+      expect(capturedSearchParams?.get('page')).toBe('1');
+    });
   });
 });

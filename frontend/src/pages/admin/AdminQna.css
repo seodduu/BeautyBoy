@@ -117,19 +117,3 @@
   gap: var(--space-sm);
 }
 
-.bb-admin-qna__pagination {
-  display: flex;
-  align-items: center;
-  gap: var(--space-md);
-}
-
-.bb-admin-qna__pagination-status {
-  font-size: var(--fs-meta);
-  color: var(--color-stone);
-}
-
-.bb-admin-qna__pagination .bb-admin-qna__action:disabled {
-  color: var(--color-hairline);
-  cursor: default;
-  text-decoration: none;
-}

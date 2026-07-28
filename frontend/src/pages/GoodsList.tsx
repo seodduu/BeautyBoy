@@ -4,7 +4,7 @@ import { useSearchParams } from 'react-router-dom';
 import { fetchGoodsList, type GoodsSort } from '../api/goods';
 import { GoodsGrid } from '../components/goods/GoodsGrid';
 import { ListToolbar, PRICE_BAND_RANGE, type PriceBand } from '../components/goods/ListToolbar';
-import { Pager } from '../components/goods/Pager';
+import { Pager } from '../components/ui/Pager';
 import { ROUTINE_STEPS } from '../features/routine/steps';
 import './GoodsList.css';
 

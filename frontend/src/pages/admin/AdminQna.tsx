@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { answerAdminQna, fetchAdminQna, type AdminQnaResponse } from '../../api/admin';
 import { Button } from '../../components/ui/Button';
+import { Pager } from '../../components/ui/Pager';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { useToast } from '../../components/ui/useToast';
 import { qnaStatusLabel } from '../../features/qna/status';
@@ -73,9 +74,10 @@ function AnswerCell({ item }: { item: AdminQnaResponse }) {
  *     보이되, `isSecret`으로 "비밀글" 표시를 얹어 admin이 인지할 수 있게 한다.
  *
  * **페이지네이션(리뷰 반영)**: 전사 목록으로 바뀌며 goodsNo 필터가 없어져 0페이지 이상으로
- * 넘어가는 일이 흔해졌다(백엔드 기본 페이지 크기는 QnaService.DEFAULT_PAGE_SIZE=10). "이전/다음"
- * 버튼만 있는 최소 형태 — 서버가 내려주는 `PageResponse.hasNext`/`totalPages`로 경계에서
- * 비활성 처리한다.
+ * 넘어가는 일이 흔해졌다(백엔드 기본 페이지 크기는 QnaService.DEFAULT_PAGE_SIZE=10). 공용
+ * 번호 페이저(`components/ui/Pager`)를 재사용한다 — 이전/다음만으로는 오래된 문의로 건너뛸
+ * 수 없었다. `page` 상태는 0-based(쿼리키·API가 그 값을 쓴다), Pager는 1-based라 변환은
+ * 여기서 한다.
  */
 export function AdminQna() {
   const [page, setPage] = useState(0);
@@ -83,7 +85,6 @@ export function AdminQna() {
 
   const items = query.data?.content ?? [];
   const totalPages = query.data?.totalPages ?? 0;
-  const hasNext = query.data?.hasNext ?? false;
 
   return (
     <div className="bb-admin-qna">
@@ -125,27 +126,7 @@ export function AdminQna() {
             </table>
           </div>
 
-          <div className="bb-admin-qna__pagination">
-            <button
-              type="button"
-              className="bb-admin-qna__action"
-              onClick={() => setPage((prev) => prev - 1)}
-              disabled={page === 0}
-            >
-              이전
-            </button>
-            <span className="bb-admin-qna__pagination-status">
-              {page + 1} / {Math.max(totalPages, 1)}
-            </span>
-            <button
-              type="button"
-              className="bb-admin-qna__action"
-              onClick={() => setPage((prev) => prev + 1)}
-              disabled={!hasNext}
-            >
-              다음
-            </button>
-          </div>
+          <Pager page={page + 1} totalPages={totalPages} onPageChange={(next) => setPage(next - 1)} />
         </>
       )}
     </div>
