@@ -70,7 +70,7 @@ export function Sets() {
       <div className="bb-sets__intro">
         <p className="bb-sets__eyebrow">PERSONAL SETS</p>
         <h1 className="bb-sets__title">당신을 위한 세트 3가지</h1>
-        {allFallback && (
+        {meSettled && allFallback && (
           <p className="bb-sets__fallback-notice">
             프로필을 등록하면 맞춤 세트로 바뀌어요.{' '}
             <Link to="/mypage/profile" className="bb-sets__fallback-link">

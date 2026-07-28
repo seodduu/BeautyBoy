@@ -2,7 +2,7 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vite
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { http, HttpResponse } from 'msw';
+import { delay, http, HttpResponse } from 'msw';
 import { server } from '../mocks/server';
 import { ToastProvider } from '../components/ui/ToastProvider';
 import { Sets } from './Sets';
@@ -377,6 +377,38 @@ describe('/sets 세트 비교 페이지', () => {
       expect.stringContaining('보습'),
     ]);
     expect(screen.getByText(/프로필을 등록하면 맞춤 세트로 바뀌어요/)).toBeInTheDocument();
+  });
+
+  it('프로필 확정 전에는 폴백 안내가 뜨지 않는다 (프로필 회원 깜빡임 방지)', async () => {
+    useAuthStore.setState({ accessToken: 'test-token' });
+    server.use(
+      http.get('/api/v1/members/me', async () => {
+        await delay(80);
+        return HttpResponse.json({
+          code: 'OK',
+          message: 'success',
+          data: {
+            id: 1,
+            email: 'test@beautyboy.dev',
+            nickname: '민수',
+            grade: 'BRONZE',
+            ageBand: '20s',
+            skinType: null,
+            concerns: ['pore', 'trouble', 'moisture'],
+          },
+        });
+      }),
+    );
+
+    renderSets();
+
+    // me가 아직 지연 중인 시점 — concepts는 임시 폴백값이지만 안내는 뜨면 안 된다.
+    expect(screen.queryByText(/프로필을 등록하면 맞춤 세트로 바뀌어요/)).not.toBeInTheDocument();
+
+    await screen.findAllByRole('heading', { level: 2 });
+
+    // me 도착 후에도 프로필 회원이므로 안내는 계속 없어야 한다.
+    expect(screen.queryByText(/프로필을 등록하면 맞춤 세트로 바뀌어요/)).not.toBeInTheDocument();
   });
 
   it('한 단계의 풀 조회가 실패해도 밴드가 그려진다 (영구 스켈레톤 방지)', async () => {
