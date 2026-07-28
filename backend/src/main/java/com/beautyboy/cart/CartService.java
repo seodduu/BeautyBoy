@@ -40,9 +40,21 @@ public class CartService {
         // 스냅샷 원칙과도 맞는다. (옵션이 하나도 없는 상품이면 그대로 null이다.)
         Long optionId = snapshot.optionId();
 
-        cartItemRepository
-                .findByMemberIdAndGoodsIdAndOptionId(memberId, request.goodsNo(), optionId)
-                .ifPresentOrElse(
+        java.util.Optional<CartItem> found =
+                cartItemRepository.findByMemberIdAndGoodsIdAndOptionId(memberId, request.goodsNo(), optionId);
+
+        // 기존 항목 누적을 포함한 "결과 수량"으로 재고를 검증한다.
+        // 줄 단위 검증이면 2개 담고 또 2개 담아 재고 3을 넘는 경우를 못 잡는다.
+        // 옵션 없는 상품은 stock이 Integer.MAX_VALUE라 자연 통과한다.
+        // 검증만 한다 — 차감은 결제 승인 시점에 StockCommandService가 한다.
+        int resultingQuantity = found
+                .map(existing -> existing.getQuantity() + request.quantity())
+                .orElse(request.quantity());
+        if (resultingQuantity > snapshot.stock()) {
+            throw new BusinessException(ErrorCode.ORDER_OUT_OF_STOCK);
+        }
+
+        found.ifPresentOrElse(
                         // 이미 있으면 더한다. 유니크 제약에 부딪히기 전에 애플리케이션이 먼저 처리한다.
                         // 해석된 optionId로 찾으므로, 같은 상품을 루틴(optionNo=null)과 상세(optionNo 지정)에서
                         // 각각 담아도 같은 옵션이면 한 행으로 합쳐진다 — 예전에는 (goodsId, null)과
@@ -83,7 +95,9 @@ public class CartService {
                             snapshot.optionName(),
                             snapshot.unitPrice(),
                             item.getQuantity(),
-                            snapshot.unitPrice() * item.getQuantity())));
+                            snapshot.unitPrice() * item.getQuantity(),
+                            snapshot.thumbnailUrl(),
+                            snapshot.stock())));
         }
         return responses;
     }
@@ -93,7 +107,15 @@ public class CartService {
         if (quantity <= 0) {
             throw new BusinessException(ErrorCode.CART_QUANTITY_INVALID);
         }
-        내_항목(memberId, cartItemId).changeQuantity(quantity);
+        CartItem item = 내_항목(memberId, cartItemId);
+        // 스냅샷을 새로 조회해 재고 상한을 검증한다. 상품이 사라졌으면 담기와 같은 관례로 GOODS_NOT_FOUND.
+        GoodsQueryService.OrderGoodsSnapshot snapshot =
+                goodsQueryService.findOrderSnapshot(item.getGoodsId(), item.getOptionId())
+                        .orElseThrow(() -> new BusinessException(ErrorCode.GOODS_NOT_FOUND));
+        if (quantity > snapshot.stock()) {
+            throw new BusinessException(ErrorCode.ORDER_OUT_OF_STOCK);
+        }
+        item.changeQuantity(quantity);
     }
 
     @Transactional

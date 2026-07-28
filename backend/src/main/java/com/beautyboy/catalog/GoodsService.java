@@ -202,7 +202,7 @@ public class GoodsService implements GoodsQueryService {
                     // 이 경우에만 상품 단위 재고를 무제한으로 본다.
                     .or(() -> Optional.of(new OrderGoodsSnapshot(
                             goods.getId(), null, goods.getName(), null,
-                            goods.getSalePrice(), Integer.MAX_VALUE)));
+                            goods.getSalePrice(), Integer.MAX_VALUE, goods.getThumbnailUrl())));
         }
 
         // 옵션은 반드시 그 상품의 것이어야 한다. 남의 옵션을 붙이는 조작을 여기서 끊는다.
@@ -219,7 +219,8 @@ public class GoodsService implements GoodsQueryService {
                 goods.getName(),
                 option.getName(),
                 goods.getSalePrice() + option.getAddPrice(),
-                option.getStock());
+                option.getStock(),
+                goods.getThumbnailUrl());
     }
 
     /**

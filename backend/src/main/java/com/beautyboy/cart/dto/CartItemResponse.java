@@ -12,5 +12,7 @@ public record CartItemResponse(
         String optionName,
         int unitPrice,
         int quantity,
-        int lineAmount) {
+        int lineAmount,
+        String thumbnailUrl,   // 스냅샷 경유. 없으면 null — 프론트가 플레이스홀더 처리
+        int stock) {           // 남은 재고. 옵션 없는 상품은 Integer.MAX_VALUE
 }

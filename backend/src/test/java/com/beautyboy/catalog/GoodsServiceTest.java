@@ -112,6 +112,18 @@ class GoodsServiceTest {
         assertThat(items).allMatch(i -> !i.wished());
     }
 
+    @Test
+    void 주문_스냅샷에_썸네일_URL이_실려_온다() {
+        // 장바구니 표시용 — 스냅샷을 이미 부르고 있는 CartService가 별도 조회 없이 그대로 옮긴다.
+        Brand brand = brandRepository.save(new Brand("브랜드1", null));
+        Goods goods = 상품_저장(brand, "토너", 10000, 9000);
+
+        GoodsQueryService.OrderGoodsSnapshot snapshot =
+                goodsService.findOrderSnapshot(goods.getId(), null).orElseThrow();
+
+        assertThat(snapshot.thumbnailUrl()).isEqualTo("https://img.example/토너.jpg");
+    }
+
     private Goods 상품_저장(Brand brand, String name, int listPrice, int salePrice) {
         Goods goods = new Goods(brand, "C001001001", name, "요약", "https://img.example/" + name + ".jpg",
                 listPrice, salePrice);
