@@ -111,24 +111,6 @@
   gap: 32px;
 }
 
-/* 앱 헤더는 검색창을 바의 기하학적 정중앙에 세운다.
-   양쪽을 같은 1fr로 두면 좌우 여백이 항상 대칭이라 검색창 중심이 바 중심과 일치한다
-   (flex의 `flex:1 1 auto`는 남는 공간만 채워 로고 폭만큼 오른쪽으로 밀린다).
-   1fr 트랙은 min-content(=우측 내비 폭) 아래로 줄지 않으므로, 좁아질 때 줄어드는 것은
-   가운데 검색창이다 — 조작 지점인 내비가 잘리는 것보다 낫다. */
-.bb-header__bar--app {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-}
-
-.bb-header__bar--app .bb-header__logo {
-  justify-self: start;
-}
-
-.bb-header__bar--app .bb-header__nav {
-  justify-self: end;
-}
-
 /* 랜딩 바는 히어로 칼럼과 같은 폭이어야 로고와 워드마크 왼쪽 끝이 한 선에 선다.
    (기본 .bb-header__bar 뒤에 와야 max-width가 덮이지 않는다) */
 .bb-header__bar--landing {
@@ -182,10 +164,7 @@
 }
 
 .bb-header__search {
-  /* 그리드 가운데 칸에서 남는 폭을 다 쓰되 480px을 넘지 않는다. min-width: 0이 있어야
-     좌우 내비가 넓어질 때 이 칸이 먼저 줄어든다(그리드 기본 min-width: auto는 안 줄어든다). */
-  width: 100%;
-  min-width: 0;
+  flex: 1 1 auto;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -206,10 +185,6 @@
 .bb-header__search-text {
   font-size: 14px;
   color: var(--color-stone);
-  /* 가운데 칸이 좁아지면 말줄임으로 접는다 — 넘쳐서 아이콘·테두리를 밀지 않게. */
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .bb-header__nav {
