@@ -1,0 +1,21 @@
+.bb-route-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-section) var(--space-lg);
+  text-align: center;
+  max-width: 34em;
+  margin: 0 auto;
+}
+
+.bb-route-error__title {
+  font: var(--fw-heading-sm) var(--fs-heading-sm) / var(--lh-heading-sm) var(--font-body);
+  color: var(--color-ink);
+  margin: 0;
+}
+
+.bb-route-error__actions {
+  display: flex;
+  gap: var(--space-md);
+}
