@@ -95,7 +95,7 @@ class AdminQnaControllerTest {
     @Test
     @WithMockUser(roles = "ADMIN")
     void 관리자는_문의_목록을_조회할_수_있다() throws Exception {
-        given(qnaService.adminList(0)).willReturn(PageResponse.of(List.of(), 0, 20, 0));
+        given(qnaService.adminList(0, 10)).willReturn(PageResponse.of(List.of(), 0, 20, 0));
 
         mockMvc.perform(get("/api/v1/admin/qna"))
                 .andExpect(status().isOk());
@@ -109,7 +109,7 @@ class AdminQnaControllerTest {
         // 이 키가 흔들리면 목은 통과해도 실 서버 응답에서만 깨지는 사각지대가 생긴다.
         AdminQnaResponse 비밀글 = new AdminQnaResponse(
                 1L, 10L, "재고 있나요?", true, "WAITING", LocalDateTime.now());
-        given(qnaService.adminList(0)).willReturn(PageResponse.of(List.of(비밀글), 0, 20, 1));
+        given(qnaService.adminList(0, 10)).willReturn(PageResponse.of(List.of(비밀글), 0, 20, 1));
 
         mockMvc.perform(get("/api/v1/admin/qna"))
                 .andExpect(status().isOk())
