@@ -5,6 +5,7 @@ import com.beautyboy.catalog.dto.GoodsDetailResponse;
 import com.beautyboy.catalog.dto.GoodsListItem;
 import com.beautyboy.catalog.dto.GoodsSearchCondition;
 import com.beautyboy.common.ApiResponse;
+import com.beautyboy.common.PageRequests;
 import com.beautyboy.common.PageResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -17,8 +18,6 @@ import java.util.List;
 
 @RestController
 public class GoodsController {
-
-    private static final int MAX_PAGE_SIZE = 100;
 
     private final GoodsService goodsService;
     private final ViewCountRecorder viewCountRecorder;
@@ -41,10 +40,11 @@ public class GoodsController {
             @AuthenticationPrincipal Long memberId) {
 
         GoodsSort goodsSort = GoodsSort.fromParam(sort);
-        int clampedSize = Math.min(size, MAX_PAGE_SIZE);
+        int clampedPage = PageRequests.clampPage(page);
+        int clampedSize = PageRequests.clampSize(size);
 
         GoodsSearchCondition condition = new GoodsSearchCondition(
-                categoryCode, brandId, minPrice, maxPrice, goodsSort, page, clampedSize, tag);
+                categoryCode, brandId, minPrice, maxPrice, goodsSort, clampedPage, clampedSize, tag);
 
         return ResponseEntity.ok(ApiResponse.ok(goodsService.list(condition, memberId)));
     }

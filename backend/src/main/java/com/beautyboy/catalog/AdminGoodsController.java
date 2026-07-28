@@ -4,6 +4,7 @@ import com.beautyboy.catalog.dto.AdminGoodsDetailResponse;
 import com.beautyboy.catalog.dto.AdminGoodsListItem;
 import com.beautyboy.catalog.dto.AdminGoodsSaveRequest;
 import com.beautyboy.common.ApiResponse;
+import com.beautyboy.common.PageRequests;
 import com.beautyboy.common.PageResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,8 +22,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class AdminGoodsController {
 
-    private static final int MAX_PAGE_SIZE = 100;
-
     private final AdminGoodsService adminGoodsService;
 
     public AdminGoodsController(AdminGoodsService adminGoodsService) {
@@ -35,8 +34,9 @@ public class AdminGoodsController {
             @RequestParam(required = false) String q,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        int clampedSize = Math.min(size, MAX_PAGE_SIZE);
-        return ResponseEntity.ok(ApiResponse.ok(adminGoodsService.list(page, clampedSize, q)));
+        int clampedPage = PageRequests.clampPage(page);
+        int clampedSize = PageRequests.clampSize(size);
+        return ResponseEntity.ok(ApiResponse.ok(adminGoodsService.list(clampedPage, clampedSize, q)));
     }
 
     /** HIDDEN 상품도 조회된다(GoodsService.detail과 다른 지점) — admin 인라인 수정 진입용. */
