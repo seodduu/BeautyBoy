@@ -554,7 +554,7 @@ If `abcNormal` is unavailable, the closest open-source substitutes are **ABC Dia
   해당 자리는 영문 레이블(`SKINCARE`, `RANKING`)을 쓰거나 자간만 벌린 한글로 대체한다.
 - **영문/한글 혼용 규칙 — 영문은 두 자리에만 허용한다.** ① 섹션 아이브로우·타이틀 장식
   (`TODAY'S PICK`, `STEP 01`, `DAILY ROUTINE` — `eyebrow`/`micro-caps` 타이포가 걸리는 자리),
-  ② 배지·워드마크(`SALE`, `COUPON`, `GIFT`, `BEAUTY BOY.`). 그 밖의 UI 문구(버튼, 본문, 안내,
+  ② 배지·워드마크(`SALE`, `COUPON`, `GIFT`, `BEAUTY BOY`). 그 밖의 UI 문구(버튼, 본문, 안내,
   placeholder, 폼 라벨)는 전부 한글이다. 이 두 자리 밖에서 영문 라벨이 필요해 보이면
   이 규칙에 먼저 추가하고 쓴다.
 
@@ -719,7 +719,7 @@ The system avoids drop shadows entirely. Depth is created by photographic layeri
 - **사업자 표기 값은 실존 정보처럼 쓰지 않는다.** 포트폴리오 데모임을 표기 블록 첫 줄에 명시하고
   ("본 사이트는 취업 포트폴리오용 데모입니다. 아래 표기는 형식 예시입니다."), 등록번호류는
   자릿수만 맞춘 자리표시 값(`000-00-00000` 등)을 쓴다.
-- 하단 스트립: 좌측 `BEAUTY BOY.` 워드마크(헤더와 동일 표기) + 우측 `© 2026 BeautyBoy — Portfolio Demo`.
+- 하단 스트립: 좌측 `BEAUTY BOY` 워드마크(헤더와 동일 표기, 마침표 없음) + 우측 `© 2026 BeautyBoy — Portfolio Demo`.
 
 ### 커머스 컴포넌트 (뷰티보이)
 

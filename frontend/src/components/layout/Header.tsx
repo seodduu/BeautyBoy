@@ -80,8 +80,24 @@ export function Header() {
     return (
       <header className="bb-header bb-header--overlay">
         <div className="bb-header__bar bb-header__bar--landing">
+          {/* 랜딩은 히어로 정중앙의 거대 워드마크가 이미 브랜드명을 말한다 —
+              좌상단은 bb 모노그램 심벌만 남겨 같은 말을 두 번 하지 않는다.
+              브랜드명은 aria-label로 유지된다. */}
           <Link to="/" className="bb-header__logo" aria-label="뷰티보이 홈으로">
-            BEAUTY BOY<span className="bb-header__logo-dot">.</span>
+            <svg
+              className="bb-header__mark"
+              viewBox="0 0 100 100"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="9"
+              strokeLinecap="round"
+              aria-hidden="true"
+            >
+              <path d="M28 16 V78" />
+              <circle cx="42" cy="64" r="14" />
+              <path d="M62 16 V78" />
+              <circle cx="76" cy="64" r="14" />
+            </svg>
           </Link>
 
           <nav className="bb-landing-nav" aria-label="주요 메뉴">
@@ -100,7 +116,7 @@ export function Header() {
     <header className="bb-header bb-header--dark">
       <div className="bb-header__bar">
         <Link to="/main" className="bb-header__logo" aria-label="뷰티보이 메인으로">
-          BEAUTY BOY<span className="bb-header__logo-dot">.</span>
+          BEAUTY BOY
         </Link>
 
         {/* 검색 기능은 이 태스크의 범위가 아님 — 자리만 확보 */}

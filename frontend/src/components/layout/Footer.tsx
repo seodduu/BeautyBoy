@@ -33,9 +33,7 @@ export function Footer() {
         </p>
       </div>
       <div className="bb-footer__strip">
-        <span className="bb-footer__wordmark">
-          BEAUTY BOY<span className="bb-footer__wordmark-dot">.</span>
-        </span>
+        <span className="bb-footer__wordmark">BEAUTY BOY</span>
         <span className="bb-footer__copyright">© 2026 BeautyBoy — Portfolio Demo</span>
       </div>
     </footer>

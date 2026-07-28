@@ -49,10 +49,6 @@
   color: var(--color-on-primary);
 }
 
-.bb-footer__wordmark-dot {
-  color: var(--color-on-primary);
-}
-
 .bb-footer__copyright {
   color: var(--color-stone);
   font: var(--fw-meta) var(--fs-meta) / var(--lh-meta) var(--font-body);
