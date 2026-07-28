@@ -789,7 +789,7 @@ The system avoids drop shadows entirely. Depth is created by photographic layeri
 - 모바일(768px 미만): 밴드 본문이 **가로 스크롤**(5칸은 한 줄에 안 들어간다). 헤더 행은
   제목과 액션이 세로로 접힌다. 한글이므로 `word-break: keep-all`.
 
-**`/main` 히어로 진입 링크** — `/main` 히어로 밴드 안, lede 아래의 **세트 진입 링크** — 검정 밴드 위 흰
+**세트 진입 링크** — `/main` 히어로 밴드 안, lede 아래 — 검정 밴드 위 흰
 텍스트 링크(`{typography.link-sm}`), 화살표 `→`를 붙인다. **채움 버튼을 쓰지 않는다** — 화면당
 검정 알약은 픽 카드의 담기 하나여야 한다.
 

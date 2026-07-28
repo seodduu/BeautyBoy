@@ -25,7 +25,8 @@ export interface ComposerSignals {
   /** aggregate() 결과 — key `${cat3}|${tag}`, value 가중치 합. */
   affinity: Map<string, number>;
   /**
-   * true면 concerns가 세트 탭의 단독 컨셉 대체(useComposer concernOverride, 스펙 §5) —
+   * true면 concerns가 `/sets` 세트 비교 페이지의 단독 컨셉 대체(useComposer concernOverride,
+   * 스펙 §5) —
    * 배열 길이가 항상 1이라 아래 고민 항의 `Math.min(concernHits.length, 2)` 캡이 다중 고민
    * 대비 절반(2.0/4.0)에서 멈춘다. 반면 flow(1.0)+behavior(1.5)=2.5는 그대로라, 행동
    * 이벤트가 쌓인 회원에게는 컨셉과 무관한 인기 후보가 이겨 세트 A/B/C가 같은 픽으로
