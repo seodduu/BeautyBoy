@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { QueryClient } from '@tanstack/react-query';
 import * as pickCard from '../../components/routine/PickCard';
 import { addSetToCart } from './addSetToCart';
+import { queryKeys } from '../../api/queryKeys';
 
 function clientOf() {
   return new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -48,7 +49,7 @@ describe('addSetToCart — 세트 일괄 담기 집계', () => {
     const client = clientOf();
     const invalidate = vi.spyOn(client, 'invalidateQueries');
     await addSetToCart(client, [101, 202]);
-    expect(invalidate).toHaveBeenCalledWith({ queryKey: ['cart'] });
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: queryKeys.cart() });
     spy.mockRestore();
   });
 });

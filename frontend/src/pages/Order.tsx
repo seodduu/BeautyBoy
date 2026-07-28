@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { isAxiosError } from 'axios';
 import { useQuery } from '@tanstack/react-query';
 import { fetchCartItems } from '../api/cart';
+import { queryKeys } from '../api/queryKeys';
 import { fetchAddresses } from '../api/member';
 import { createOrder } from '../api/order';
 import { requestTossPayment } from '../features/payment/toss';
@@ -56,7 +57,7 @@ function validateReceiver(v: ManualAddress): string | null {
 export function Order() {
   const member = useAuthStore((state) => state.member);
 
-  const cartQuery = useQuery({ queryKey: ['cart'], queryFn: fetchCartItems });
+  const cartQuery = useQuery({ queryKey: queryKeys.cart(), queryFn: fetchCartItems });
   const addressQuery = useQuery({ queryKey: ['addresses'], queryFn: fetchAddresses });
 
   const [selectedId, setSelectedId] = useState<number | 'manual' | null>(null);

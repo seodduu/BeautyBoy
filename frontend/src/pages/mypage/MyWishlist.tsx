@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import * as wishlistApi from '../../api/wishlist';
+import { queryKeys } from '../../api/queryKeys';
 import { EmptyState } from '../../components/common/EmptyState';
 import { GoodsGrid } from '../../components/goods/GoodsGrid';
 import { Skeleton } from '../../components/ui/Skeleton';
@@ -18,11 +19,11 @@ import './MyWishlist.css';
 export function MyWishlist() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const wishlistQuery = useQuery({ queryKey: ['wishlist'], queryFn: wishlistApi.fetchWishlist });
+  const wishlistQuery = useQuery({ queryKey: queryKeys.wishlist(), queryFn: wishlistApi.fetchWishlist });
 
   function handleRemove(goodsNo: number) {
     wishlistApi.removeWish(goodsNo).then(() => {
-      queryClient.invalidateQueries({ queryKey: ['wishlist'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.wishlist() });
     });
   }
 

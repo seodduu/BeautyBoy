@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { fetchCartItems, removeCartItem, updateCartQuantity } from '../api/cart';
 import { checkCompat } from '../api/compat';
+import { queryKeys } from '../api/queryKeys';
 import { CartLine } from '../components/cart/CartLine';
 import { CompatBanner } from '../components/compat/CompatBanner';
 import { EmptyState } from '../components/common/EmptyState';
@@ -24,7 +25,7 @@ export function Cart() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const cartQuery = useQuery({ queryKey: ['cart'], queryFn: fetchCartItems });
+  const cartQuery = useQuery({ queryKey: queryKeys.cart(), queryFn: fetchCartItems });
   const items = useMemo(() => cartQuery.data ?? [], [cartQuery.data]);
 
   // 담긴 goodsNo 집합이 바뀔 때만 궁합을 재조회한다 — 수량만 바뀌는 흔한 조작에는 다시 부르지 않는다.
@@ -34,7 +35,7 @@ export function Cart() {
   );
 
   const compatQuery = useQuery({
-    queryKey: ['compat', goodsNos.join(',')],
+    queryKey: queryKeys.compat(goodsNos),
     queryFn: () => checkCompat(goodsNos),
     enabled: goodsNos.length > 0,
   });
@@ -42,13 +43,13 @@ export function Cart() {
   const quantityMutation = useMutation({
     mutationFn: ({ cartItemId, quantity }: { cartItemId: number; quantity: number }) =>
       updateCartQuantity(cartItemId, quantity),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['cart'] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.cart() }),
   });
 
   const removeMutation = useMutation({
     mutationFn: (cartItemId: number) => removeCartItem(cartItemId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['cart'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.cart() });
       toast('삭제했어요');
     },
   });

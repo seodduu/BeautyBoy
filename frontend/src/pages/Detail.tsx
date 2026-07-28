@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { fetchGoodsDetail } from '../api/goods';
 import { fetchAssessment } from '../api/assessment';
 import { addCartItem } from '../api/cart';
+import { queryKeys } from '../api/queryKeys';
 import { Price } from '../components/ui/Price';
 import { Rating } from '../components/ui/Rating';
 import { Badge, TodayDreamBadge } from '../components/ui/Badge';
@@ -92,9 +93,8 @@ export function Detail() {
         tags: detailQuery.data.tags.map((tag) => tag.slug),
         w: WEIGHT.cart,
       });
-      // Header.tsx의 ['cart'] 쿼리(장바구니 배지)를 무효화해, 새로고침 없이 즉시 갱신되게 한다
-      // (Routine.tsx:94와 같은 패턴).
-      queryClient.invalidateQueries({ queryKey: ['cart'] });
+      // 장바구니 배지(Header.tsx)를 무효화해, 새로고침 없이 즉시 갱신되게 한다.
+      queryClient.invalidateQueries({ queryKey: queryKeys.cart() });
       toast('장바구니에 담았어요');
     } catch {
       toast('담기에 실패했어요. 다시 시도해 주세요', { tone: 'danger' });

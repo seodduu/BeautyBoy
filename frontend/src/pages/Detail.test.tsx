@@ -6,6 +6,7 @@ import { http, HttpResponse } from 'msw';
 import { server } from '../mocks/server';
 import { ToastProvider } from '../components/ui/ToastProvider';
 import { Detail } from './Detail';
+import { queryKeys } from '../api/queryKeys';
 import type { GoodsDescription, GoodsDetail, GoodsIngredientResponse } from '../types/detail';
 import type { ApiEnvelope, GoodsListItem, PageResponse } from '../types/goods';
 import type { ReviewItem, ReviewStats, QnaItem } from '../types/review';
@@ -177,7 +178,7 @@ describe('Detail — 상세 페이지', () => {
     fireEvent.click(button);
 
     await screen.findByText('장바구니에 담았어요');
-    expect(invalidateSpy).toHaveBeenCalledWith(expect.objectContaining({ queryKey: ['cart'] }));
+    expect(invalidateSpy).toHaveBeenCalledWith(expect.objectContaining({ queryKey: queryKeys.cart() }));
 
     invalidateSpy.mockRestore();
   });
