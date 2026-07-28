@@ -20,7 +20,7 @@ description: 뷰티보이 설계 문서·구현 계획을 작성할 때 항상 �
 
    ```
    [1단계 — 작업 공간 만들기] 다른 무엇보다 먼저 이것부터 해라.
-     git worktree add ../뷰티보이-<세트> -b <브랜치명>
+     git worktree add .claude/worktrees/뷰티보이-<세트> -b <브랜치명>
    를 실행한 뒤 EnterWorktree 도구에 path로 그 경로를 넘겨 세션을 그 안으로 옮겨라.
    진입 후 아래를 확인하고, 하나라도 어긋나면 중단하고 보고해라:
      - pwd가 해당 worktree인지
@@ -30,6 +30,11 @@ description: 뷰티보이 설계 문서·구현 계획을 작성할 때 항상 �
    [2단계 — 실행] (이하 태스크 지시)
    ```
 
+   - **worktree 위치는 반드시 `.claude/worktrees/` 아래다.** `EnterWorktree`는 이 저장소의
+     `.claude/worktrees/` 밖에 있는 worktree로는 세션을 옮기지 못한다(형제 디렉토리 `../…`로
+     만들면 "is not under … .claude/worktrees" 오류로 거부된다). 이 경로는 gitignore에 이미
+     들어 있다(`.claude/worktrees/`). 잘못된 위치에 이미 만들었다면 지우지 말고
+     `git worktree move <기존경로> .claude/worktrees/<이름>` 후 다시 진입한다.
    - **`EnterWorktree`를 `name`으로 새로 만들게 하지 않는다.** 기본 설정(`worktree.baseRef: fresh`)이
      로컬 HEAD가 아니라 `origin/<기본브랜치>`에서 브랜치를 딴다. 푸시가 밀려 있으면 계획서도 참조
      문서도 없는 worktree가 생긴다. 항상 `git worktree add`(로컬 HEAD 기준) 후 `path`로 진입시킨다.

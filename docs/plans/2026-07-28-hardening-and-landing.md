@@ -565,7 +565,7 @@ it('자리표시 항목(About/Work/Services/Packages)은 더 이상 없다', () 
 
 ```
 [1단계 — 작업 공간 만들기] 다른 무엇보다 먼저 이것부터 해라.
-  git worktree add ../뷰티보이-결제강화 -b feature/payment-hardening
+  git worktree add .claude/worktrees/뷰티보이-결제강화 -b feature/payment-hardening
 를 실행한 뒤 EnterWorktree 도구에 path로 그 경로를 넘겨 세션을 그 안으로 옮겨라.
 진입 후 아래를 확인하고, 하나라도 어긋나면 중단하고 보고해라:
   - pwd가 해당 worktree인지
@@ -585,7 +585,7 @@ ErrorCode.java 등 common 패키지는 열지 않는다. 스텝별 TDD는 계획
 
 ```
 [1단계 — 작업 공간 만들기] 다른 무엇보다 먼저 이것부터 해라.
-  git worktree add ../뷰티보이-궁합경계 -b feature/compat-boundary
+  git worktree add .claude/worktrees/뷰티보이-궁합경계 -b feature/compat-boundary
 를 실행한 뒤 EnterWorktree 도구에 path로 그 경로를 넘겨 세션을 그 안으로 옮겨라.
 진입 후 아래를 확인하고, 하나라도 어긋나면 중단하고 보고해라:
   - pwd가 해당 worktree인지
@@ -604,7 +604,7 @@ Global Constraints·파일 소유권 표를 지켜라. CompatService의 로직�
 
 ```
 [1단계 — 작업 공간 만들기] 다른 무엇보다 먼저 이것부터 해라.
-  git worktree add ../뷰티보이-랜딩내비 -b feature/landing-nav
+  git worktree add .claude/worktrees/뷰티보이-랜딩내비 -b feature/landing-nav
 를 실행한 뒤 EnterWorktree 도구에 path로 그 경로를 넘겨 세션을 그 안으로 옮겨라.
 진입 후 아래를 확인하고, 하나라도 어긋나면 중단하고 보고해라:
   - pwd가 해당 worktree인지
