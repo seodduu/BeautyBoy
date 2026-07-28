@@ -4,6 +4,7 @@ import com.beautyboy.common.BusinessException;
 import com.beautyboy.common.ErrorCode;
 import com.beautyboy.compat.dto.CompatCheckRequest;
 import com.beautyboy.compat.dto.CompatCheckResponse;
+import com.beautyboy.compat.dto.CompatFinding;
 import com.beautyboy.ingredient.GoodsIngredientQueryService;
 import com.beautyboy.ingredient.IngredientRule;
 import com.beautyboy.ingredient.IngredientRuleRepository;
@@ -45,7 +46,7 @@ class CompatServiceTest {
         assertThat(r.findings()).singleElement().satisfies(f -> {
             assertThat(f.verdict()).isEqualTo("CONFLICT");
             assertThat(f.categoryA()).isEqualTo("AHA");
-            assertThat(f.categoryB()).isEqualTo("RETINOID");
+            assertThat(f.categoryB()).isEqualTo("레티노이드");
             assertThat(f.reason()).isEqualTo("자극 중첩");
             assertThat(f.goodsNos()).containsExactly(1L, 2L);
         });
@@ -125,8 +126,26 @@ class CompatServiceTest {
         assertThat(r.findings()).extracting(f -> f.verdict())
                 .containsExactly("CONFLICT", "CAUTION", "SYNERGY");
         assertThat(r.findings()).extracting(f -> f.categoryA())
-                .containsExactly("AHA", "AHA", "RETINOID");
+                .containsExactly("AHA", "AHA", "레티노이드");
         assertThat(r.findings().get(0).goodsNos()).containsExactly(1L, 2L);
+    }
+
+    @Test
+    @org.junit.jupiter.api.DisplayName("finding의 categoryA/B는 코드가 아니라 한글 표시명으로 내려간다")
+    void 카테고리_표시명_변환() {
+        // VITAMIN_C × NIACINAMIDE 규칙이 걸리는 카트를 구성한다.
+        // 정규화(사전순)로 ca=NIACINAMIDE, cb=VITAMIN_C — 라벨도 그 순서로 내려간다.
+        given(goodsIngredientQueryService.findCategoriesByGoodsIds(List.of(1L, 2L)))
+                .willReturn(Map.of(1L, Set.of("VITAMIN_C"), 2L, Set.of("NIACINAMIDE")));
+        given(ruleRepository.findNormalized("NIACINAMIDE", "VITAMIN_C"))
+                .willReturn(Optional.of(new IngredientRule(
+                        null, "NIACINAMIDE", "VITAMIN_C", "CAUTION", "동시 사용 주의")));
+
+        CompatCheckResponse response = compatService.check(new CompatCheckRequest(List.of(1L, 2L)));
+
+        CompatFinding finding = response.findings().get(0);
+        assertThat(finding.categoryA()).isEqualTo("나이아신아마이드");   // "NIACINAMIDE"면 실패
+        assertThat(finding.categoryB()).isEqualTo("비타민C");            // "VITAMIN_C"면 실패
     }
 
     @Test
@@ -144,6 +163,6 @@ class CompatServiceTest {
         CompatCheckResponse r = compatService.check(new CompatCheckRequest(List.of(1L, 2L, 3L)));
 
         assertThat(r.findings()).extracting(f -> f.categoryB())
-                .containsExactly("BHA", "RETINOID");
+                .containsExactly("BHA", "레티노이드");
     }
 }
