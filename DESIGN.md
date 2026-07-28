@@ -771,24 +771,27 @@ The system avoids drop shadows entirely. Depth is created by photographic layeri
   거르지 않는다(돈은 서버).
 - 모바일(768px 미만): 탭이 가로 스크롤, 정렬 셀렉트는 줄바꿈해 우측 정렬 유지.
 
-**`set-tabs`** — /main 히어로 아래 "당신을 위한 세트" 섹션
-- 구성: 아이브로우 "PERSONAL SETS"(`{typography.eyebrow}`) + 섹션 제목 "당신을 위한 세트"
-  (`{typography.heading-sm}`) + pill 탭 3개 한 줄. 탭 라벨은 "세트 A · 모공" 형식
-  (세트 문자 + 고민 태그와 같은 문구).
-- 탭 pill은 `{rounded.full}`. 타이포·크기·간격은 **list-toolbar 카테고리 탭 pill과 동일 사양**을
-  그대로 쓴다(패딩 `{spacing.xs}` × `{spacing.md}`, 1px 테두리, 타이포 `{typography.link-sm}`) —
-  같은 조작(카테고리 전환/세트 전환)이 화면마다 다르게 생기면 안 된다.
-  선택 상태는 "선택 상태 — 색 반전" 규칙(배경 `{colors.primary}` + 글자 `{colors.on-primary}`),
-  비선택은 1px `{colors.hairline-soft}` 테두리 + `{colors.ink}` 글자 + 배경 `{colors.canvas}`.
-- 액센트(signal-*) 금지 — 이 섹션도 무채색 사다리 안이다. 개인화 여부를 색으로 구분하지 않는다.
-- 폴백 상태(전부 비개인화): 탭 아래 안내 한 줄 "프로필을 등록하면 맞춤 세트로 바뀌어요" —
-  `{typography.meta}` / `{colors.slate}`(list-toolbar·goods-card의 메타 텍스트와 동일 조합,
-  본문보다 한 단 낮은 무채색). 문구 끝에 `{typography.link-sm}` / `{colors.ink}` 텍스트 링크
-  (밑줄, list-toolbar "전체 보기"류 링크와 동일 사양)로 프로필/가입 화면을 연결한다.
-- 로딩(프로필 확정 전): 아이브로우·제목·탭 pill 3개 **전부** 공용 `{Skeleton}` 컴포넌트로 채운다
-  (아이브로우·제목은 각 타이포 크기와 같은 세로 크기로, 탭은 `{rounded.full}`로 덮어써 pill 모양을
-  유지) — 세 줄이 같은 로딩 언어(shimmer)를 쓴다. 조작 불가. 확정 후 높이가 흔들리지 않는다.
-- 모바일(768px 미만): 탭 가로 스크롤(list-toolbar와 동일). 한글이므로 `word-break: keep-all`.
+**`sets-page`** — `/sets` 세트 비교 화면
+- 페이지 제목 "당신을 위한 세트 3가지"(`{typography.heading-md}`) + 아이브로우 "PERSONAL SETS"
+  (`{typography.eyebrow}`). 프로필이 없으면 제목 아래 안내 한 줄
+  "프로필을 등록하면 맞춤 세트로 바뀌어요"(`{typography.meta}`) + 프로필 화면 텍스트 링크.
+- **세트 밴드**가 세로로 3개 쌓인다. 밴드 사이는 1px `{colors.hairline-soft}` 구분선 +
+  위아래 `{spacing.xl}`. 마지막 밴드 아래에는 선을 두지 않는다.
+- **밴드 헤더 행**: 좌측 세트 제목 "세트 A · 브라이트닝"(`{typography.heading-sm}`),
+  우측 액션 `[이 세트 5개 담기]`. 같은 줄에서 양끝 정렬한다 — 액션을 밴드 하단에 두지 않는다.
+  액션은 `{button-ghost}`(검정 채움 금지 — 이 화면의 검정 알약은 상품 카드의 담기뿐이다).
+- **밴드 본문**: 5칸 가로 한 줄, 칸 간격 `{spacing.lg}`. 각 칸은 단계 라벨("01 클렌징",
+  `{typography.micro-caps}`) + 상품 카드. 대안 상품은 노출하지 않는다.
+  픽이 없는 단계는 칸을 비우고 "추천할 상품이 없어요"(`{typography.meta}`)를 둔다 —
+  칸을 접지 않는다(5칸 그리드가 밴드끼리 세로로 정렬되어야 비교가 된다).
+- **로딩**: 헤더 제목·액션·5칸 전부 공용 `{Skeleton}`. 확정 후 높이가 흔들리지 않는다.
+- 액센트(`signal-*`) 배경 금지. 개인화 여부를 색으로 구분하지 않는다.
+- 모바일(768px 미만): 밴드 본문이 **가로 스크롤**(5칸은 한 줄에 안 들어간다). 헤더 행은
+  제목과 액션이 세로로 접힌다. 한글이므로 `word-break: keep-all`.
+
+**`/main` 히어로 진입 링크** — `/main` 히어로 밴드 안, lede 아래의 **세트 진입 링크** — 검정 밴드 위 흰
+텍스트 링크(`{typography.link-sm}`), 화살표 `→`를 붙인다. **채움 버튼을 쓰지 않는다** — 화면당
+검정 알약은 픽 카드의 담기 하나여야 한다.
 
 **`pager`** — 페이지 이동 공용 컴포넌트 (상품 그리드 아래 중앙 / admin 표 아래)
 - **페이지를 나누는 화면은 전부 이 하나를 쓴다.** 목록·검색은 그리드 아래 중앙,
