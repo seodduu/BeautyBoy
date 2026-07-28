@@ -24,11 +24,11 @@ function renderToolbar(props: Partial<Parameters<typeof ListToolbar>[0]> = {}) {
 }
 
 describe('ListToolbar', () => {
-  it('정렬 5종을 서버 GoodsSort 값으로 노출한다', () => {
+  it('정렬 6종을 서버 GoodsSort 값으로 노출한다', () => {
     renderToolbar();
     const select = screen.getByRole('combobox', { name: '정렬' });
     const values = Array.from(select.querySelectorAll('option')).map((o) => o.getAttribute('value'));
-    expect(values).toEqual(['popular', 'new', 'sales', 'priceAsc', 'discount']);
+    expect(values).toEqual(['popular', 'new', 'sales', 'priceAsc', 'discount', 'review']);
   });
 
   it('정렬을 바꾸면 onSortChange가 서버 값으로 불린다', () => {

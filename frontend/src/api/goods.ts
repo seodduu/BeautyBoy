@@ -3,7 +3,7 @@ import type { ApiEnvelope, GoodsListItem, NextStepBlock, PageResponse } from '..
 import type { GoodsDescription, GoodsDetail } from '../types/detail';
 
 /** T1 설계의 정렬 규약 — mock(handlers.ts)과 실 API가 공유하는 값 집합. */
-export type GoodsSort = 'popular' | 'new' | 'sales' | 'priceAsc' | 'discount';
+export type GoodsSort = 'popular' | 'new' | 'sales' | 'priceAsc' | 'discount' | 'review';
 
 export interface FetchGoodsListParams {
   page?: number;
@@ -12,6 +12,9 @@ export interface FetchGoodsListParams {
   categoryCode?: string;
   /** 태그 슬러그 필터(예: "uv"). GoodsList가 `/goods?tag=` 진입 시 이 값을 그대로 실어 보낸다. */
   tag?: string;
+  /** 가격대 필터 — 서버 GoodsController의 minPrice/maxPrice와 1:1. 경계값은 포함(이상/이하). */
+  minPrice?: number;
+  maxPrice?: number;
 }
 
 /** GET /goods — 정렬·페이지네이션·카테고리 필터. ApiEnvelope를 벗겨 PageResponse만 반환한다. */

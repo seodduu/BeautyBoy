@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, useLocation, type Location } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -10,10 +10,14 @@ import { GoodsList } from './GoodsList';
 let capturedSearchParams: URLSearchParams | null = null;
 /** MemoryRouter 내부의 현재 위치 — "URL이 상태의 진실" 단언용. */
 let location: Location | null = null;
+/** jsdom은 scrollIntoView 미구현 — 스텁이 곧 "페이지 전환 시 목록 상단으로" 관측 지점이다. */
+let scrollIntoView = vi.fn();
 
 beforeEach(() => {
   capturedSearchParams = null;
   location = null;
+  scrollIntoView = vi.fn();
+  Element.prototype.scrollIntoView = scrollIntoView;
   // 응답은 기본 핸들러에 넘기고(undefined 반환 → fall-through) 요청 파라미터만 기록한다.
   server.use(
     http.get('/api/v1/goods', ({ request }) => {
@@ -119,9 +123,23 @@ describe('GoodsList — 카테고리 목록', () => {
     });
   });
 
-  // 계획서 원문 스텝 4의 "minPrice/maxPrice가 요청에 실린다" 테스트는 api/goods.ts의
-  // FetchGoodsListParams에 minPrice/maxPrice가 없어 배선이 불가능하다(소유 밖 파일 — 보고됨).
-  // 그때까지 URL 레벨 배선(?price=)만 검증한다.
+  it('sort=review가 fetch에 전달된다 — 리뷰 많은 순은 서버 정렬이다', async () => {
+    renderList('?category=C002&sort=review');
+    await screen.findByRole('combobox', { name: '정렬' });
+    await waitFor(() => {
+      expect(capturedSearchParams?.get('sort')).toBe('review');
+    });
+  });
+
+  it('가격대 pill 선택 시 minPrice/maxPrice가 실제 요청에 실린다', async () => {
+    renderList('?category=C002&price=FROM_10K_TO_30K');
+    await screen.findByRole('combobox', { name: '정렬' });
+    await waitFor(() => {
+      expect(capturedSearchParams?.get('minPrice')).toBe('10000');
+    });
+    expect(capturedSearchParams?.get('maxPrice')).toBe('29999');
+  });
+
   it('가격대 pill 토글은 URL의 price 파라미터를 바꾸고, 선택 상태로 반영된다', async () => {
     renderList('?category=C002&price=UNDER_10K');
     await screen.findByRole('combobox', { name: '정렬' });
@@ -135,6 +153,62 @@ describe('GoodsList — 카테고리 목록', () => {
 
     fireEvent.click(screen.getByRole('button', { name: '3만원 이상' }));
     expect(currentLocation().search).not.toContain('price=');
+  });
+
+  // ---- 페이지네이션 (T2-B) ----
+  // mock 픽스처는 40건이고 한 페이지가 20건이라 카테고리 없이 들어가야 2페이지가 생긴다
+  // (실 시드는 전체 190·C001 67건 — 계획서의 C001 예시는 픽스처 규모에 맞춰 옮겼다).
+
+  it('?page=2는 0-based page=1로 요청되고, 페이저가 렌더된다', async () => {
+    renderList('?page=2');
+    await screen.findByRole('navigation', { name: '페이지 이동' });
+    await waitFor(() => {
+      expect(capturedSearchParams?.get('page')).toBe('1');
+    });
+  });
+
+  it('한 페이지에 다 들어가면 페이저를 렌더하지 않는다', async () => {
+    renderList('?category=C002');
+    await screen.findByRole('combobox', { name: '정렬' });
+    await waitFor(() => {
+      expect(screen.getAllByRole('link', { name: /No\./ })).toHaveLength(8);
+    });
+    expect(screen.queryByRole('navigation', { name: '페이지 이동' })).not.toBeInTheDocument();
+  });
+
+  it('page 미지값·0 이하는 1로 정규화한다 — 손으로 친 URL이 빈 화면이 되지 않게', async () => {
+    renderList('?page=0');
+    await screen.findByRole('combobox', { name: '정렬' });
+    await waitFor(() => {
+      expect(capturedSearchParams?.get('page')).toBe('0');
+    });
+  });
+
+  it('페이지를 넘기면 URL이 바뀌고, 1페이지로 돌아오면 page 파라미터가 지워진다', async () => {
+    renderList('?page=2');
+    fireEvent.click(await screen.findByRole('button', { name: '1' }));
+    expect(currentLocation().search).not.toContain('page=');
+  });
+
+  it('페이지를 넘기면 목록 상단(툴바)으로 즉시 스크롤한다 — 문서 최상단이 아니다', async () => {
+    renderList('?page=2');
+    fireEvent.click(await screen.findByRole('button', { name: '1' }));
+    expect(scrollIntoView).toHaveBeenCalledWith({ behavior: 'instant', block: 'start' });
+  });
+
+  it('정렬이 바뀌면 page는 1로 리셋된다 — 결과 집합이 달라졌는데 2페이지에 남는 것은 거짓 화면이다', async () => {
+    renderList('?page=2');
+    fireEvent.change(await screen.findByRole('combobox', { name: '정렬' }), {
+      target: { value: 'priceAsc' },
+    });
+    expect(currentLocation().search).not.toContain('page=');
+  });
+
+  it('가격대가 바뀌어도 page는 1로 리셋된다', async () => {
+    renderList('?page=2');
+    await screen.findByRole('combobox', { name: '정렬' });
+    fireEvent.click(screen.getByRole('button', { name: '3만원 이상' }));
+    expect(currentLocation().search).not.toContain('page=');
   });
 
   it('조회가 실패하면 에러 문구를 보여주고 개수·빈 상태는 보여주지 않는다', async () => {

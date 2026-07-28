@@ -145,6 +145,8 @@ function sortGoods(items: GoodsFixture[], sort: string | null): GoodsFixture[] {
       return sorted.sort((a, b) => a.salePrice - b.salePrice);
     case 'discount':
       return sorted.sort((a, b) => b.discountRate - a.discountRate);
+    case 'review':
+      return sorted.sort((a, b) => b.reviewCount - a.reviewCount);
     case 'popular':
     default:
       // mock에는 별도 인기 지표가 없어 등록 순서를 그대로 인기순으로 간주한다.
@@ -544,10 +546,15 @@ export const handlers = [
     const sort = url.searchParams.get('sort');
     const categoryCode = url.searchParams.get('categoryCode');
     const tag = url.searchParams.get('tag');
+    // 가격대 필터는 실 서버와 같이 판매가 기준·경계값 포함이다(minPrice 이상 / maxPrice 이하).
+    const minPrice = url.searchParams.get('minPrice');
+    const maxPrice = url.searchParams.get('maxPrice');
 
     const filtered = goodsFixtures
       .filter((item) => (categoryCode ? item.categoryCode.startsWith(categoryCode) : true))
-      .filter((item) => (tag ? item.tags.some((t) => t.slug === tag) : true));
+      .filter((item) => (tag ? item.tags.some((t) => t.slug === tag) : true))
+      .filter((item) => (minPrice ? item.salePrice >= Number(minPrice) : true))
+      .filter((item) => (maxPrice ? item.salePrice <= Number(maxPrice) : true));
 
     const sorted = sortGoods(filtered, sort);
     const start = page * size;

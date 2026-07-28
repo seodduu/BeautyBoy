@@ -23,6 +23,12 @@
   color: var(--color-stone);
 }
 
+/* 페이지 전환 시 scrollIntoView가 멈출 자리. 헤더가 sticky라 그만큼(= {spacing.xl} 2칸,
+   헤더 높이) 위로 여유를 두지 않으면 툴바 윗줄이 헤더 뒤로 들어가 "툴바가 보이는 위치"가 아니게 된다. */
+.bb-goods-list__toolbar {
+  scroll-margin-top: calc(var(--space-xl) * 2);
+}
+
 /* 조회 실패 문구. 색만으로 오류를 알리지 않도록 문구 자체로 상태를 명시한다. */
 .bb-goods-list__error {
   padding: var(--space-lg) 0;
