@@ -26,6 +26,8 @@ const CART_ITEMS: CartItem[] = [
     unitPrice: 20000,
     quantity: 2,
     lineAmount: 40000,
+    thumbnailUrl: null,
+    stock: 30,
   },
   {
     cartItemId: 2,
@@ -36,6 +38,8 @@ const CART_ITEMS: CartItem[] = [
     unitPrice: 1500,
     quantity: 2,
     lineAmount: 3000,
+    thumbnailUrl: null,
+    stock: 2147483647,
   },
 ];
 

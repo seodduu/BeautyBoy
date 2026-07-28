@@ -31,6 +31,8 @@ export interface CartItem {
   unitPrice: number;
   quantity: number;
   lineAmount: number;
+  thumbnailUrl: string | null;
+  stock: number; // 옵션 없는 상품은 2147483647 — min(stock, 99) 캡이 흡수한다
 }
 
 /** GET /cart/items — 장바구니 라인 목록. */

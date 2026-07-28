@@ -104,11 +104,12 @@ export function Cart() {
       </div>
 
       <div className="bb-cart__summary">
-        <span className="bb-cart__summary-label">합계(안내용)</span>
+        <span className="bb-cart__summary-label">결제 예상 금액</span>
         <span className="bb-cart__summary-total" data-testid="cart-total">
           {formatWon(total)}
         </span>
       </div>
+      <p className="bb-cart__summary-note">배송비는 주문서에서 계산됩니다</p>
 
       <Button className="bb-cart__cta" variant="primary" onClick={() => navigate('/order')}>
         주문하기
