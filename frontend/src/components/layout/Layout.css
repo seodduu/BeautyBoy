@@ -1,3 +1,10 @@
+/* 짧은 화면에서도 푸터가 하단에 붙도록 — __main의 flex: 1 1 auto가 이를 전제한다. */
+.bb-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+
 .bb-layout__main {
   flex: 1 1 auto;
 }
