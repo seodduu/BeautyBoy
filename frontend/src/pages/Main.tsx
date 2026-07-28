@@ -88,10 +88,15 @@ export function Main() {
         <div className="bb-main__intro-inner">
           <p className="bb-main__eyebrow">DAILY ROUTINE</p>
           <h1 className="bb-main__title">순서대로 따라오면 됩니다</h1>
+          {/* 마지막 문장이 아래 CTA를 받는다 — "스크롤하세요"로 끝내면 다른 화면으로 보내는
+              버튼이 바로 뒤에 와서 충돌한다. 두 경로(단계별/세트)를 한 문장에 담아 다리를 놓는다. */}
           <p className="bb-main__lede">
-            씻고, 정돈하고, 채우고, 덮고, 막는 다섯 단계. 아래로 내리는 순서가 그대로 루틴 순서입니다.
+            씻고, 정돈하고, 채우고, 덮고, 막는 다섯 단계. 하나씩 살펴봐도 좋고, 한 번에 세트로 시작해도
+            됩니다.
           </p>
-          <Link className="bb-main__sets-link" to="/sets">
+          {/* 검정 밴드 위 흰 채움 알약({button-primary-on-dark}). 밴드 안이라 같은 화면의 픽 카드
+              [바로 담기](검정 알약)와 색이 반전돼 서로 경쟁하지 않는다. */}
+          <Link className="bb-btn bb-btn--primary-on-dark bb-main__sets-cta" to="/sets">
             맞춤형 세트 보러가기 →
           </Link>
         </div>

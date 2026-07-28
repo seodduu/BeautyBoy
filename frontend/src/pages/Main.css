@@ -50,18 +50,11 @@
 
 /* 검정 밴드 위 흰 텍스트 링크 — 채움 버튼을 쓰지 않는다(DESIGN.md: 화면당 검정 알약은
    픽 카드 [바로 담기] 하나). /sets 전용 비교 페이지로 넘어가는 진입점. */
-.bb-main__sets-link {
-  display: inline-block;
+/* 타이포·색·모양은 전부 {button-primary-on-dark}(Button.css)가 준다 — 여기서는 배치만 맡는다.
+   크기로 소리치는 대신 채움으로 무게를 주므로, 글자는 본문 언저리(button 14px/600)로 내려온다. */
+.bb-main__sets-cta {
   margin-top: var(--space-lg);
-  /* 히어로 안의 다른 글자(아이브로우·제목·lede)가 전부 400이라 굵기로 강조하면 혼자 튄다.
-     편집디자인 계열이므로 **크기로만** 세운다 — lede 18px 위 24px(DESIGN.md 세트 진입 링크). */
-  font-size: var(--fs-heading-sm);
-  font-weight: var(--fw-heading-sm);
-  line-height: var(--lh-heading-sm);
-  letter-spacing: var(--ls-heading-sm);
-  color: var(--color-on-primary);
-  text-decoration: underline;
-  text-underline-offset: var(--space-xxs);
+  text-decoration: none;
 }
 
 /* ── 흰 콘텐츠 영역 ──────────────────────────────────────── */
