@@ -104,6 +104,24 @@ class PageParamClampTest {
                 .andExpect(jsonPath("$.data.size").value(1));
     }
 
+    @Test
+    @DisplayName("문의 목록 page=-1은 500이 아니라 200 — QnaService.list에도 하한이 생겼다")
+    void 문의목록_page_음수() throws Exception {
+        Goods goods = 상품_저장("토너");
+
+        mockMvc.perform(get("/api/v1/qna").param("goodsNo", String.valueOf(goods.getId())).param("page", "-1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.page").value(0));
+    }
+
+    @Test
+    @DisplayName("admin 문의 목록 page=-1은 500이 아니라 200 — size만 조이던 곳의 나머지 절반")
+    void admin_문의목록_page_음수() throws Exception {
+        mockMvc.perform(get("/api/v1/admin/qna").param("page", "-1").with(관리자_로그인()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.page").value(0));
+    }
+
     private Goods 상품_저장(String name) {
         Brand brand = brandRepository.save(new Brand("브랜드", null));
         return goodsRepository.save(new Goods(brand, "C001001001", name, "요약", "https://img.example/x.jpg", 10000, 10000));
@@ -119,5 +137,10 @@ class PageParamClampTest {
     private static RequestPostProcessor 로그인(Long memberId) {
         return authentication(new UsernamePasswordAuthenticationToken(
                 memberId, null, List.of(new SimpleGrantedAuthority("ROLE_USER"))));
+    }
+
+    private static RequestPostProcessor 관리자_로그인() {
+        return authentication(new UsernamePasswordAuthenticationToken(
+                회원, null, List.of(new SimpleGrantedAuthority("ROLE_ADMIN"))));
     }
 }

@@ -45,13 +45,14 @@ public class QnaService {
 
     @Transactional(readOnly = true)
     public PageResponse<QnaResponse> list(Long goodsNo, Long viewerId, int page) {
+        int pageNumber = PageRequests.clampPage(page);
         List<Qna> items = qnaRepository.findByGoodsIdOrderByCreatedAtDesc(
-                goodsNo, PageRequest.of(page, DEFAULT_PAGE_SIZE));
+                goodsNo, PageRequest.of(pageNumber, DEFAULT_PAGE_SIZE));
         long total = qnaRepository.countByGoodsId(goodsNo);
         List<QnaResponse> responses = items.stream()
                 .map(qna -> toResponse(qna, viewerId))
                 .toList();
-        return PageResponse.of(responses, page, DEFAULT_PAGE_SIZE, total);
+        return PageResponse.of(responses, pageNumber, DEFAULT_PAGE_SIZE, total);
     }
 
     /**
@@ -67,13 +68,14 @@ public class QnaService {
      */
     @Transactional(readOnly = true)
     public PageResponse<AdminQnaResponse> adminList(int page, int size) {
+        int pageNumber = PageRequests.clampPage(page);
         int pageSize = PageRequests.clampSize(size);
-        List<Qna> items = qnaRepository.findAllOrderByWaitingFirst(PageRequest.of(page, pageSize));
+        List<Qna> items = qnaRepository.findAllOrderByWaitingFirst(PageRequest.of(pageNumber, pageSize));
         long total = qnaRepository.count();
         List<AdminQnaResponse> responses = items.stream()
                 .map(this::toAdminResponse)
                 .toList();
-        return PageResponse.of(responses, page, pageSize, total);
+        return PageResponse.of(responses, pageNumber, pageSize, total);
     }
 
     private QnaResponse toResponse(Qna qna, Long viewerId) {
