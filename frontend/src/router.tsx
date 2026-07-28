@@ -4,6 +4,7 @@ import { Home } from './pages/Home';
 import { Login } from './pages/Login';
 import { Signup } from './pages/Signup';
 import { Main } from './pages/Main';
+import { Sets } from './pages/Sets';
 import { GoodsList } from './pages/GoodsList';
 import { Detail } from './pages/Detail';
 import { Search } from './pages/Search';
@@ -39,6 +40,14 @@ export const router = createBrowserRouter([
         element: (
           <RequireAuth>
             <Main />
+          </RequireAuth>
+        ),
+      },
+      {
+        path: 'sets',
+        element: (
+          <RequireAuth>
+            <Sets />
           </RequireAuth>
         ),
       },

@@ -1,0 +1,54 @@
+/*
+  DESIGN.md `sets-page` 사양의 구현. 색·간격·타이포는 index.css 토큰만 참조한다
+  (hex/px 직접 기입 금지). 밴드 사이 구분선·간격은 SetBand.css의 인접 선택자가 스스로 진다.
+*/
+.bb-sets {
+  max-width: var(--landing-column);
+  margin: 0 auto;
+  padding: var(--space-xl) var(--space-lg) var(--space-section);
+  background: var(--color-canvas);
+}
+
+.bb-sets__intro {
+  margin-bottom: var(--space-xl);
+}
+
+.bb-sets__eyebrow {
+  font-size: var(--fs-eyebrow);
+  font-weight: var(--fw-eyebrow);
+  line-height: var(--lh-eyebrow);
+  letter-spacing: var(--ls-eyebrow);
+  color: var(--color-slate);
+}
+
+.bb-sets__title {
+  margin-top: var(--space-sm);
+  font-size: var(--fs-heading-md);
+  font-weight: var(--fw-heading-md);
+  line-height: var(--lh-heading-md);
+  letter-spacing: var(--ls-heading-md);
+  color: var(--color-ink);
+  word-break: keep-all;
+}
+
+/* 프로필 미입력(폴백 3종)일 때만 렌더 — 제목 아래 안내 한 줄 + 프로필 화면 텍스트 링크. */
+.bb-sets__fallback-notice {
+  margin-top: var(--space-sm);
+  font-size: var(--fs-meta);
+  font-weight: var(--fw-meta);
+  line-height: var(--lh-meta);
+  color: var(--color-slate);
+  word-break: keep-all;
+}
+
+.bb-sets__fallback-link {
+  color: var(--color-ink);
+  text-decoration: underline;
+  text-underline-offset: var(--space-xxs);
+}
+
+@media (max-width: 900px) {
+  .bb-sets {
+    padding: var(--space-xl) var(--space-md) var(--space-section);
+  }
+}
