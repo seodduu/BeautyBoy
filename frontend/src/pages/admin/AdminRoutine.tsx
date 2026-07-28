@@ -6,6 +6,7 @@ import {
   type AdminRoutineStep,
   type AdminRoutineTemplate,
 } from '../../api/admin';
+import { ErrorState } from '../../components/common/ErrorState';
 import { Button } from '../../components/ui/Button';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { useToast } from '../../components/ui/useToast';
@@ -131,7 +132,7 @@ export function AdminRoutine() {
   if (query.isError) {
     return (
       <div className="bb-admin-routine">
-        <p className="bb-admin-routine__error">루틴 템플릿을 불러오지 못했어요.</p>
+        <ErrorState title="루틴 템플릿을 불러오지 못했어요" onRetry={() => query.refetch()} />
       </div>
     );
   }

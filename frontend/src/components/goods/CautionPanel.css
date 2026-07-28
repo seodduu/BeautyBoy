@@ -162,7 +162,7 @@
 }
 
 /* 모바일: 아래에서 올라오는 바텀시트 */
-@media (max-width: 767px) {
+@media (max-width: 768px) {
   .bb-caution-overlay {
     align-items: flex-end;
     justify-content: stretch;

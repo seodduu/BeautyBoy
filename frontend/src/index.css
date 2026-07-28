@@ -77,7 +77,10 @@
   /* ---- Typography: font stacks ----
      abcNormal은 독점 서체라 한글 글리프가 없다. 라틴은 Inter, 한글은
      Pretendard가 받는다 (DESIGN.md "한글 적용"). --font-mono은 폐기 —
-     이 시스템은 단일 산세리프 원칙(One face, every level)이라 모노스페이스가 없다. */
+     이 시스템은 단일 산세리프 원칙(One face, every level)이라 모노스페이스가 없다.
+     실물은 이 파일이 아니라 index.html의 CDN <link>(Pretendard 동적 서브셋 +
+     Inter 가변 축)가 받는다. 이 주석과 index.html이 갈라지면 폰트가 조용히
+     폴백 스택(-apple-system 등)으로 떨어진다 — index.html도 같이 확인할 것. */
   --font-body:
     Inter, 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont,
     'Apple SD Gothic Neo', 'Malgun Gothic', system-ui, sans-serif;

@@ -35,21 +35,35 @@ const GOODS_DETAIL_1: GoodsDetail = {
   tags: [],
 };
 
-function registerHandlers(options: { wishlistGoodsNos?: number[] } = {}) {
-  const { wishlistGoodsNos = [1] } = options;
+/**
+ * GET/DELETE 핸들러가 같은 배열을 공유한다 — DELETE 성공 시 그 자리에서 goodsNo를 지워
+ * 이후의 GET(재조회)이 실제 서버처럼 갱신된 목록을 돌려준다. 두 핸들러를 각자
+ * `server.use()`로 시점을 맞춰 흉내 내면(예: DELETE 성공을 기다렸다가 GET 핸들러를
+ * 교체) react-query의 invalidate → refetch가 그 교체보다 먼저 끝나버리는 경합이 생긴다.
+ */
+function registerHandlers(options: { wishlistGoodsNos?: number[]; deleteStatus?: number } = {}) {
+  const { wishlistGoodsNos = [1], deleteStatus = 204 } = options;
+  const goodsNos = [...wishlistGoodsNos];
   server.use(
     http.get('/api/v1/wishlist', () =>
-      HttpResponse.json(envelope(wishlistGoodsNos.map((goodsNo) => ({ goodsNo })))),
+      HttpResponse.json(envelope(goodsNos.map((goodsNo) => ({ goodsNo })))),
     ),
     http.get('/api/v1/goods/1', () => HttpResponse.json(envelope(GOODS_DETAIL_1))),
-    http.delete('/api/v1/wishlist/1', () => new HttpResponse(null, { status: 204 })),
+    http.delete('/api/v1/wishlist/1', () => {
+      if (deleteStatus >= 400) {
+        return new HttpResponse(null, { status: deleteStatus });
+      }
+      const index = goodsNos.indexOf(1);
+      if (index !== -1) goodsNos.splice(index, 1);
+      return new HttpResponse(null, { status: 204 });
+    }),
   );
 }
 
 function renderMyWishlist() {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
 
-  return render(
+  render(
     <QueryClientProvider client={queryClient}>
       <ToastProvider>
         <MemoryRouter initialEntries={['/mypage/wishlist']}>
@@ -58,6 +72,7 @@ function renderMyWishlist() {
       </ToastProvider>
     </QueryClientProvider>,
   );
+  return queryClient;
 }
 
 beforeEach(() => {
@@ -84,12 +99,39 @@ describe('MyWishlist — 마이페이지 찜', () => {
 
     fireEvent.click(await screen.findByRole('button', { name: /찜 해제/ }));
 
-    expect(removeWishSpy).toHaveBeenCalledWith(1);
+    await waitFor(() => expect(removeWishSpy).toHaveBeenCalledWith(1));
 
     // 해제 후 목록이 빈 상태로 재조회된다 — 카드가 화면에서 사라진다.
-    server.use(http.get('/api/v1/wishlist', () => HttpResponse.json(envelope([]))));
     await waitFor(() => expect(screen.queryByText('그린티 토너')).not.toBeInTheDocument());
 
     removeWishSpy.mockRestore();
+  });
+
+  it('찜 해제가 실패하면 토스트로 알린다 — 조용히 사라지지 않는다', async () => {
+    registerHandlers({ deleteStatus: 500 });
+
+    renderMyWishlist();
+
+    expect(await screen.findByText('그린티 토너')).toBeInTheDocument();
+
+    fireEvent.click(await screen.findByRole('button', { name: /찜 해제/ }));
+
+    const toastMessage = await screen.findByText('찜 해제에 실패했어요. 다시 시도해 주세요');
+    expect(toastMessage.closest('[role="status"]')).toHaveTextContent(
+      '찜 해제에 실패했어요. 다시 시도해 주세요',
+    );
+  });
+
+  it('찜 해제가 실패해도 카드가 목록에 남는다 — 낙관적 제거를 하지 않는다', async () => {
+    registerHandlers({ deleteStatus: 500 });
+
+    renderMyWishlist();
+
+    expect(await screen.findByText('그린티 토너')).toBeInTheDocument();
+
+    fireEvent.click(await screen.findByRole('button', { name: /찜 해제/ }));
+
+    await screen.findByText('찜 해제에 실패했어요. 다시 시도해 주세요');
+    expect(screen.getByText('그린티 토너')).toBeInTheDocument();
   });
 });

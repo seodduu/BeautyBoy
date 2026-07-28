@@ -3,9 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { fetchCartItems, removeCartItem, updateCartQuantity } from '../api/cart';
 import { checkCompat } from '../api/compat';
+import { queryKeys } from '../api/queryKeys';
 import { CartLine } from '../components/cart/CartLine';
 import { CompatBanner } from '../components/compat/CompatBanner';
 import { EmptyState } from '../components/common/EmptyState';
+import { ErrorState } from '../components/common/ErrorState';
 import { Button } from '../components/ui/Button';
 import { Skeleton } from '../components/ui/Skeleton';
 import { formatWon } from '../components/ui/Price';
@@ -24,7 +26,12 @@ export function Cart() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const cartQuery = useQuery({ queryKey: ['cart'], queryFn: fetchCartItems });
+  const cartQuery = useQuery({
+    queryKey: queryKeys.cart(),
+    queryFn: fetchCartItems,
+    // 수량·재고·합계가 곧 결제 금액이다 — 전역 60초 staleTime을 여기서 덮어써 항상 최신을 받는다.
+    staleTime: 0,
+  });
   const items = useMemo(() => cartQuery.data ?? [], [cartQuery.data]);
 
   // 담긴 goodsNo 집합이 바뀔 때만 궁합을 재조회한다 — 수량만 바뀌는 흔한 조작에는 다시 부르지 않는다.
@@ -34,7 +41,7 @@ export function Cart() {
   );
 
   const compatQuery = useQuery({
-    queryKey: ['compat', goodsNos.join(',')],
+    queryKey: queryKeys.compat(goodsNos),
     queryFn: () => checkCompat(goodsNos),
     enabled: goodsNos.length > 0,
   });
@@ -42,13 +49,13 @@ export function Cart() {
   const quantityMutation = useMutation({
     mutationFn: ({ cartItemId, quantity }: { cartItemId: number; quantity: number }) =>
       updateCartQuantity(cartItemId, quantity),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['cart'] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.cart() }),
   });
 
   const removeMutation = useMutation({
     mutationFn: (cartItemId: number) => removeCartItem(cartItemId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['cart'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.cart() });
       toast('삭제했어요');
     },
   });
@@ -64,7 +71,7 @@ export function Cart() {
   if (cartQuery.isError) {
     return (
       <div className="bb-cart">
-        <p className="bb-cart__error">장바구니를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.</p>
+        <ErrorState title="장바구니를 불러오지 못했어요" onRetry={() => cartQuery.refetch()} />
       </div>
     );
   }

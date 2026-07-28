@@ -1,11 +1,24 @@
-import { beforeEach, describe, expect, it } from 'vitest';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { http, HttpResponse } from 'msw';
 import { server } from '../../mocks/server';
 import { Header } from './Header';
 import { useAuthStore } from '../../stores/authStore';
+
+beforeAll(() => {
+  // Header가 769px 리사이즈 시 시트를 닫기 위해 matchMedia를 쓴다. jsdom에는 구현이 없다.
+  Object.defineProperty(window, 'matchMedia', {
+    writable: true,
+    value: (query: string) => ({
+      matches: false,
+      media: query,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+    }),
+  });
+});
 
 function renderHeader() {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -202,5 +215,139 @@ describe('Header — 앱(로그인 이후) 내비', () => {
       el.textContent?.trim(),
     );
     expect(labels).toEqual(['루틴 가이드', '랭킹', '전체 상품', '장바구니', '민수님', '로그아웃']);
+  });
+});
+
+describe('모바일 햄버거 내비', () => {
+  beforeEach(() => {
+    useAuthStore.setState({ accessToken: null, member: null, isBootstrapping: false });
+  });
+
+  it('메뉴 버튼은 aria-expanded=false로 시작한다', () => {
+    renderHeaderAt('/main');
+
+    const toggle = screen.getByRole('button', { name: '메뉴 열기' });
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  it('메뉴를 열면 PRIMARY_NAV 세 링크가 모두 보인다 — 768px 이하에서 사라지던 것들이다', async () => {
+    renderHeaderAt('/main');
+
+    fireEvent.click(screen.getByRole('button', { name: '메뉴 열기' }));
+
+    const sheet = screen.getByRole('navigation', { name: '메뉴' });
+    expect(within(sheet).getByRole('link', { name: '루틴 가이드' })).toHaveAttribute(
+      'href',
+      '/routine',
+    );
+    expect(within(sheet).getByRole('link', { name: '랭킹' })).toHaveAttribute('href', '/ranking');
+    expect(within(sheet).getByRole('link', { name: '전체 상품' })).toHaveAttribute(
+      'href',
+      '/goods',
+    );
+  });
+
+  it('링크를 누르면 메뉴가 닫힌다', async () => {
+    renderHeaderAt('/main');
+
+    fireEvent.click(screen.getByRole('button', { name: '메뉴 열기' }));
+    const sheet = screen.getByRole('navigation', { name: '메뉴' });
+    fireEvent.click(within(sheet).getByRole('link', { name: '랭킹' }));
+
+    expect(screen.queryByRole('navigation', { name: '메뉴' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '메뉴 열기' })).toHaveAttribute(
+      'aria-expanded',
+      'false',
+    );
+  });
+
+  it('버튼을 다시 누르면 닫힌다 (aria-expanded=false)', async () => {
+    renderHeaderAt('/main');
+
+    const toggle = screen.getByRole('button', { name: '메뉴 열기' });
+    fireEvent.click(toggle);
+    expect(screen.getByRole('button', { name: '메뉴 닫기' })).toHaveAttribute(
+      'aria-expanded',
+      'true',
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: '메뉴 닫기' }));
+    expect(screen.getByRole('button', { name: '메뉴 열기' })).toHaveAttribute(
+      'aria-expanded',
+      'false',
+    );
+    expect(screen.queryByRole('navigation', { name: '메뉴' })).not.toBeInTheDocument();
+  });
+
+  it('Esc를 누르면 닫힌다', async () => {
+    renderHeaderAt('/main');
+
+    fireEvent.click(screen.getByRole('button', { name: '메뉴 열기' }));
+    expect(screen.getByRole('navigation', { name: '메뉴' })).toBeInTheDocument();
+
+    fireEvent.keyDown(document, { key: 'Escape' });
+
+    expect(screen.queryByRole('navigation', { name: '메뉴' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '메뉴 열기' })).toHaveAttribute(
+      'aria-expanded',
+      'false',
+    );
+  });
+
+  it('라우트가 바뀌면 닫힌다 — 이동 후에도 시트가 남으면 안 된다', async () => {
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={['/main']}>
+          <Routes>
+            <Route path="/main" element={<Header />} />
+            <Route path="/ranking" element={<Header />} />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: '메뉴 열기' }));
+    const sheet = screen.getByRole('navigation', { name: '메뉴' });
+    fireEvent.click(within(sheet).getByRole('link', { name: '랭킹' }));
+
+    await waitFor(() =>
+      expect(screen.queryByRole('navigation', { name: '메뉴' })).not.toBeInTheDocument(),
+    );
+  });
+
+  it('장바구니와 계정은 햄버거 안이 아니라 상단바에 남는다', () => {
+    useAuthStore.getState().setAuth('token-abc', {
+      id: 1,
+      email: 'test@beautyboy.dev',
+      nickname: '민수',
+      grade: 'BRONZE',
+    });
+
+    renderHeaderAt('/main');
+
+    // 메뉴가 닫힌 상태에서도 장바구니·닉네임 링크는 상단바에 그대로 보인다.
+    expect(screen.getByRole('link', { name: '장바구니' })).toBeInTheDocument();
+    expect(screen.getByText('민수님')).toBeInTheDocument();
+    expect(screen.queryByRole('navigation', { name: '메뉴' })).not.toBeInTheDocument();
+  });
+
+  it('랜딩 헤더에서도 LANDING_NAV 네 개가 메뉴로 들어간다', () => {
+    renderHeaderAt('/');
+
+    fireEvent.click(screen.getByRole('button', { name: '메뉴 열기' }));
+
+    const sheet = screen.getByRole('navigation', { name: '메뉴' });
+    expect(within(sheet).getByRole('link', { name: '루틴 가이드' })).toHaveAttribute(
+      'href',
+      '/routine',
+    );
+    expect(within(sheet).getByRole('link', { name: '랭킹' })).toHaveAttribute('href', '/ranking');
+    expect(within(sheet).getByRole('link', { name: '전체 상품' })).toHaveAttribute(
+      'href',
+      '/goods',
+    );
+    expect(within(sheet).getByRole('link', { name: '로그인' })).toHaveAttribute('href', '/login');
   });
 });

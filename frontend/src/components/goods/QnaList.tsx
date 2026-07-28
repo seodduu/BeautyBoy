@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { fetchQna } from '../../api/qna';
 import { qnaStatusLabel } from '../../features/qna/status';
 import { EmptyState } from '../common/EmptyState';
+import { ErrorState } from '../common/ErrorState';
 import { Skeleton } from '../ui/Skeleton';
 import { QnaForm } from './QnaForm';
 import './QnaList.css';
@@ -49,7 +50,7 @@ export function QnaList({ goodsNo, active }: QnaListProps) {
     return (
       <div className="bb-qna-list">
         <QnaForm goodsNo={goodsNo} />
-        <p className="bb-qna-list__error">문의를 불러오지 못했어요.</p>
+        <ErrorState title="문의를 불러오지 못했어요" onRetry={() => query.refetch()} />
       </div>
     );
   }

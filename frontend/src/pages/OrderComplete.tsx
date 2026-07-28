@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { isAxiosError } from 'axios';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { confirmPayment, type PaymentConfirmResult } from '../api/order';
+import { queryKeys } from '../api/queryKeys';
 import { formatWon } from '../components/ui/Price';
 import './OrderComplete.css';
 
@@ -59,7 +60,7 @@ export function OrderComplete() {
       .then((confirmed) => {
         setResult(confirmed);
         // 주문이 끝나 장바구니가 비었으므로 다시 읽는다.
-        queryClient.invalidateQueries({ queryKey: ['cart'] });
+        queryClient.invalidateQueries({ queryKey: queryKeys.cart() });
       })
       .catch((err: unknown) => setFailure(readServerError(err)));
   }, [hasValidParams, mutateAsync, queryClient]);

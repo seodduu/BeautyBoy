@@ -124,9 +124,8 @@ describe('RoutineSection', () => {
   it('풀 조회가 실패하면 에러 문구를 보여주고 빈 상태 문구는 보여주지 않는다', () => {
     renderSection({ isError: true });
 
-    expect(
-      screen.getByText('상품을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.'),
-    ).toBeInTheDocument();
+    expect(screen.getByRole('alert')).toBeInTheDocument();
+    expect(screen.getByText('상품을 불러오지 못했어요')).toBeInTheDocument();
     expect(screen.queryByText('표시할 상품이 없어요')).not.toBeInTheDocument();
   });
 

@@ -5,10 +5,12 @@ import { fetchRoutine, type SkinType } from '../api/routine';
 import { fetchMe } from '../api/member';
 import { addCartItemsBulk, type CartBulkAddItem } from '../api/cart';
 import { checkCompat } from '../api/compat';
+import { queryKeys } from '../api/queryKeys';
 import { promoteLocalSkinTypeIfNeeded, readLocalSkinType, writeLocalSkinType } from '../features/routine/skinProfile';
 import { SkinTypeQuiz } from '../components/routine/SkinTypeQuiz';
 import { RoutineStepCard } from '../components/routine/RoutineStepCard';
 import { CompatBanner } from '../components/compat/CompatBanner';
+import { ErrorState } from '../components/common/ErrorState';
 import { Button } from '../components/ui/Button';
 import { Skeleton } from '../components/ui/Skeleton';
 import { useToast } from '../components/ui/useToast';
@@ -81,9 +83,10 @@ export function Routine() {
 
   const selectedGoodsNos = Object.values(selections);
 
-  // 선택 조합(goodsNo 집합)이 바뀔 때만 재조회 — Cart.tsx와 같은 패턴.
+  // 선택 조합(goodsNo 집합)이 바뀔 때만 재조회 — queryKeys.compat이 정렬·중복제거해
+  // 고른 순서와 무관하게 같은 조합이면 같은 캐시 엔트리를 쓴다.
   const compatQuery = useQuery({
-    queryKey: ['compat', selectedGoodsNos.join(',')],
+    queryKey: queryKeys.compat(selectedGoodsNos),
     queryFn: () => checkCompat(selectedGoodsNos),
     enabled: selectedGoodsNos.length > 0,
   });
@@ -91,7 +94,7 @@ export function Routine() {
   const bulkAddMutation = useMutation({
     mutationFn: (items: CartBulkAddItem[]) => addCartItemsBulk(items),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['cart'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.cart() });
       toast('루틴을 장바구니에 담았어요');
       navigate('/cart');
     },
@@ -145,7 +148,7 @@ export function Routine() {
   if (routineQuery.isError || !routineQuery.data) {
     return (
       <div className="bb-routine">
-        <p className="bb-routine__error">루틴을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.</p>
+        <ErrorState title="루틴을 불러오지 못했어요" onRetry={() => routineQuery.refetch()} />
       </div>
     );
   }

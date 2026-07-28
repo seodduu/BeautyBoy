@@ -2,6 +2,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { fetchOrderDetail, fetchOrders } from '../../api/order';
 import { EmptyState } from '../../components/common/EmptyState';
+import { ErrorState } from '../../components/common/ErrorState';
 import { Pager } from '../../components/ui/Pager';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { formatWon } from '../../components/ui/Price';
@@ -75,7 +76,7 @@ function OrderListView() {
   if (ordersQuery.isError || !ordersQuery.data) {
     return (
       <div className="bb-my-orders">
-        <p className="bb-my-orders__error">주문내역을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.</p>
+        <ErrorState title="주문내역을 불러오지 못했어요" onRetry={() => ordersQuery.refetch()} />
       </div>
     );
   }
@@ -141,7 +142,7 @@ function OrderDetailView({ orderNo }: { orderNo: string }) {
   if (detailQuery.isError || !detailQuery.data) {
     return (
       <div className="bb-order-detail">
-        <p className="bb-order-detail__error">주문 정보를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.</p>
+        <ErrorState title="주문 정보를 불러오지 못했어요" onRetry={() => detailQuery.refetch()} />
       </div>
     );
   }

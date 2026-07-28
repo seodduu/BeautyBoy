@@ -1,5 +1,6 @@
 import type { QueryClient } from '@tanstack/react-query';
 import { addPickToCart } from '../../components/routine/PickCard';
+import { queryKeys } from '../../api/queryKeys';
 
 /**
  * 세트/루틴 일괄 담기 — 픽을 순차로 담고 **실패는 건너뛰고 집계로 돌려준다.**
@@ -26,6 +27,6 @@ export async function addSetToCart(
   // 전량 실패해도 무효화한다. 담기 실패의 원인이 "이미 장바구니에 있음"이나 서버 측 상태
   // 변화일 수 있어, 실패했다는 이유로 캐시를 낡은 채 두면 화면이 서버와 어긋난다.
   // 추출 전 동작과도 같다.
-  queryClient.invalidateQueries({ queryKey: ['cart'] });
+  queryClient.invalidateQueries({ queryKey: queryKeys.cart() });
   return { added, skipped: goodsNos.length - added };
 }

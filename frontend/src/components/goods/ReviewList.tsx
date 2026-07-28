@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { fetchReviewStats, fetchReviews } from '../../api/review';
 import { EmptyState } from '../common/EmptyState';
+import { ErrorState } from '../common/ErrorState';
 import { Skeleton } from '../ui/Skeleton';
 import { ReviewForm } from './ReviewForm';
 import './ReviewList.css';
@@ -56,7 +57,13 @@ export function ReviewList({ goodsNo, active }: ReviewListProps) {
     return (
       <div className="bb-review-list">
         <ReviewForm goodsNo={goodsNo} />
-        <p className="bb-review-list__error">리뷰를 불러오지 못했어요.</p>
+        <ErrorState
+          title="리뷰를 불러오지 못했어요"
+          onRetry={() => {
+            statsQuery.refetch();
+            listQuery.refetch();
+          }}
+        />
       </div>
     );
   }

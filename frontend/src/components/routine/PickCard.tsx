@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { fetchGoodsDetail } from '../../api/goods';
 import { addCartItem } from '../../api/cart';
+import { queryKeys } from '../../api/queryKeys';
 import { Button } from '../ui/Button';
 import { Price } from '../ui/Price';
 import { Tag } from '../ui/Tag';
@@ -84,9 +85,8 @@ export function PickCard({ pick, reason, matched }: PickCardProps) {
     setAdding(true);
     try {
       await addPickToCart(queryClient, pick.goodsNo);
-      // Header.tsx의 ['cart'] 쿼리(장바구니 배지)를 무효화해 새로고침 없이 갱신되게 한다
-      // (Detail.tsx와 같은 패턴).
-      queryClient.invalidateQueries({ queryKey: ['cart'] });
+      // 장바구니 배지(Header.tsx)를 무효화해 새로고침 없이 갱신되게 한다(Detail.tsx와 같은 패턴).
+      queryClient.invalidateQueries({ queryKey: queryKeys.cart() });
       toast('담았어요 — 옵션 변경은 장바구니에서');
     } catch {
       toast('담기에 실패했어요. 다시 시도해 주세요', { tone: 'danger' });

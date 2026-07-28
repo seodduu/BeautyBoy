@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { answerAdminQna, fetchAdminQna, type AdminQnaResponse } from '../../api/admin';
+import { ErrorState } from '../../components/common/ErrorState';
 import { Button } from '../../components/ui/Button';
 import { Pager } from '../../components/ui/Pager';
 import { Skeleton } from '../../components/ui/Skeleton';
@@ -92,7 +93,9 @@ export function AdminQna() {
 
       {query.isLoading && <Skeleton ratio="16 / 5" />}
 
-      {query.isError && <p className="bb-admin-qna__error">문의 목록을 불러오지 못했어요.</p>}
+      {query.isError && (
+        <ErrorState title="문의 목록을 불러오지 못했어요" onRetry={() => query.refetch()} />
+      )}
 
       {query.isSuccess && items.length === 0 && <p className="bb-admin-qna__hint">등록된 문의가 없어요.</p>}
 

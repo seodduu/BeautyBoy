@@ -946,6 +946,14 @@ The system avoids drop shadows entirely. Depth is created by photographic layeri
 | xs | 768px | Top nav collapses to a hamburger; section padding drops to `{spacing.section}` |
 | xxs | 640px | Single-column reading; hero display drops to `{typography.display-sm}`; pricing tiers stack 1-up |
 
+**이월 결정(§6, 2026-07-29 carryover-5-1):** 실측상 브레이크포인트가 900/768/767/820/640/600/480/
+1024/1440px 9종 35회로 혼재해 있다. 767px 3곳(오타)은 768px로 고쳤지만, 나머지 수렴은 **하지
+않는다** — 증상이 드러나는 조건이 "창을 850px 근처로 맞춤" 또는 "화면 폭이 정확히 768px"뿐이라
+손님에게 보이는 손해가 없고(390px 실측 12개 화면 전부 가로 오버플로 0), 숫자를 옮기면 CSS 21개
+파일 35개 규칙에 대해 화면 전수 스크린샷 대조가 필요해 비용이 이 웨이브의 나머지 전부를 합친
+것보다 크며, 1차 MVP 완성 상태라 부채가 자라지 않는다. 인지하고 우선순위를 매긴 부채로 여기
+남겨 둔다 — 코드와 문서가 갈라진 채로 방치하지 않기 위해서다.
+
 ### Touch Targets
 - Every `{button-primary}` is 40px tall — at the lower edge of the 44×44 WCAG target. On mobile the buttons grow to 48px height (still `{rounded.full}`, still `{typography.button}`).
 - `{nav-link}` items get `{spacing.sm}` vertical padding inside the mobile menu, expanding the tap target without changing typography.
@@ -957,6 +965,13 @@ The system avoids drop shadows entirely. Depth is created by photographic layeri
 
 ### Collapsing Strategy
 - **Nav.** Centred desktop menu collapses into a single hamburger that opens an overlay sheet; the right-side `{button-primary}` "Try Runwai" stays visible above the hamburger as the persistent action.
+  뷰티보이 IA: 데스크톱의 가운데 정렬 메뉴(루틴 가이드 · 랭킹 · 전체 상품, 랜딩에서는 로그인
+  포함 네 개)가 768px 이하에서 상단바 우측 끝의 햄버거 버튼 하나로 접힌다. 버튼을 열면 상단바
+  바로 아래로 펼치는 시트(오버레이 없음)에 링크가 세로 1열로 나열된다. 원본의 "Try Runwai"
+  자리에 해당하는 persistent action은 **장바구니와 계정**이다 — 이 둘은 햄버거 안으로 들어가지
+  않고 상단바에 그대로 남는다(돈으로 가는 길과 로그인 상태 표시는 항상 보여야 한다). 시트는
+  링크 클릭 · 버튼 재클릭 · Esc · 라우트 변경 네 경로로 닫히고, 바깥 클릭 감지는 붙이지 않는다
+  — 오버레이가 없는 형태라 바깥 클릭 감지를 붙이면 그 아래 콘텐츠의 첫 클릭을 삼킨다.
 - **Pricing.** 5-column slab collapses to single-column stacked cards at xxs; the featured `{colors.hairline}` infill is preserved on the Pro card so the tonal cue survives the stack.
 - **Research grid.** 5/7 split collapses to image-on-top, text-below at sm; thumbnail rounding (`{rounded.md}`) is preserved.
 - **Footer.** 6-column link grid collapses to 2-column at sm and 1-column at xxs; the lowercase `runwai` wordmark stays bottom-left, legal links stack underneath.

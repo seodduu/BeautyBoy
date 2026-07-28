@@ -2,10 +2,12 @@ import { useEffect, useState } from 'react';
 import { isAxiosError } from 'axios';
 import { useQuery } from '@tanstack/react-query';
 import { fetchCartItems } from '../api/cart';
+import { queryKeys } from '../api/queryKeys';
 import { fetchAddresses } from '../api/member';
 import { createOrder } from '../api/order';
 import { requestTossPayment } from '../features/payment/toss';
 import { AddressSection, type ManualAddress } from '../components/order/AddressSection';
+import { ErrorState } from '../components/common/ErrorState';
 import { Button } from '../components/ui/Button';
 import { Skeleton } from '../components/ui/Skeleton';
 import { formatWon } from '../components/ui/Price';
@@ -56,7 +58,12 @@ function validateReceiver(v: ManualAddress): string | null {
 export function Order() {
   const member = useAuthStore((state) => state.member);
 
-  const cartQuery = useQuery({ queryKey: ['cart'], queryFn: fetchCartItems });
+  const cartQuery = useQuery({
+    queryKey: queryKeys.cart(),
+    queryFn: fetchCartItems,
+    // 결제 직전 금액 — 여기가 틀리면 토스 승인에서 금액 불일치가 난다. 전역 60초 staleTime을 덮어쓴다.
+    staleTime: 0,
+  });
   const addressQuery = useQuery({ queryKey: ['addresses'], queryFn: fetchAddresses });
 
   const [selectedId, setSelectedId] = useState<number | 'manual' | null>(null);
@@ -84,7 +91,13 @@ export function Order() {
   if (cartQuery.isError || addressQuery.isError) {
     return (
       <div className="bb-order">
-        <p className="bb-order__error">주문서를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.</p>
+        <ErrorState
+          title="주문서를 불러오지 못했어요"
+          onRetry={() => {
+            cartQuery.refetch();
+            addressQuery.refetch();
+          }}
+        />
       </div>
     );
   }

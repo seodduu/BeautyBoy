@@ -191,6 +191,10 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  /* §2 결정 7: 18px 높이였던 히트영역을 세로 패딩으로 44px까지 넓힌다. 폰트 크기는 그대로다.
+     min-height는 패딩만으로 반올림 오차가 생겨도 44px 미만으로 떨어지지 않게 하는 안전판. */
+  padding: var(--space-sm) 0;
+  min-height: 44px;
   color: var(--color-ink-soft);
   transition: color 0.15s ease;
 }
@@ -207,10 +211,14 @@
 .bb-header__logout {
   font-family: var(--font-body);
   font-size: 14px;
+  display: inline-flex;
+  align-items: center;
   color: var(--color-ink-soft);
   background: none;
   border: none;
-  padding: 0;
+  /* §2 결정 7: nav-link와 같은 이유로 44px 히트영역을 세로 패딩으로 확보한다. */
+  padding: var(--space-sm) 0;
+  min-height: 44px;
   cursor: pointer;
   transition: color 0.15s ease;
 }
@@ -261,4 +269,77 @@
     gap: 10px;
     font-size: 12px;
   }
+}
+
+/* ── 모바일 햄버거 메뉴 (§2 결정 6) ──────────────────────────
+   .bb-header__primary-nav(위)와 .bb-landing-nav(위)의 기존 display:none 규칙은
+   그대로 둔다 — 그 규칙이 접는 쪽이고, 여기는 펼치는 수단을 새로 붙이는 쪽이다. */
+.bb-header__menu-toggle {
+  display: none;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  /* WCAG 44×44 최소 타깃 — 스페이싱 토큰이 아니라 접근성 기준값이다(DESIGN.md Touch Targets). */
+  width: 44px;
+  height: 44px;
+  background: none;
+  border: none;
+  color: var(--color-ink);
+  cursor: pointer;
+}
+
+.bb-header--dark .bb-header__menu-toggle,
+.bb-header--overlay .bb-header__menu-toggle {
+  color: var(--color-on-primary);
+}
+
+@media (max-width: 768px) {
+  /* 상단바 우측 끝, 장바구니·계정 오른쪽 — DOM 순서(nav 다음)가 이미 그 위치를 만든다. */
+  .bb-header__menu-toggle {
+    display: inline-flex;
+  }
+}
+
+@media (max-width: 640px) {
+  /* 44px 버튼이 새로 상단바에 들어오면서, 검색 자리(아직 비활성 placeholder — 실제 검색은
+     이 태스크 범위 밖)까지 더하면 390px 폭에서 가로 오버플로가 난다. 로고·장바구니·계정·
+     햄버거가 전부 실제 기능이고 검색은 자리만 있는 상태이므로, 폭이 가장 좁아 늘어설 곳이
+     없는 구간에서는 검색을 접어 햄버거가 화면 안에 들어오게 한다. */
+  .bb-header__search {
+    display: none;
+  }
+}
+
+/* 상단바 바로 아래로 펼치는 시트. 오버레이 없음 — 바깥 클릭으로 닫지 않는 설계와 짝이다.
+   흰 캔버스 + 검정 잉크만 쓴다(signal-*을 배경으로 칠하지 않는다). */
+.bb-header__sheet {
+  display: flex;
+  flex-direction: column;
+  background: var(--color-canvas);
+  border-bottom: 1px solid var(--color-hairline);
+}
+
+@media (min-width: 769px) {
+  .bb-header__sheet {
+    display: none;
+  }
+}
+
+.bb-header__sheet .bb-header__nav-link {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  padding: var(--space-sm) var(--space-lg);
+  border-bottom: 1px solid var(--color-hairline);
+  /* 시트는 항상 흰 배경이라, 다크/오버레이 헤더의 on-primary 오버라이드보다 우선해야 한다 —
+     이 파일 안에서 이 규칙 다음에 오는 선택자가 없도록 맨 뒤에 둔다. */
+  color: var(--color-ink);
+}
+
+.bb-header__sheet .bb-header__nav-link:last-child {
+  border-bottom: none;
+}
+
+.bb-header__sheet .bb-header__nav-link:hover {
+  color: var(--color-graphite);
 }

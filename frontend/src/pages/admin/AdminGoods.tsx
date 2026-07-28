@@ -9,6 +9,7 @@ import {
   type AdminGoodsListItem,
   type AdminGoodsSaveInput,
 } from '../../api/admin';
+import { ErrorState } from '../../components/common/ErrorState';
 import { Button } from '../../components/ui/Button';
 import { Field } from '../../components/ui/Field';
 import { Skeleton } from '../../components/ui/Skeleton';
@@ -135,7 +136,7 @@ export function AdminGoods() {
   if (listQuery.isError) {
     return (
       <div className="bb-admin-goods">
-        <p className="bb-admin-goods__error">상품 목록을 불러오지 못했어요.</p>
+        <ErrorState title="상품 목록을 불러오지 못했어요" onRetry={() => listQuery.refetch()} />
       </div>
     );
   }

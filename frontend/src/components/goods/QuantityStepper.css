@@ -12,12 +12,22 @@
   appearance: none;
   background: none;
   border: none;
+  position: relative;
   width: 32px;
   height: 32px;
   font-size: var(--fs-body-strong);
   color: var(--color-ink);
   cursor: pointer;
   border-radius: var(--rounded-full);
+}
+
+/* §2 결정 7: 원의 시각 크기는 32px 그대로, 히트영역만 44px(::before 확장).
+   -와 + 사이에는 __value(min-width 32px)가 있어 양쪽에서 6px씩 넓혀도(6+6=12 < 32)
+   서로의 히트영역과 겹치지 않는다. */
+.bb-quantity-stepper__button::before {
+  content: '';
+  position: absolute;
+  inset: -6px;
 }
 
 .bb-quantity-stepper__button:disabled {

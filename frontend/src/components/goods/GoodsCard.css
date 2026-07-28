@@ -131,6 +131,15 @@
   z-index: 1;
 }
 
+/* §2 결정 7: 시각 원은 32px 그대로 두고 히트영역만 44px로 넓힌다(::before 확장).
+   32 + 6 + 6 = 44 — 상품 카드마다 하나뿐이고 다음 카드의 찜 버튼과는 그리드 gap(space-lg)
+   만큼 떨어져 있어 인접 타깃과 겹치지 않는다. */
+.bb-goods-card__wish::before {
+  content: '';
+  position: absolute;
+  inset: -6px;
+}
+
 .bb-goods-card__wish[aria-pressed='true'] {
   color: var(--color-signal-sale);
 }

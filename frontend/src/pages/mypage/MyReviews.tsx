@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { fetchMyReviews } from '../../api/review';
 import { EmptyState } from '../../components/common/EmptyState';
+import { ErrorState } from '../../components/common/ErrorState';
 import { Skeleton } from '../../components/ui/Skeleton';
 import './MyReviews.css';
 
@@ -29,7 +30,7 @@ export function MyReviews() {
   if (reviewsQuery.isError) {
     return (
       <div className="bb-my-reviews">
-        <p className="bb-my-reviews__error">내 리뷰를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.</p>
+        <ErrorState title="내 리뷰를 불러오지 못했어요" onRetry={() => reviewsQuery.refetch()} />
       </div>
     );
   }
