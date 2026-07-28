@@ -370,7 +370,7 @@ void 카테고리_표시명_변환() {
 **Files:** `CompatBanner.tsx`, `CompatBanner.test.tsx`
 **Interfaces:** Consumes `CompatCheckResult`(무변경). Props 인터페이스 불변.
 
-- [ ] **1. 실패 테스트** — `CompatBanner.test.tsx`에 추가/수정. 픽스처 `MIXED_RESULT` 추가:
+- [x] **1. 실패 테스트** — `CompatBanner.test.tsx`에 추가/수정. 픽스처 `MIXED_RESULT` 추가:
 
 ```tsx
 /* 리뷰 1-5 재현: 주의(CAUTION)와 시너지(SYNERGY)가 한 응답에 섞여 내려오는 실제 케이스.
@@ -428,18 +428,18 @@ it('주의와 시너지가 섞이면 verdict별 섹션으로 분리해 보여준
 
 (기존 CONFLICT·CAUTION·OK 케이스는 그대로 통과해야 한다 — 단언 수정 금지.)
 
-- [ ] **2. RED 확인**: `npx vitest run src/components/compat/CompatBanner.test.tsx` —
+- [x] **2. RED 확인**: `npx vitest run src/components/compat/CompatBanner.test.tsx` —
   분리 케이스가 "시너지 문구가 alert 안에 있음"으로, SYNERGY 케이스가 "status 없음"으로 실패
-- [ ] **3. 구현**: `VERDICT_ORDER = ['CONFLICT','CAUTION','SYNERGY']`로 findings를 verdict별
+- [x] **3. 구현**: `VERDICT_ORDER = ['CONFLICT','CAUTION','SYNERGY']`로 findings를 verdict별
   그룹핑, 빈 그룹은 렌더하지 않고, 그룹마다 기존 `bb-compat-banner` 마크업(TONE_CLASS/HEADING/
   ICON 유지)을 반복. SYNERGY만 `role="status"`. 컴포넌트 주석의 "SYNERGY도 alert 재사용"
   문구를 새 결정(§2 결정 1)에 맞게 고친다.
-- [ ] **4. GREEN + `npm test` + `npx tsc -b`**
-- [ ] **5. 스크린샷**: `VITE_USE_MOCK=true npm run dev` → 장바구니 궁합 배너 상태를 캡처.
+- [x] **4. GREEN + `npm test` + `npx tsc -b`**
+- [x] **5. 스크린샷**: `VITE_USE_MOCK=true npm run dev` → 장바구니 궁합 배너 상태를 캡처.
   목 핸들러의 compat 응답이 혼합 케이스가 아니면 **핸들러를 고치지 말고**(T4 소유) 목이
   주는 단일 verdict 화면을 찍는다 — 혼합 분리의 시각 검증은 테스트(스텝 1)와 W2 실스택
   확인이 담당한다 → 파일 경로 보고
-- [ ] **6. 커밋** `fix(cart): 궁합 배너를 verdict별 섹션으로 분리`
+- [x] **6. 커밋** `fix(cart): 궁합 배너를 verdict별 섹션으로 분리`
 
 ### T2-A: 목록 정렬 셀렉트
 
@@ -741,7 +741,7 @@ it('합계 라벨은 "결제 예상 금액"이고 배송비 안내가 붙는다'
   `--color-surface-cool` 플레이스홀더, `alt=""` — 상품명 텍스트가 바로 옆에 있다),
   개당 가격 `개당 {formatWon(unitPrice)}` meta 톤(`--color-graphite` — 카드 대비 최저선 준수),
   스텝퍼 `max={Math.min(item.stock, 99)}`
-- [ ] **4. GREEN + `npm test` + `npx tsc -b`**
+- [x] **4. GREEN + `npm test` + `npx tsc -b`**
 - [ ] **5. 스크린샷**: 목 dev 서버 장바구니 — 썸네일·개당가·재고 상한(+ 비활성) 보이는 상태 → 경로 보고
 - [ ] **6. 커밋** `feat(cart): 장바구니 줄 썸네일·개당가·재고 상한, 합계 문구 명확화`
 
