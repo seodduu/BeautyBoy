@@ -37,8 +37,11 @@ class TossPaymentGatewayTest {
     void setUp() {
         builder = RestClient.builder();
         server = MockRestServiceServer.bindTo(builder).build();
-        gateway = new TossPaymentGateway(
-                builder, new TossProperties("test_sk_secret", "https://api.tosspayments.com"));
+        // MockRestServiceServer가 심어둔 요청 팩토리를 게이트웨이가 덮어쓰지 않는 배선을 쓴다
+        // (덮어쓰면 목이 무력화돼 실제 토스로 요청이 나간다). 타임아웃 발화는 TossPaymentGatewayTimeoutTest가 본다.
+        gateway = TossPaymentGateway.withGivenRequestFactory(
+                builder,
+                new TossProperties("test_sk_secret", "https://api.tosspayments.com", null, null));
     }
 
     @Test
