@@ -16,7 +16,6 @@
   border-bottom: none;
 }
 
-.bb-header--overlay .bb-header__logo,
 .bb-header--overlay .bb-header__nav-link,
 .bb-header--overlay .bb-header__logout {
   color: var(--color-on-primary);
@@ -107,11 +106,12 @@
   gap: 32px;
 }
 
-/* 랜딩 바는 히어로 칼럼과 같은 폭이어야 로고와 워드마크 왼쪽 끝이 한 선에 선다.
+/* 랜딩 바는 히어로 칼럼과 같은 폭. 좌측에는 아무것도 없다(브랜드명은 히어로
+   정중앙 워드마크가 말한다) — 내비만 오른쪽 끝에 붙인다.
    (기본 .bb-header__bar 뒤에 와야 max-width가 덮이지 않는다) */
 .bb-header__bar--landing {
   max-width: var(--landing-column);
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: var(--space-lg);
 }
 
@@ -133,14 +133,6 @@
   text-transform: uppercase;
   white-space: nowrap;
   color: var(--color-ink);
-}
-
-/* 랜딩 헤더의 bb 모노그램 심벌. stroke가 currentColor라 로고 링크의 색 규칙
-   (.bb-header--overlay .bb-header__logo)을 그대로 따른다. */
-.bb-header__mark {
-  display: block;
-  width: 52px;
-  height: 52px;
 }
 
 /* 우측 내비 안의 첫 묶음. 부모(.bb-header__nav)의 gap과 같은 값이라 시각적으로는
