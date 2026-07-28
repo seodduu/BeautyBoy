@@ -7,8 +7,8 @@ import com.beautyboy.compat.dto.CompatCheckResponse;
 import com.beautyboy.compat.dto.CompatFinding;
 import com.beautyboy.ingredient.GoodsIngredientQueryService;
 import com.beautyboy.ingredient.IngredientCategoryLabels;
-import com.beautyboy.ingredient.IngredientRule;
-import com.beautyboy.ingredient.IngredientRuleRepository;
+import com.beautyboy.ingredient.IngredientRuleQueryService;
+import com.beautyboy.ingredient.IngredientRuleQueryService.RuleVerdict;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -26,7 +26,7 @@ import java.util.TreeSet;
  *
  * ingredient 도메인은 두 인터페이스로만 소비한다(패키지 = 서비스 경계):
  *  - {@link GoodsIngredientQueryService#findCategoriesByGoodsIds} — 상품→분류집합
- *  - {@link IngredientRuleRepository#findNormalized} — 분류쌍 규칙(사전순 정규화 조회)
+ *  - {@link IngredientRuleQueryService#findNormalized} — 분류쌍 규칙(사전순 정규화 조회)
  *
  * 결정적 출력: 분류를 TreeSet(사전순)로 모아 i<j로 순회하므로 findNormalized 호출·finding 생성이
  * 항상 같은 순서이고, 최종 findings는 심각도 내림차순→categoryA→categoryB로 재정렬해 고정한다.
@@ -45,12 +45,12 @@ public class CompatService implements CompatQueryService {
     }
 
     private final GoodsIngredientQueryService goodsIngredientQueryService;
-    private final IngredientRuleRepository ruleRepository;
+    private final IngredientRuleQueryService ruleQueryService;
 
     public CompatService(GoodsIngredientQueryService goodsIngredientQueryService,
-                         IngredientRuleRepository ruleRepository) {
+                         IngredientRuleQueryService ruleQueryService) {
         this.goodsIngredientQueryService = goodsIngredientQueryService;
-        this.ruleRepository = ruleRepository;
+        this.ruleQueryService = ruleQueryService;
     }
 
     public CompatCheckResponse check(CompatCheckRequest request) {
@@ -78,7 +78,7 @@ public class CompatService implements CompatQueryService {
             for (int j = i + 1; j < categories.size(); j++) {
                 String ca = categories.get(i);
                 String cb = categories.get(j);
-                Optional<IngredientRule> rule = ruleRepository.findNormalized(ca, cb);
+                Optional<RuleVerdict> rule = ruleQueryService.findNormalized(ca, cb);
                 if (rule.isEmpty()) {
                     continue;
                 }
@@ -87,10 +87,10 @@ public class CompatService implements CompatQueryService {
                 TreeSet<Long> contributors = new TreeSet<>(byCategory.get(ca));
                 contributors.addAll(byCategory.get(cb));
                 findings.add(new CompatFinding(
-                        rule.get().getVerdict(),
+                        rule.get().verdict(),
                         IngredientCategoryLabels.labelOf(ca),
                         IngredientCategoryLabels.labelOf(cb),
-                        rule.get().getReason(),
+                        rule.get().reason(),
                         List.copyOf(contributors)));
             }
         }
@@ -119,8 +119,8 @@ public class CompatService implements CompatQueryService {
         // 규칙 전량(시드 18행) 1회 로드 후 정규화 키("A|B", A<B 사전순)로 인덱싱 —
         // 후보 × 분류쌍마다 findNormalized를 부르면 쿼리가 후보 수 × 쌍 수만큼 나간다.
         Map<String, String> verdictByPair = new HashMap<>();
-        for (IngredientRule rule : ruleRepository.findAll()) {
-            verdictByPair.put(rule.getCategoryA() + "|" + rule.getCategoryB(), rule.getVerdict());
+        for (RuleVerdict rule : ruleQueryService.findAll()) {
+            verdictByPair.put(rule.categoryA() + "|" + rule.categoryB(), rule.verdict());
         }
 
         Map<Long, String> result = new HashMap<>();
