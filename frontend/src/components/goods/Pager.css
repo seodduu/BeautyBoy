@@ -1,0 +1,48 @@
+/* DESIGN.md `pager` — 상품 그리드 아래 중앙. 그리드와의 사이 {spacing.xl},
+   상단 hairline 없음(그리드 자체가 구분선 없는 시스템이다). */
+.bb-pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  margin-top: var(--space-xl);
+}
+
+/* 번호 — 기본은 잉크색 텍스트, 현재 페이지만 "선택 상태 — 색 반전" pill */
+.bb-pager__number {
+  min-width: 36px;
+  padding: var(--space-xs) var(--space-sm);
+  border: 1px solid transparent;
+  border-radius: var(--rounded-full);
+  background: transparent;
+  color: var(--color-ink);
+  font-family: inherit;
+  font-size: var(--fs-body-tight);
+  line-height: var(--lh-body-tight);
+  letter-spacing: var(--ls-body-tight);
+  cursor: pointer;
+}
+
+.bb-pager__number[aria-current='page'] {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+/* 이전·다음 — 텍스트 버튼. 비활성은 색만이 아니라 disabled 자체가 신호다. */
+.bb-pager__step {
+  padding: var(--space-xs) var(--space-sm);
+  border: none;
+  background: transparent;
+  color: var(--color-ink);
+  font-family: inherit;
+  font-size: var(--fs-body-tight);
+  line-height: var(--lh-body-tight);
+  letter-spacing: var(--ls-body-tight);
+  cursor: pointer;
+}
+
+.bb-pager__step:disabled {
+  color: var(--color-stone);
+  cursor: default;
+}
