@@ -2,10 +2,10 @@ import { useEffect, useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { RoutineSection } from '../components/routine/RoutineSection';
 import { SetTabs } from '../components/routine/SetTabs';
-import { addPickToCart } from '../components/routine/PickCard';
 import { Button } from '../components/ui/Button';
 import { Skeleton } from '../components/ui/Skeleton';
 import { useToast } from '../components/ui/useToast';
+import { addSetToCart } from '../features/routine/addSetToCart';
 import { ROUTINE_STEPS } from '../features/routine/steps';
 import { useComposer } from '../features/affinity/useComposer';
 import { deriveSetConcepts } from '../features/affinity/setConcepts';
@@ -87,19 +87,11 @@ export function Main() {
    */
   async function handleAddAll() {
     setAddingAll(true);
-    let added = 0;
     try {
-      for (const pick of picks) {
-        try {
-          await addPickToCart(queryClient, pick.goodsNo);
-          added += 1;
-        } catch {
-          // 품절·네트워크 실패 모두 이 픽만 건너뛴다.
-        }
-      }
-      queryClient.invalidateQueries({ queryKey: ['cart'] });
-
-      const skipped = picks.length - added;
+      const { added, skipped } = await addSetToCart(
+        queryClient,
+        picks.map((pick) => pick.goodsNo),
+      );
       if (added === 0) {
         toast('담지 못했어요. 잠시 후 다시 시도해 주세요', { tone: 'danger' });
       } else if (skipped === 0) {
