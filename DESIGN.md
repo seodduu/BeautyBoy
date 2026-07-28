@@ -785,8 +785,9 @@ The system avoids drop shadows entirely. Depth is created by photographic layeri
   `{typography.meta}` / `{colors.slate}`(list-toolbar·goods-card의 메타 텍스트와 동일 조합,
   본문보다 한 단 낮은 무채색). 문구 끝에 `{typography.link-sm}` / `{colors.ink}` 텍스트 링크
   (밑줄, list-toolbar "전체 보기"류 링크와 동일 사양)로 프로필/가입 화면을 연결한다.
-- 로딩(프로필 확정 전): 같은 크기의 스켈레톤 pill 3개(공용 `{Skeleton}` 컴포넌트를 `{rounded.full}`로
-  덮어써 pill 모양을 유지), 조작 불가. 확정 후 높이가 흔들리지 않는다.
+- 로딩(프로필 확정 전): 아이브로우·제목·탭 pill 3개 **전부** 공용 `{Skeleton}` 컴포넌트로 채운다
+  (아이브로우·제목은 각 타이포 크기와 같은 세로 크기로, 탭은 `{rounded.full}`로 덮어써 pill 모양을
+  유지) — 세 줄이 같은 로딩 언어(shimmer)를 쓴다. 조작 불가. 확정 후 높이가 흔들리지 않는다.
 - 모바일(768px 미만): 탭 가로 스크롤(list-toolbar와 동일). 한글이므로 `word-break: keep-all`.
 
 **`pager`** — 페이지 이동 공용 컴포넌트 (상품 그리드 아래 중앙 / admin 표 아래)

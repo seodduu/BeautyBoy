@@ -4,6 +4,11 @@ import { SKIN_TYPE_CONCERNS, effectiveConcerns, type DerivedConcern } from './pr
 /** 세트 수. 탭 3개가 한 줄에 들어가는 최대치이자 고르는 부담이 없는 수. */
 export const SET_COUNT = 3;
 
+/** 세트 표시 문자(A, B, C…) — SET_COUNT에서 자동 생성돼 개수가 어긋날 일이 없다. */
+export const SET_LETTERS: readonly string[] = Array.from({ length: SET_COUNT }, (_, i) =>
+  String.fromCharCode(65 + i),
+);
+
 /**
  * 최후 폴백 3종 — 비로그인·무프로필에게 보이는 대표 컨셉.
  * pore/trouble은 남성 지성 피부 최빈 고민, moisture가 건성 계열을 덮는다.

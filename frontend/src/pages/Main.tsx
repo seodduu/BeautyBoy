@@ -136,8 +136,8 @@ export function Main() {
           // .bb-set-tabs와 같은 3단(eyebrow → title → 탭 줄) 구조로 자리를 채운다 — 확정 후
           // 실제 SetTabs와 같은 높이여야 프로필 도착 순간 앵커 네비·섹션들이 밀리지 않는다.
           <div className="bb-set-tabs__skeleton" aria-hidden>
-            <div className="bb-set-tabs__skeleton-eyebrow" />
-            <div className="bb-set-tabs__skeleton-title" />
+            <Skeleton ratio="auto" className="bb-set-tabs__skeleton-eyebrow" />
+            <Skeleton ratio="auto" className="bb-set-tabs__skeleton-title" />
             <div className="bb-set-tabs__skeleton-list">
               <Skeleton ratio="auto" className="bb-set-tabs__skeleton-pill" />
               <Skeleton ratio="auto" className="bb-set-tabs__skeleton-pill" />
