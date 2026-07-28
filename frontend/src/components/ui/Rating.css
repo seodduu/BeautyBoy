@@ -1,10 +1,11 @@
+/* 카드(surface) 위 보조 텍스트 최저선(DESIGN.md) — ash는 2.6:1로 AA 미달, graphite는 8.7:1 */
 .bb-rating {
   font-family: var(--font-body);
   font-size: var(--fs-meta);
   line-height: var(--lh-meta);
-  color: var(--color-ash);
+  color: var(--color-graphite);
 }
 
 .bb-rating--empty {
-  color: var(--color-ash);
+  color: var(--color-graphite);
 }

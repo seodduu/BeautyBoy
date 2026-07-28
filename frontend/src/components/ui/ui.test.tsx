@@ -67,9 +67,9 @@ describe('Price', () => {
 });
 
 describe('Rating', () => {
-  it('reviewCount가 0이면 "리뷰 없음"을 보여준다', () => {
+  it('reviewCount가 0이면 "첫 리뷰를 기다려요"를 보여준다', () => {
     render(<Rating rating={0} reviewCount={0} />);
-    expect(screen.getByText('리뷰 없음')).toBeInTheDocument();
+    expect(screen.getByText('첫 리뷰를 기다려요')).toBeInTheDocument();
   });
 
   it('rating=4.3이면 접근성 텍스트에 4.3이 포함된다', () => {
