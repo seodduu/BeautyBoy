@@ -167,3 +167,22 @@ describe('Header — 랜딩 내비', () => {
     }
   });
 });
+
+describe('Header — 앱(로그인 이후) 내비', () => {
+  beforeEach(() => {
+    useAuthStore.setState({ accessToken: null, member: null, isBootstrapping: false });
+  });
+
+  it('랜딩이 아닌 화면에서도 루틴 가이드·랭킹·전체 상품 링크가 실제 라우트를 가리킨다', () => {
+    renderHeaderAt('/main');
+    expect(screen.getByRole('link', { name: '루틴 가이드' })).toHaveAttribute('href', '/routine');
+    expect(screen.getByRole('link', { name: '랭킹' })).toHaveAttribute('href', '/ranking');
+    expect(screen.getByRole('link', { name: '전체 상품' })).toHaveAttribute('href', '/goods');
+  });
+
+  it('현재 위치와 일치하는 항목에 aria-current="page"가 붙는다', () => {
+    renderHeaderAt('/ranking');
+    expect(screen.getByRole('link', { name: '랭킹' })).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByRole('link', { name: '루틴 가이드' })).not.toHaveAttribute('aria-current');
+  });
+});

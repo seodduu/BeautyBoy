@@ -16,6 +16,14 @@ const LANDING_NAV = [
   { label: '로그인', to: '/login' },
 ] as const;
 
+/* 앱(로그인 이후) 헤더의 주요 메뉴 — 랜딩 내비의 로그인 링크만 뺀 3개.
+   로그인/로그아웃은 이 배열과 별도로 기존 자리(cart 옆)에 그대로 둔다. */
+const PRIMARY_NAV = [
+  { label: '루틴 가이드', to: '/routine' },
+  { label: '랭킹', to: '/ranking' },
+  { label: '전체 상품', to: '/goods' },
+] as const;
+
 /**
  * 올리브영식 헤더: 로고 / 검색바 자리(실제 검색은 후속 웨이브) / 장바구니·로그인.
  * 로그인 상태(authStore.member)면 "로그인" 링크 대신 닉네임 + 로그아웃 버튼을 표시한다.
@@ -94,6 +102,19 @@ export function Header() {
         <Link to="/main" className="bb-header__logo" aria-label="뷰티보이 메인으로">
           BEAUTY BOY<span className="bb-header__logo-dot">.</span>
         </Link>
+
+        <nav className="bb-header__primary-nav" aria-label="주요 메뉴">
+          {PRIMARY_NAV.map(({ label, to }) => (
+            <Link
+              to={to}
+              className="bb-header__nav-link"
+              key={to}
+              aria-current={pathname === to ? 'page' : undefined}
+            >
+              {label}
+            </Link>
+          ))}
+        </nav>
 
         {/* 검색 기능은 이 태스크의 범위가 아님 — 자리만 확보 */}
         <div className="bb-header__search" role="search" aria-label="상품 검색(준비 중)">
