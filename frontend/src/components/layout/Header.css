@@ -139,8 +139,8 @@
    (.bb-header--overlay .bb-header__logo)을 그대로 따른다. */
 .bb-header__mark {
   display: block;
-  width: 26px;
-  height: 26px;
+  width: 52px;
+  height: 52px;
 }
 
 /* 우측 내비 안의 첫 묶음. 부모(.bb-header__nav)의 gap과 같은 값이라 시각적으로는
