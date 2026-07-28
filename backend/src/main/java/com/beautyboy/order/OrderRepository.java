@@ -1,6 +1,8 @@
 package com.beautyboy.order;
 
 import jakarta.persistence.LockModeType;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
@@ -14,6 +16,13 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     Optional<Order> findByOrderNo(String orderNo);
 
     List<Order> findByMemberIdOrderByOrderedAtDesc(Long memberId);
+
+    /**
+     * 내 주문 한 페이지. 2차 정렬 키로 id desc를 두는 이유: ordered_at만으로 정렬하면 같은 초에
+     * 만들어진 주문 두 건의 순서가 비결정적이고, 그러면 페이지 경계에서 한 건이 사라지거나
+     * 두 번 나온다. (findRecommendedRows·findCandidateIds가 이미 같은 이유로 2차 키를 둔다.)
+     */
+    Page<Order> findByMemberIdOrderByOrderedAtDescIdDesc(Long memberId, Pageable pageable);
 
     boolean existsByOrderNo(String orderNo);
 

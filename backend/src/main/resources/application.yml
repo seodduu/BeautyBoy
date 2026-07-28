@@ -8,6 +8,12 @@ spring:
   jpa:
     hibernate:
       ddl-auto: validate
+    properties:
+      hibernate:
+        # LAZY 컬렉션(@OneToMany)을 부모 100건씩 IN 절로 모아 읽는다. 없으면 주문 목록이
+        # "주문 1건 = 항목 쿼리 1건"으로 늘어난다(N+1). 100을 고른 이유는 목록 size 상한과
+        # 같은 값이어서다 — 한 페이지를 한 번의 IN으로 덮는 가장 작은 수다.
+        default_batch_fetch_size: 100
   data:
     redis:
       host: ${REDIS_HOST:localhost}
