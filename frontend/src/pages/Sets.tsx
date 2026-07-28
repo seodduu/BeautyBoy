@@ -80,19 +80,20 @@ export function Sets() {
         )}
       </div>
 
-      <div className="bb-sets__bands">
-        {concepts.map((concept, index) => (
-          <SetBand
-            key={concept.slug}
-            concept={concept}
-            letter={SET_LETTERS[index]}
-            picks={states[index].map((step) => step.composition?.pick ?? null)}
-            loading={!meSettled || states[index].some((step) => step.composition === undefined)}
-            adding={addingIndex === index}
-            onAddSet={() => handleAddSet(index)}
-          />
-        ))}
-      </div>
+      {concepts.map((concept, index) => (
+        <SetBand
+          key={concept.slug}
+          concept={concept}
+          letter={SET_LETTERS[index]}
+          picks={states[index].map((step) => step.composition?.pick ?? null)}
+          loading={
+            !meSettled ||
+            states[index].some((step) => step.composition === undefined && !step.isError)
+          }
+          adding={addingIndex === index}
+          onAddSet={() => handleAddSet(index)}
+        />
+      ))}
     </div>
   );
 }

@@ -116,6 +116,32 @@ function serveGoods() {
   );
 }
 
+/** 특정 단계의 풀 조회만 500으로 만들고 나머지는 정상 응답한다(영구 스켈레톤 회귀 테스트용). */
+function serveGoodsWithFailingStep(failingCategoryCode: string) {
+  server.use(
+    http.get('/api/v1/goods', ({ request }) => {
+      const url = new URL(request.url);
+      const categoryCode = url.searchParams.get('categoryCode');
+      if (categoryCode === failingCategoryCode) {
+        return new HttpResponse(null, { status: 500 });
+      }
+      const content = poolFor(categoryCode ?? '');
+      return HttpResponse.json({
+        code: 'OK',
+        message: 'success',
+        data: {
+          content,
+          page: 0,
+          size: content.length,
+          totalElements: content.length,
+          totalPages: 1,
+          hasNext: false,
+        },
+      });
+    }),
+  );
+}
+
 /** 합성 goodsNo의 상세. 클렌징 단계만 카테고리 코드가 대분류 4자(C002)라 중분류를 따로 받아야 한다. */
 function serveGoodsDetail() {
   server.use(
@@ -351,5 +377,49 @@ describe('/sets 세트 비교 페이지', () => {
       expect.stringContaining('보습'),
     ]);
     expect(screen.getByText(/프로필을 등록하면 맞춤 세트로 바뀌어요/)).toBeInTheDocument();
+  });
+
+  it('한 단계의 풀 조회가 실패해도 밴드가 그려진다 (영구 스켈레톤 방지)', async () => {
+    serveMe({ skinType: null, concerns: ['pore', 'trouble', 'moisture'] });
+    // 세럼(에센스/세럼) 단계만 풀 조회가 500 — 나머지 4단계는 정상 응답한다.
+    serveGoodsWithFailingStep('C001002');
+
+    renderSets();
+
+    const bands = await screen.findAllByRole('heading', { level: 2 });
+    expect(bands).toHaveLength(3);
+    const bandA = bands[0].closest('section') as HTMLElement;
+
+    // 스켈레톤이 아니라 실제 담기 버튼이 렌더돼야 한다 — 영구 스켈레톤이면 이 버튼 자체가 없다.
+    const addButton = await within(bandA).findByRole('button', { name: /이 세트 \d+개 담기/ });
+    await waitFor(() => expect(addButton).toBeEnabled());
+
+    // 실패한 세럼 칸만 빈 안내, 나머지 4칸은 정상 렌더.
+    const serumCell = within(bandA).getByText('03 에센스/세럼').closest('li') as HTMLElement;
+    expect(within(serumCell).getByText('추천할 상품이 없어요')).toBeInTheDocument();
+
+    expect(within(bandA).getByText(/^클렌징 \d+위$/)).toBeInTheDocument();
+    expect(within(bandA).getByText(/^토너\/스킨 \d+위$/)).toBeInTheDocument();
+    expect(within(bandA).getByText(/^로션\/크림 \d+위$/)).toBeInTheDocument();
+    expect(within(bandA).getByText(/^선크림 \d+위$/)).toBeInTheDocument();
+  });
+
+  it('세트의 모든 픽이 품절이면 "담지 못했어요" 토스트가 뜬다', async () => {
+    serveMe({ skinType: null, concerns: ['pore', 'trouble', 'moisture'] });
+    // 태그를 안 심어 세 밴드 모두 동일한 기준선 픽(101/201/301/401/501)을 받는다 — 전부 품절 처리.
+    soldOutGoodsNos = [101, 201, 301, 401, 501];
+
+    renderSets();
+
+    const bands = await screen.findAllByRole('heading', { level: 2 });
+    const bandA = bands[0].closest('section') as HTMLElement;
+    const addButton = within(bandA).getByRole('button', { name: /이 세트 \d+개 담기/ });
+    await waitFor(() => expect(addButton).toBeEnabled());
+    fireEvent.click(addButton);
+
+    expect(
+      await screen.findByText('담지 못했어요. 잠시 후 다시 시도해 주세요'),
+    ).toBeInTheDocument();
+    expect(cartPosts).toHaveLength(0);
   });
 });
