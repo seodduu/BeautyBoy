@@ -156,17 +156,16 @@ public class GoodsService implements GoodsQueryService {
      * <p>왜 id를 2차 키로 두는가: 결정적이어야 한다. sortOrder가 동률인데 순서가 컬렉션 로딩 순서에
      * 좌우되면 같은 입력에 다른 답이 나오고 테스트가 흔들린다.
      *
-     * <p><b>NPE 함정</b>: {@code thenComparing(GoodsOption::getId)}는 컬렉션 안에 {@code id}가
-     * null인 옵션이 있으면(같은 트랜잭션에서 flush되기 전에 추가된 옵션 — {@code new GoodsOption(...)}
-     * 직후 아직 persist/flush 안 된 상태) NPE를 던진다. 지금은 프로덕션 코드 어디서도 이 컴퍼레이터가
-     * 평가되는 시점에 미저장 {@code GoodsOption}을 컬렉션에 넣는 호출부가 없어(옵션은 Flyway 시드로만
-     * 들어오고, admin에 옵션 생성 API가 아직 없다) 도달 불가능하지만, admin에 옵션 생성 기능이 추가되고
-     * 그 트랜잭션 안에서 곧바로 이 비교자를 타는 경로(예: 생성 직후 재조회 없이 재계산)가 생기면
-     * 되살아나는 함정이다. 옵션을 추가한 뒤에는 반드시 flush/재조회로 id를 확정한 컬렉션을 넘겨라.
+     * <p><b>미저장 옵션</b>: {@code id}가 null인 옵션(같은 트랜잭션에서 아직 flush되지 않은
+     * {@code new GoodsOption(...)})이 컬렉션에 섞여도 NPE 없이 <b>맨 뒤로</b> 밀린다
+     * ({@code nullsLast}). 저장된 옵션들끼리의 순서가 먼저 결정되므로 대표 옵션이 미저장분에
+     * 가로채이지 않는다. 그래도 옵션을 추가한 뒤에는 flush/재조회로 id를 확정한 컬렉션을 넘겨라 —
+     * 정렬이 안전해졌을 뿐, 미저장 엔티티를 흘려보내는 것이 옳은 코드는 아니다.
      */
     private static final java.util.Comparator<GoodsOption> 대표_옵션_순서 =
             java.util.Comparator.comparingInt(GoodsOption::getSortOrder)
-                    .thenComparing(GoodsOption::getId);
+                    .thenComparing(GoodsOption::getId,
+                            java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder()));
 
     /**
      * 주문·장바구니용 상품 스냅샷. 숨김 상품과 상품-옵션 불일치는 빈 값으로 답한다

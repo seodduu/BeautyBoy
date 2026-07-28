@@ -30,6 +30,8 @@ class GoodsServiceTest {
     CategoryRepository categoryRepository;
     @Autowired
     GoodsRepository goodsRepository;
+    @Autowired
+    GoodsOptionRepository goodsOptionRepository;
     @MockBean
     GoodsRatingProvider goodsRatingProvider;
     @MockBean
@@ -122,6 +124,26 @@ class GoodsServiceTest {
                 goodsService.findOrderSnapshot(goods.getId(), null).orElseThrow();
 
         assertThat(snapshot.thumbnailUrl()).isEqualTo("https://img.example/토너.jpg");
+    }
+
+    @Test
+    void 미저장_옵션이_섞여도_NPE_없이_저장된_옵션이_대표로_뽑힌다() {
+        // sortOrder가 같은(2차 키 id로만 갈리는) 미저장 옵션(id=null)을 섞는다.
+        // nullsLast이면 저장된 옵션이 대표로 뽑히고, 예전 비교자였다면 NPE가 난다.
+        Brand brand = brandRepository.save(new Brand("브랜드1", null));
+        Goods goods = 상품_저장(brand, "토너", 10000, 9000);
+
+        GoodsOption 저장된_옵션 = new GoodsOption(goods, "100ml", 0, 10, 1);
+        goodsOptionRepository.saveAndFlush(저장된_옵션);
+        goods.getOptions().add(저장된_옵션);
+
+        GoodsOption 미저장_옵션 = new GoodsOption(goods, "150ml", 500, 5, 1);
+        goods.getOptions().add(미저장_옵션);
+
+        GoodsQueryService.OrderGoodsSnapshot snapshot =
+                goodsService.findOrderSnapshot(goods.getId(), null).orElseThrow();
+
+        assertThat(snapshot.optionId()).isEqualTo(저장된_옵션.getId());
     }
 
     private Goods 상품_저장(Brand brand, String name, int listPrice, int salePrice) {
