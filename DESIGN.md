@@ -763,12 +763,25 @@ The system avoids drop shadows entirely. Depth is created by photographic layeri
   탭 전환은 같은 화면의 쿼리스트링(`?category=`)만 바꾼다 — 루틴 STEP 맥락이 유지된다.
 - 우측: **정렬 `<select>`** — 네이티브 셀렉트, `{typography.body-tight}` / `{colors.ink}`,
   1px `{colors.hairline-soft}` 테두리, 배경 `{colors.canvas}`. 라벨은 시각적으로 숨기고
-  `aria-label="정렬"`. 항목과 순서: 인기순 / 최신순 / 판매량순 / 낮은 가격순 / 높은 할인율순
-  (서버 `GoodsSort` 5종 popular/new/sales/priceAsc/discount와 1:1 — 임의로 늘리지 않는다).
+  `aria-label="정렬"`. 항목과 순서: 인기순 / 최신순 / 판매량순 / 낮은 가격순 / 높은 할인율순 /
+  리뷰 많은 순 (서버 `GoodsSort` 6종 popular/new/sales/priceAsc/discount/review와 1:1 —
+  임의로 늘리지 않는다).
 - 정렬 아래 **가격대 필터** pill 3종: 1만원 미만 / 1~3만원 / 3만원 이상. 다중 선택 없음(단일 토글),
   선택 상태는 색 반전. 해제하면 전체. 서버 `minPrice`/`maxPrice`로만 거른다 — 클라이언트에서
   거르지 않는다(돈은 서버).
 - 모바일(768px 미만): 탭이 가로 스크롤, 정렬 셀렉트는 줄바꿈해 우측 정렬 유지.
+
+**`pager`** — 상품 그리드 아래 중앙 (목록·검색 공용)
+- 구성: `이전` 텍스트 버튼 · 페이지 번호(현재 페이지 ±2, 최대 5개) · `다음` 텍스트 버튼.
+  번호는 `{typography.body-tight}` / `{colors.ink}`, **현재 페이지만 색 반전 pill**
+  ("선택 상태 — 색 반전" 규칙). 이전/다음 비활성은 `{colors.stone}` + `disabled` — 색만으로
+  알리지 않는다(버튼 자체가 비활성).
+- 그리드와의 사이 `{spacing.xl}`, 상단 hairline 없음(그리드 자체가 구분선 없는 시스템이다).
+- **1페이지뿐이면 렌더하지 않는다.** 자리도 남기지 않는다 — 카드 그리드의 행 간격 리듬이
+  그대로 페이지 끝이 된다.
+- 페이지 이동은 URL(`?page=N`, 1부터)로만 한다 — URL이 상태의 진실. 이동 시 목록 상단으로
+  스크롤한다(문서 최상단이 아니라 툴바가 보이는 위치).
+- 접근성: `<nav aria-label="페이지 이동">`, 현재 페이지에 `aria-current="page"`.
 
 **`compat-banner`** — 장바구니 성분 궁합 안내 (설계 8장 적용 지점 ③)
 - **verdict마다 별도 섹션으로 분리해 위→아래로 쌓는다**: CONFLICT → CAUTION → SYNERGY 순.
