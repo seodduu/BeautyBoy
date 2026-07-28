@@ -790,8 +790,11 @@ The system avoids drop shadows entirely. Depth is created by photographic layeri
   제목과 액션이 세로로 접힌다. 한글이므로 `word-break: keep-all`.
 
 **세트 진입 링크** — `/main` 히어로 밴드 안, lede 아래 — 검정 밴드 위 흰
-텍스트 링크(`{typography.link-sm}`), 화살표 `→`를 붙인다. **채움 버튼을 쓰지 않는다** — 화면당
+텍스트 링크, 화살표 `→`를 붙인다. **채움 버튼을 쓰지 않는다** — 화면당
 검정 알약은 픽 카드의 담기 하나여야 한다.
+- 크기는 `{typography.subtitle}`(20px), 굵기는 `{typography.link-sm}`의 600을 쓴다.
+  바로 위 lede(`{typography.body-lg}` 18px)보다 한 단 크고 굵어야 밴드 안에서 눈에 걸린다 —
+  채움을 못 쓰는 자리라 **크기와 굵기가 유일한 강조 수단**이다.
 
 **`pager`** — 페이지 이동 공용 컴포넌트 (상품 그리드 아래 중앙 / admin 표 아래)
 - **페이지를 나누는 화면은 전부 이 하나를 쓴다.** 목록·검색은 그리드 아래 중앙,

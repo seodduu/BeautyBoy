@@ -92,7 +92,7 @@ export function Main() {
             씻고, 정돈하고, 채우고, 덮고, 막는 다섯 단계. 아래로 내리는 순서가 그대로 루틴 순서입니다.
           </p>
           <Link className="bb-main__sets-link" to="/sets">
-            컨셉별 세트 보러가기 →
+            맞춤형 세트 보러가기 →
           </Link>
         </div>
       </header>
