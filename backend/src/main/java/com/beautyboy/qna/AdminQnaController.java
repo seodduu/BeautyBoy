@@ -4,6 +4,7 @@ import com.beautyboy.common.ApiResponse;
 import com.beautyboy.common.PageResponse;
 import com.beautyboy.qna.dto.AdminQnaAnswerRequest;
 import com.beautyboy.qna.dto.AdminQnaResponse;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -35,7 +36,7 @@ public class AdminQnaController {
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/api/v1/admin/qna/{qnaId}/answer")
     public ResponseEntity<ApiResponse<Void>> answer(@PathVariable Long qnaId,
-                                                      @RequestBody AdminQnaAnswerRequest request) {
+                                                      @Valid @RequestBody AdminQnaAnswerRequest request) {
         qnaService.answer(qnaId, request.answer());
         return ResponseEntity.ok(ApiResponse.ok(null));
     }

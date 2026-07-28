@@ -6,6 +6,7 @@ import com.beautyboy.catalog.dto.AdminGoodsSaveRequest;
 import com.beautyboy.common.ApiResponse;
 import com.beautyboy.common.PageRequests;
 import com.beautyboy.common.PageResponse;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -48,7 +49,7 @@ public class AdminGoodsController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/api/v1/admin/goods")
-    public ResponseEntity<ApiResponse<Long>> create(@RequestBody AdminGoodsSaveRequest request) {
+    public ResponseEntity<ApiResponse<Long>> create(@Valid @RequestBody AdminGoodsSaveRequest request) {
         Long goodsNo = adminGoodsService.create(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(goodsNo));
     }
@@ -56,7 +57,7 @@ public class AdminGoodsController {
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/api/v1/admin/goods/{goodsNo}")
     public ResponseEntity<ApiResponse<Void>> update(@PathVariable Long goodsNo,
-                                                      @RequestBody AdminGoodsSaveRequest request) {
+                                                      @Valid @RequestBody AdminGoodsSaveRequest request) {
         adminGoodsService.update(goodsNo, request);
         return ResponseEntity.ok(ApiResponse.ok(null));
     }

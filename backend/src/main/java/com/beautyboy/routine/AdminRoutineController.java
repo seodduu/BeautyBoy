@@ -3,6 +3,7 @@ package com.beautyboy.routine;
 import com.beautyboy.common.ApiResponse;
 import com.beautyboy.routine.dto.AdminRoutineTemplateResponse;
 import com.beautyboy.routine.dto.RoutineStepGoodsRequest;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -33,7 +34,7 @@ public class AdminRoutineController {
     @PutMapping("/api/v1/admin/routines/{templateId}/steps/{stepOrder}/goods")
     public ResponseEntity<ApiResponse<Void>> replaceStepGoods(@PathVariable Long templateId,
                                                                 @PathVariable int stepOrder,
-                                                                @RequestBody RoutineStepGoodsRequest request) {
+                                                                @Valid @RequestBody RoutineStepGoodsRequest request) {
         adminRoutineService.replaceStepGoods(templateId, stepOrder, request.goodsNos());
         return ResponseEntity.ok(ApiResponse.ok(null));
     }
