@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { fetchQna } from '../../api/qna';
+import { qnaStatusLabel } from '../../features/qna/status';
 import { EmptyState } from '../common/EmptyState';
 import { Skeleton } from '../ui/Skeleton';
 import { QnaForm } from './QnaForm';
@@ -10,12 +11,6 @@ interface QnaListProps {
   /** Q&A 탭이 활성 상태일 때만 true — 비활성 탭에서는 fetch를 막는다(enabled). */
   active: boolean;
 }
-
-/** 실제 백엔드 값은 WAITING이다(backend/.../qna/Qna.java:45,62) — PENDING이 아니다. */
-const STATUS_LABEL: Record<string, string> = {
-  ANSWERED: '답변완료',
-  WAITING: '답변대기',
-};
 
 /** YYYY.MM.DD 포맷 — ReviewList와 동일 규약. */
 function formatDate(iso: string): string {
@@ -78,7 +73,7 @@ export function QnaList({ goodsNo, active }: QnaListProps) {
           <li key={item.qnaId} className="bb-qna-list__item">
             <div className="bb-qna-list__meta">
               {item.isSecret && <span className="bb-qna-list__secret">비밀글</span>}
-              <span className="bb-qna-list__status">{STATUS_LABEL[item.status] ?? item.status}</span>
+              <span className="bb-qna-list__status">{qnaStatusLabel(item.status)}</span>
               <span className="bb-qna-list__date">{formatDate(item.createdAt)}</span>
             </div>
             <p className="bb-qna-list__question">{item.isSecret ? '비밀글입니다.' : item.question}</p>
