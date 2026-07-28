@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -83,4 +84,17 @@ public interface GoodsRepository extends JpaRepository<Goods, Long> {
     List<Long> findCandidateIdsByTag(@Param("prefix") String prefix, @Param("tagSlug") String tagSlug,
                                      @Param("hidden") String hidden, @Param("excludeId") Long excludeId,
                                      Pageable pageable);
+
+    /**
+     * 상품과 옵션을 한 번에 끌어오는 배치 조회. {@code options}는 LAZY라 이 fetch join이 없으면
+     * 스냅샷을 만드는 쪽에서 <b>상품 수만큼 옵션 쿼리가 추가로</b> 나간다(N+1을 옮겨 놓는 꼴).
+     *
+     * <p>{@code distinct}가 필요한 이유: {@code left join fetch}는 상품 행을 그 상품의 옵션 수만큼
+     * 복제해 돌려준다. 옵션이 3개면 같은 상품이 3번 나온다.
+     *
+     * <p>{@code left}인 이유: 옵션이 하나도 없는 상품도 스냅샷 대상이다(재고 무제한 경로).
+     * inner join이면 그 상품이 통째로 사라진다.
+     */
+    @Query("select distinct g from Goods g left join fetch g.options where g.id in :ids")
+    List<Goods> findAllWithOptionsByIdIn(@Param("ids") Collection<Long> ids);
 }

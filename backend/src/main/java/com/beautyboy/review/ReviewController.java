@@ -6,6 +6,7 @@ import com.beautyboy.review.dto.MyReviewItem;
 import com.beautyboy.review.dto.ReviewCreateRequest;
 import com.beautyboy.review.dto.ReviewResponse;
 import com.beautyboy.review.dto.ReviewStatResponse;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -31,7 +32,7 @@ public class ReviewController {
 
     @PostMapping("/api/v1/reviews")
     public ResponseEntity<ApiResponse<Void>> create(@AuthenticationPrincipal Long memberId,
-                                                     @RequestBody ReviewCreateRequest request) {
+                                                     @Valid @RequestBody ReviewCreateRequest request) {
         reviewService.create(memberId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(null));
     }

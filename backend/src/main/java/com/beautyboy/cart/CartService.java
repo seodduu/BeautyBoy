@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class CartService {
@@ -76,28 +77,44 @@ public class CartService {
 
     @Transactional(readOnly = true)
     public List<CartItemResponse> itemsOf(Long memberId) {
+        List<CartItem> items = cartItemRepository.findByMemberIdOrderByIdAsc(memberId);
+        if (items.isEmpty()) {
+            return List.of();
+        }
+
+        // 줄마다 findOrderSnapshot을 부르면 줄 수만큼 쿼리가 나간다(N+1).
+        // 키를 모아 한 번만 묻는다 — search/ranking/review가 이미 쓰는 규칙이다.
+        List<GoodsQueryService.OrderSnapshotKey> keys = items.stream()
+                .map(item -> new GoodsQueryService.OrderSnapshotKey(item.getGoodsId(), item.getOptionId()))
+                .toList();
+        Map<GoodsQueryService.OrderSnapshotKey, GoodsQueryService.OrderGoodsSnapshot> snapshots =
+                goodsQueryService.findOrderSnapshots(keys);
+
         List<CartItemResponse> responses = new ArrayList<>();
-        for (CartItem item : cartItemRepository.findByMemberIdOrderByIdAsc(memberId)) {
-            // 담은 뒤 숨겨진 상품은 목록에서 제외한다. 지우지는 않는다 —
+        for (CartItem item : items) {
+            // 담은 뒤 숨겨진 상품(과 삭제된 옵션)은 목록에서 제외한다. 지우지는 않는다 —
             // 다시 판매되면 그대로 살아나는 편이 손님에게 자연스럽다.
-            goodsQueryService.findOrderSnapshot(item.getGoodsId(), item.getOptionId())
-                    .ifPresent(snapshot -> responses.add(new CartItemResponse(
-                            item.getId(),
-                            item.getGoodsId(),
-                            // item.getOptionId()가 아니라 snapshot.optionId()를 내려준다. 4-18 이전에
-                            // 담긴 레거시 행(옵션 있는 상품인데 option_id=NULL로 저장된 행)은
-                            // item.getOptionId()가 여전히 null이라, 그걸 그대로 내리면 optionNo=null인데
-                            // optionName은 대표 옵션 이름이 나오는 자기모순 응답이 된다.
-                            // snapshot은 optionNo=null이었던 경우에도 catalog가 해석한 대표 옵션의
-                            // id를 담고 있으므로 그것을 내리면 optionNo·optionName이 항상 같은 옵션을 가리킨다.
-                            snapshot.optionId(),
-                            snapshot.goodsName(),
-                            snapshot.optionName(),
-                            snapshot.unitPrice(),
-                            item.getQuantity(),
-                            snapshot.unitPrice() * item.getQuantity(),
-                            snapshot.thumbnailUrl(),
-                            snapshot.stock())));
+            // 맵에 키가 없는 것이 곧 그 경우다(배치 계약).
+            GoodsQueryService.OrderGoodsSnapshot snapshot = snapshots.get(
+                    new GoodsQueryService.OrderSnapshotKey(item.getGoodsId(), item.getOptionId()));
+            if (snapshot == null) {
+                continue;
+            }
+            responses.add(new CartItemResponse(
+                    item.getId(),
+                    item.getGoodsId(),
+                    // item.getOptionId()가 아니라 snapshot.optionId()를 내려준다. 4-18 이전에
+                    // 담긴 레거시 행(옵션 있는 상품인데 option_id=NULL로 저장된 행)은
+                    // item.getOptionId()가 여전히 null이라, 그걸 그대로 내리면 optionNo=null인데
+                    // optionName은 대표 옵션 이름이 나오는 자기모순 응답이 된다.
+                    snapshot.optionId(),
+                    snapshot.goodsName(),
+                    snapshot.optionName(),
+                    snapshot.unitPrice(),
+                    item.getQuantity(),
+                    snapshot.unitPrice() * item.getQuantity(),
+                    snapshot.thumbnailUrl(),
+                    snapshot.stock()));
         }
         return responses;
     }

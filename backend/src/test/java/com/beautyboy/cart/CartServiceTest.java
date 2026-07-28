@@ -6,6 +6,7 @@ import com.beautyboy.catalog.Brand;
 import com.beautyboy.catalog.BrandRepository;
 import com.beautyboy.catalog.Goods;
 import com.beautyboy.catalog.GoodsOption;
+import com.beautyboy.catalog.GoodsQueryService;
 import com.beautyboy.catalog.GoodsRepository;
 import com.beautyboy.common.BusinessException;
 import com.beautyboy.common.ErrorCode;
@@ -14,10 +15,16 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.transaction.annotation.Transactional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.clearInvocations;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 /**
  * 장바구니 서비스 재고 상한·응답 확장 테스트.
@@ -40,6 +47,13 @@ class CartServiceTest {
     BrandRepository brandRepository;
     @Autowired
     GoodsRepository goodsRepository;
+
+    /**
+     * 이 테스트가 이 계획의 존재 이유다 — 줄 수가 늘어도 상품 조회는 한 번이어야 한다.
+     * 응답 내용만 단언하면 N+1이 되살아나도 녹색이라 잡히지 않는다.
+     */
+    @MockitoSpyBean
+    GoodsQueryService goodsQueryService;
 
     @Test
     @DisplayName("담기: 기존 수량과 합쳐 재고를 넘으면 409 ORDER_OUT_OF_STOCK")
@@ -91,6 +105,55 @@ class CartServiceTest {
 
         assertThat(item.thumbnailUrl()).isEqualTo("https://img/x.jpg");
         assertThat(item.stock()).isEqualTo(3);
+    }
+
+    @Test
+    @DisplayName("장바구니 조회: 줄이 3개여도 상품 조회는 배치 1회 — 단건 조회는 부르지 않는다")
+    void 조회는_배치_한_번() {
+        // 서로 다른 상품 3개를 담는다(담기 과정의 호출을 세지 않도록 clearInvocations 후 조회)
+        for (int i = 0; i < 3; i++) {
+            Long goodsNo = 상품_저장("토너" + i, 16000);
+            Long optionNo = 옵션_저장(goodsNo, "200ml", 0, 3);
+            cartService.add(회원, new CartAddRequest(goodsNo, optionNo, 1));
+        }
+
+        clearInvocations(goodsQueryService);
+        cartService.itemsOf(회원);
+
+        verify(goodsQueryService, times(1)).findOrderSnapshots(any());
+        verify(goodsQueryService, never()).findOrderSnapshot(any(), any());
+    }
+
+    @Test
+    @DisplayName("숨김 상품 줄은 목록에서 조용히 빠지고 나머지 줄은 그대로 남는다")
+    void 숨김_줄만_빠진다() {
+        Long goodsNo1 = 상품_저장("토너", 16000);
+        Long optionNo1 = 옵션_저장(goodsNo1, "200ml", 0, 3);
+        cartService.add(회원, new CartAddRequest(goodsNo1, optionNo1, 1));
+
+        Long goodsNo2 = 상품_저장("로션", 18000);
+        Long optionNo2 = 옵션_저장(goodsNo2, "150ml", 0, 3);
+        cartService.add(회원, new CartAddRequest(goodsNo2, optionNo2, 1));
+
+        Goods hidden = goodsRepository.findById(goodsNo1).orElseThrow();
+        hidden.hide();
+        goodsRepository.saveAndFlush(hidden);
+
+        assertThat(cartService.itemsOf(회원)).hasSize(1);
+        assertThat(cartItemRepository.findByMemberIdOrderByIdAsc(회원)).hasSize(2); // 지우지는 않는다
+    }
+
+    @Test
+    @DisplayName("optionNo=null로 담긴 레거시 행도 대표 옵션 이름·번호로 채워진다(배치 경로에서도)")
+    void 레거시_행도_대표_옵션으로() {
+        Long goodsNo = 상품_저장("토너", 16000);
+        Long 대표옵션_id = 옵션_저장(goodsNo, "200ml", 0, 3);
+        cartItemRepository.save(new CartItem(회원, goodsNo, null, 1));
+
+        CartItemResponse response = cartService.itemsOf(회원).get(0);
+
+        assertThat(response.optionNo()).isEqualTo(대표옵션_id);
+        assertThat(response.optionName()).isEqualTo("200ml");
     }
 
     private Long 단일_항목_id(Long memberId) {

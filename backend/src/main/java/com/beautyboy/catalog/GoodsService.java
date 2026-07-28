@@ -14,9 +14,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 public class GoodsService implements GoodsQueryService {
@@ -182,18 +184,54 @@ public class GoodsService implements GoodsQueryService {
     @Override
     @Transactional(readOnly = true)
     public Optional<OrderGoodsSnapshot> findOrderSnapshot(Long goodsNo, Long optionNo) {
-        Optional<Goods> found = goodsRepository.findById(goodsNo)
-                .filter(goods -> !Goods.STATUS_HIDDEN.equals(goods.getStatus()));
-        if (found.isEmpty()) {
-            return Optional.empty();
-        }
-        Goods goods = found.get();
+        return goodsRepository.findById(goodsNo)
+                .filter(goods -> !Goods.STATUS_HIDDEN.equals(goods.getStatus()))
+                .flatMap(goods -> 해석(goods, optionNo));
+    }
 
+    /**
+     * 여러 키를 한 번에 해석한다. 상품+옵션을 fetch join 한 방으로 읽고, 해석은 단건과 <b>같은</b>
+     * {@link #해석} 하나를 쓴다 — 해석이 두 벌이 되면 대표 옵션 규칙이 한쪽에서만 바뀌는 날이 오고,
+     * 그때 장바구니와 주문이 서로 다른 옵션을 고른다.
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public Map<OrderSnapshotKey, OrderGoodsSnapshot> findOrderSnapshots(Collection<OrderSnapshotKey> keys) {
+        if (keys.isEmpty()) {
+            return Map.of();
+        }
+        Set<Long> goodsIds = keys.stream()
+                .map(OrderSnapshotKey::goodsNo)
+                .filter(java.util.Objects::nonNull)
+                .collect(java.util.stream.Collectors.toSet());
+        if (goodsIds.isEmpty()) {
+            return Map.of();
+        }
+
+        Map<Long, Goods> 노출_상품 = goodsRepository.findAllWithOptionsByIdIn(goodsIds).stream()
+                .filter(goods -> !Goods.STATUS_HIDDEN.equals(goods.getStatus()))
+                .collect(java.util.stream.Collectors.toMap(Goods::getId, goods -> goods));
+
+        Map<OrderSnapshotKey, OrderGoodsSnapshot> result = new java.util.LinkedHashMap<>();
+        for (OrderSnapshotKey key : keys) {
+            Goods goods = 노출_상품.get(key.goodsNo());
+            if (goods == null) {
+                continue;   // 미존재·숨김은 키를 넣지 않는다(단건의 Optional.empty와 같은 계약)
+            }
+            해석(goods, key.optionNo()).ifPresent(snapshot -> result.put(key, snapshot));
+        }
+        return result;
+    }
+
+    /**
+     * 상품 하나에 대해 optionNo를 스냅샷으로 해석한다. 노출 여부(HIDDEN) 판정은 호출자가 이미 끝냈다.
+     *
+     * <p>optionNo가 null인 것은 "옵션을 특정하지 않았다"는 뜻일 뿐 "상품에 옵션이 없다"는 뜻이 아니다.
+     * 예전에는 이 둘을 같게 보고 무조건 재고 MAX_VALUE로 답했고, 그래서 루틴 전체담기
+     * (항상 optionNo=null을 보낸다)로 담은 품절 상품이 재고 게이트를 통째로 통과했다.
+     */
+    private Optional<OrderGoodsSnapshot> 해석(Goods goods, Long optionNo) {
         if (optionNo == null) {
-            // optionNo가 null인 것은 "옵션을 특정하지 않았다"는 뜻일 뿐 "상품에 옵션이 없다"는 뜻이 아니다.
-            // 예전에는 이 둘을 같게 보고 무조건 재고 MAX_VALUE로 답했고, 그래서 루틴 전체담기
-            // (항상 optionNo=null을 보낸다)로 담은 품절 상품이 재고 게이트를 통째로 통과했다.
-            // 옵션이 있으면 서버가 대표 옵션을 골라 재고·추가금·옵션명을 모두 그 옵션으로 채운다.
             return goods.getOptions().stream()
                     .min(대표_옵션_순서)
                     .map(option -> 스냅샷(goods, option))
@@ -203,7 +241,6 @@ public class GoodsService implements GoodsQueryService {
                             goods.getId(), null, goods.getName(), null,
                             goods.getSalePrice(), Integer.MAX_VALUE, goods.getThumbnailUrl())));
         }
-
         // 옵션은 반드시 그 상품의 것이어야 한다. 남의 옵션을 붙이는 조작을 여기서 끊는다.
         return goods.getOptions().stream()
                 .filter(option -> option.getId().equals(optionNo))

@@ -5,6 +5,7 @@ import com.beautyboy.cart.dto.CartBulkAddRequest;
 import com.beautyboy.cart.dto.CartItemResponse;
 import com.beautyboy.cart.dto.CartQuantityRequest;
 import com.beautyboy.common.ApiResponse;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -35,7 +36,7 @@ public class CartController {
 
     @PostMapping("/api/v1/cart/items")
     public ResponseEntity<ApiResponse<Void>> add(@AuthenticationPrincipal Long memberId,
-                                                 @RequestBody CartAddRequest request) {
+                                                 @Valid @RequestBody CartAddRequest request) {
         cartService.add(memberId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(null));
     }
@@ -43,7 +44,7 @@ public class CartController {
     /** 루틴 전체 담기. 한 건이라도 실패하면 전부 되돌린다(CartService.addAll의 트랜잭션). */
     @PostMapping("/api/v1/cart/items/bulk")
     public ResponseEntity<ApiResponse<Void>> addAll(@AuthenticationPrincipal Long memberId,
-                                                    @RequestBody CartBulkAddRequest request) {
+                                                    @Valid @RequestBody CartBulkAddRequest request) {
         cartService.addAll(memberId, request.items());
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(null));
     }
