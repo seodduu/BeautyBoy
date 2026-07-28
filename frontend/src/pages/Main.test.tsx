@@ -513,3 +513,49 @@ describe('Main — 루틴 조합기', () => {
     expect(await pickNameOf('에센스/세럼')).toBe('에센스/세럼 6위');
   });
 });
+
+describe('컨셉 세트 탭 (스펙 §3)', () => {
+  it('프로필 회원 — 탭 3개가 role=tab으로 렌더되고 첫 탭만 aria-selected', async () => {
+    serveMe({ skinType: null, concerns: ['pore', 'trouble', 'moisture'] });
+
+    renderMain();
+
+    const tabs = await screen.findAllByRole('tab');
+    expect(tabs).toHaveLength(3);
+    expect(tabs[0]).toHaveAttribute('aria-selected', 'true');
+    expect(tabs[0]).toHaveTextContent('모공');
+    expect(tabs[1]).toHaveAttribute('aria-selected', 'false');
+  });
+
+  it('탭 클릭 — 세럼 단계 픽이 새 컨셉의 태그 보유 상품으로 바뀐다', async () => {
+    // 세럼(C001002) 풀에서: 인기 1위(301)는 무태그, 2위(302)는 pore, 3위(303)는 trouble.
+    serveMe({ skinType: null, concerns: ['pore', 'trouble'] });
+    tagPlan = { 302: ['pore'], 303: ['trouble'] };
+
+    renderMain();
+
+    const serumSection = sectionOf('에센스/세럼');
+    expect(await pickNameOf('에센스/세럼')).toBe('에센스/세럼 2위');
+
+    const tabs = await screen.findAllByRole('tab');
+    fireEvent.click(tabs[1]);
+
+    expect(await within(serumSection).findByText('에센스/세럼 3위')).toBeInTheDocument();
+    const tabsAfter = screen.getAllByRole('tab');
+    expect(tabsAfter[1]).toHaveAttribute('aria-selected', 'true');
+  });
+
+  it('프로필 미입력 회원 — 폴백 3종 라벨(모공·트러블·보습)과 프로필 등록 유도 문구가 보인다', async () => {
+    serveMe({ skinType: null, concerns: [] });
+
+    renderMain();
+
+    const tabs = await screen.findAllByRole('tab');
+    expect(tabs.map((t) => t.textContent)).toEqual([
+      expect.stringContaining('모공'),
+      expect.stringContaining('트러블'),
+      expect.stringContaining('보습'),
+    ]);
+    expect(screen.getByText(/프로필을 등록하면 맞춤 세트로 바뀌어요/)).toBeInTheDocument();
+  });
+});

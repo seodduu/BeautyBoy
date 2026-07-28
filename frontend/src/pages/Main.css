@@ -55,6 +55,12 @@
   padding: 0 var(--space-lg);
 }
 
+/* 세트 섹션(확정/스켈레톤 공통)과 그 아래 앵커 네비 사이 간격만 — 나머지 렌더는 무수정. */
+.bb-main__body > .bb-set-tabs,
+.bb-main__body > .bb-set-tabs__skeleton {
+  margin-bottom: var(--space-xl);
+}
+
 /* 앵커 네비 — 5섹션 긴 스크롤의 현재 위치 표시이자 지름길.
    sticky top은 헤더 높이만큼 띄운다(DESIGN.md UX 계약의 sticky 오프셋 규칙).
    Header.css의 .bb-header가 top:0에 sticky로 먼저 고정되므로, 그 아래에
