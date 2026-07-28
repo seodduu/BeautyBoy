@@ -534,13 +534,17 @@ describe('컨셉 세트 탭 (스펙 §3)', () => {
 
     renderMain();
 
-    const serumSection = sectionOf('에센스/세럼');
     expect(await pickNameOf('에센스/세럼')).toBe('에센스/세럼 2위');
 
     const tabs = await screen.findAllByRole('tab');
     fireEvent.click(tabs[1]);
 
-    expect(await within(serumSection).findByText('에센스/세럼 3위')).toBeInTheDocument();
+    // 픽(h3)만 본다 — 대안 그리드에 302/303/304가 이미 함께 렌더되므로 '에센스/세럼 3위'라는
+    // 텍스트 자체는 클릭 전에도 DOM에 있다. 재조합이 안 일어나도 통과하는 단언이 되지 않도록
+    // 픽 카드 헤딩(pickNameOf)이 '3위'로 바뀌는지를 waitFor로 확인한다.
+    await waitFor(async () => {
+      expect(await pickNameOf('에센스/세럼')).toBe('에센스/세럼 3위');
+    });
     const tabsAfter = screen.getAllByRole('tab');
     expect(tabsAfter[1]).toHaveAttribute('aria-selected', 'true');
   });

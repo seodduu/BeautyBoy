@@ -4,6 +4,7 @@ import { RoutineSection } from '../components/routine/RoutineSection';
 import { SetTabs } from '../components/routine/SetTabs';
 import { addPickToCart } from '../components/routine/PickCard';
 import { Button } from '../components/ui/Button';
+import { Skeleton } from '../components/ui/Skeleton';
 import { useToast } from '../components/ui/useToast';
 import { ROUTINE_STEPS } from '../features/routine/steps';
 import { useComposer } from '../features/affinity/useComposer';
@@ -36,15 +37,9 @@ export function Main() {
   // useComposer 내부와 같은 ['me'] 키 — 네트워크 왕복은 react-query 캐시가 흡수한다.
   const meQuery = useQuery({ queryKey: ['me'], queryFn: fetchMe, enabled: !!accessToken });
   // me가 확정되기 전에 탭을 그리면 프로필 도착 순간 탭이 갈아엎어진다(스펙 §5).
-  //
-  // 브리프 원안은 `!accessToken ||`로 비로그인을 즉시 확정 취급했다. 이 화면은 router.tsx의
-  // RequireAuth가 지켜 로그인 없이는 도달할 수 없으므로(오케스트레이터 판정 (1)), 실사용에서
-  // accessToken이 없는 상태는 없다 — 그 분기는 이 파일 단독 렌더 테스트(비로그인 시뮬레이션)만
-  // 통과하게 하는 지름길이었다. 그런데 그 지름길을 넣으면 비로그인 시뮬레이션에서 SetTabs가
-  // 즉시 마운트돼 `<h2>당신을 위한 세트</h2>`가 끼어들고, concepts[0](폴백 'pore')이 즉시
-  // useComposer로 흘러들어가 콜드스타트 전제(신호 0개 → reason 없음)를 깨— 두 기존 테스트가
-  // 무너진다. accessToken 없이는 me 쿼리가 절대 끝나지 않으므로(enabled: false) 지름길을 빼면
-  // 이 시뮬레이션은 스켈레톤에 영원히 머문다 — 실사용에서는 애초에 못 만드는 상태라 손해가 없다.
+  // 브리프 원안의 `!accessToken ||` 지름길은 뺐다 — /main은 RequireAuth 뒤라 마운트 시점엔
+  // accessToken이 항상 있으므로 불필요하고, 라우터 가드 없이 Main을 단독 렌더하는 테스트에서만
+  // "비로그인"을 흉내 내 SetTabs를 조기 마운트시켜 기존 케이스를 깼다(사용자 결정으로 유지).
   const meSettled = meQuery.isSuccess || meQuery.isError;
   const concepts = useMemo(
     () =>
@@ -55,11 +50,9 @@ export function Main() {
     [meQuery.data],
   );
   const [selectedSet, setSelectedSet] = useState(0);
-  // 확정 전에도 항상 호출한다(훅 순서). 확정 전엔 useComposer 내부 signalsReady가
-  // 같은 me 쿼리를 기다리므로 조합이 시작되지 않는다 — 픽이 두 번 계산되는 일은 없다.
-  // 단, override 인자는 meSettled로 한 번 더 게이트한다: useComposer 내부 signalsReady는
-  // `!accessToken ||`로 비로그인에서 즉시 열리므로(그 파일은 읽기 전용이라 못 고친다), 확정 전에도
-  // concepts[0](폴백값)을 그대로 넘기면 비로그인 콜드스타트에도 override가 곧장 걸린다.
+  // 확정 전에도 항상 호출한다(훅 순서). override는 meSettled로 게이트한다 — useComposer 내부
+  // signalsReady(읽기 전용 파일)는 `!accessToken ||`로 비로그인에서 즉시 열려, 게이트 없이
+  // 넘기면 폴백 슬러그가 비로그인 시뮬레이션에도 곧장 걸린다.
   const states = useComposer(meSettled ? concepts[selectedSet].slug : null);
   const picks = states
     .map((state) => state.composition?.pick)
@@ -140,10 +133,16 @@ export function Main() {
         {meSettled ? (
           <SetTabs concepts={concepts} selected={selectedSet} onSelect={setSelectedSet} />
         ) : (
+          // .bb-set-tabs와 같은 3단(eyebrow → title → 탭 줄) 구조로 자리를 채운다 — 확정 후
+          // 실제 SetTabs와 같은 높이여야 프로필 도착 순간 앵커 네비·섹션들이 밀리지 않는다.
           <div className="bb-set-tabs__skeleton" aria-hidden>
-            <span className="bb-set-tabs__skeleton-pill" />
-            <span className="bb-set-tabs__skeleton-pill" />
-            <span className="bb-set-tabs__skeleton-pill" />
+            <div className="bb-set-tabs__skeleton-eyebrow" />
+            <div className="bb-set-tabs__skeleton-title" />
+            <div className="bb-set-tabs__skeleton-list">
+              <Skeleton ratio="auto" className="bb-set-tabs__skeleton-pill" />
+              <Skeleton ratio="auto" className="bb-set-tabs__skeleton-pill" />
+              <Skeleton ratio="auto" className="bb-set-tabs__skeleton-pill" />
+            </div>
           </div>
         )}
 
