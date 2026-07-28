@@ -4,6 +4,9 @@ import com.beautyboy.config.TossProperties;
 import com.beautyboy.payment.dto.PaymentApproval;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.http.client.ClientHttpRequestFactoryBuilder;
+import org.springframework.boot.http.client.ClientHttpRequestFactorySettings;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
@@ -28,10 +31,33 @@ public class TossPaymentGateway implements PaymentGateway {
     private final RestClient restClient;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
+    // 생성자가 둘이면 스프링이 주입 대상을 못 고른다 — 운영 생성자를 @Autowired로 지목한다.
+    @Autowired
     public TossPaymentGateway(RestClient.Builder builder, TossProperties properties) {
+        this(builder, properties, true);
+    }
+
+    /**
+     * 테스트 배선용. {@code MockRestServiceServer}가 builder에 이미 자기 요청 팩토리를 심어둔
+     * 경우에 쓴다 — 그 팩토리를 타임아웃 팩토리로 덮어쓰면 목이 무력화돼 요청이 실제 토스로 나간다.
+     * 운영 경로(public 생성자)는 항상 타임아웃 팩토리를 붙인다.
+     */
+    static TossPaymentGateway withGivenRequestFactory(RestClient.Builder builder, TossProperties properties) {
+        return new TossPaymentGateway(builder, properties, false);
+    }
+
+    // 생성자를 하나만 public으로 두는 이유: 스프링이 주입 생성자를 고를 때 후보가 둘이면 기본 생성자를 찾다 실패한다.
+    private TossPaymentGateway(RestClient.Builder builder, TossProperties properties, boolean applyTimeoutFactory) {
         // 토스 Basic 인증: "시크릿키:"를 Base64로. 콜론 뒤 비밀번호는 비운다.
         String basic = Base64.getEncoder()
                 .encodeToString((properties.secretKey() + ":").getBytes(StandardCharsets.UTF_8));
+        if (applyTimeoutFactory) {
+            // 타임아웃이 없으면 재고 차감이 쥔 goods_option 행 락의 보유 시간이 무제한이 된다.
+            builder = builder.requestFactory(ClientHttpRequestFactoryBuilder.jdk().build(
+                    ClientHttpRequestFactorySettings.defaults()
+                            .withConnectTimeout(properties.connectTimeout())
+                            .withReadTimeout(properties.readTimeout())));
+        }
         this.restClient = builder
                 .baseUrl(properties.baseUrl())
                 .defaultHeader("Authorization", "Basic " + basic)
