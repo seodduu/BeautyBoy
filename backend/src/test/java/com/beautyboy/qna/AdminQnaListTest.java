@@ -33,7 +33,7 @@ class AdminQnaListTest {
     void 관리자_목록은_비밀글도_본문을_그대로_보여준다() {
         qnaRepository.save(new Qna(작성자, 상품, "비밀 질문입니다", true));
 
-        PageResponse<AdminQnaResponse> result = qnaService.adminList(0);
+        PageResponse<AdminQnaResponse> result = qnaService.adminList(0, 10);
 
         assertThat(result.content()).extracting(AdminQnaResponse::question)
                 .contains("비밀 질문입니다");
@@ -43,7 +43,7 @@ class AdminQnaListTest {
     void 관리자_목록은_goodsNo를_포함한다() {
         Qna 저장됨 = qnaRepository.save(new Qna(작성자, 상품, "재고 있나요?", false));
 
-        PageResponse<AdminQnaResponse> result = qnaService.adminList(0);
+        PageResponse<AdminQnaResponse> result = qnaService.adminList(0, 10);
 
         assertThat(result.content()).filteredOn(item -> item.qnaId().equals(저장됨.getId()))
                 .extracting(AdminQnaResponse::goodsNo)
@@ -54,7 +54,7 @@ class AdminQnaListTest {
     void 관리자_목록은_상태_원문_값을_그대로_낸다() {
         qnaRepository.save(new Qna(작성자, 상품, "답변 안 된 질문", false));
 
-        PageResponse<AdminQnaResponse> result = qnaService.adminList(0);
+        PageResponse<AdminQnaResponse> result = qnaService.adminList(0, 10);
 
         assertThat(result.content()).extracting(AdminQnaResponse::status)
                 .contains("WAITING");
@@ -66,7 +66,7 @@ class AdminQnaListTest {
         qnaService.answer(답변됨.getId(), "네");
         Qna 대기중 = qnaRepository.save(new Qna(작성자, 상품, "대기중 질문", false));
 
-        PageResponse<AdminQnaResponse> result = qnaService.adminList(0);
+        PageResponse<AdminQnaResponse> result = qnaService.adminList(0, 10);
 
         int 대기중_인덱스 = indexOf(result, 대기중.getId());
         int 답변됨_인덱스 = indexOf(result, 답변됨.getId());

@@ -27,8 +27,9 @@ public class AdminQnaController {
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/api/v1/admin/qna")
     public ResponseEntity<ApiResponse<PageResponse<AdminQnaResponse>>> list(
-            @RequestParam(defaultValue = "0") int page) {
-        return ResponseEntity.ok(ApiResponse.ok(qnaService.adminList(page)));
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(ApiResponse.ok(qnaService.adminList(page, size)));
     }
 
     @PreAuthorize("hasRole('ADMIN')")
