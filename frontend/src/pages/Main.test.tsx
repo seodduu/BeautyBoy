@@ -514,52 +514,23 @@ describe('Main — 루틴 조합기', () => {
   });
 });
 
-describe('컨셉 세트 탭 (스펙 §3)', () => {
-  it('프로필 회원 — 탭 3개가 role=tab으로 렌더되고 첫 탭만 aria-selected', async () => {
+describe('세트 진입 링크 (/sets 스펙 §3)', () => {
+  it('세트 탭이 더 이상 렌더되지 않는다', async () => {
     serveMe({ skinType: null, concerns: ['pore', 'trouble', 'moisture'] });
 
     renderMain();
 
-    const tabs = await screen.findAllByRole('tab');
-    expect(tabs).toHaveLength(3);
-    expect(tabs[0]).toHaveAttribute('aria-selected', 'true');
-    expect(tabs[0]).toHaveTextContent('모공');
-    expect(tabs[1]).toHaveAttribute('aria-selected', 'false');
+    // 화면이 뜬 뒤 판정. 텍스트 '클렌징'은 앵커 네비 라벨과 섹션 제목 양쪽에 있어 모호하므로
+    // 섹션 제목(h2)으로 단일 매치를 잡는다.
+    await screen.findByRole('heading', { level: 2, name: '클렌징' });
+    expect(screen.queryAllByRole('tab')).toHaveLength(0);
+    expect(screen.queryByText(/당신을 위한 세트/)).not.toBeInTheDocument();
   });
 
-  it('탭 클릭 — 세럼 단계 픽이 새 컨셉의 태그 보유 상품으로 바뀐다', async () => {
-    // 세럼(C001002) 풀에서: 인기 1위(301)는 무태그, 2위(302)는 pore, 3위(303)는 trouble.
-    serveMe({ skinType: null, concerns: ['pore', 'trouble'] });
-    tagPlan = { 302: ['pore'], 303: ['trouble'] };
-
+  it('히어로에 /sets로 가는 링크가 있다', async () => {
     renderMain();
 
-    expect(await pickNameOf('에센스/세럼')).toBe('에센스/세럼 2위');
-
-    const tabs = await screen.findAllByRole('tab');
-    fireEvent.click(tabs[1]);
-
-    // 픽(h3)만 본다 — 대안 그리드에 302/303/304가 이미 함께 렌더되므로 '에센스/세럼 3위'라는
-    // 텍스트 자체는 클릭 전에도 DOM에 있다. 재조합이 안 일어나도 통과하는 단언이 되지 않도록
-    // 픽 카드 헤딩(pickNameOf)이 '3위'로 바뀌는지를 waitFor로 확인한다.
-    await waitFor(async () => {
-      expect(await pickNameOf('에센스/세럼')).toBe('에센스/세럼 3위');
-    });
-    const tabsAfter = screen.getAllByRole('tab');
-    expect(tabsAfter[1]).toHaveAttribute('aria-selected', 'true');
-  });
-
-  it('프로필 미입력 회원 — 폴백 3종 라벨(모공·트러블·보습)과 프로필 등록 유도 문구가 보인다', async () => {
-    serveMe({ skinType: null, concerns: [] });
-
-    renderMain();
-
-    const tabs = await screen.findAllByRole('tab');
-    expect(tabs.map((t) => t.textContent)).toEqual([
-      expect.stringContaining('모공'),
-      expect.stringContaining('트러블'),
-      expect.stringContaining('보습'),
-    ]);
-    expect(screen.getByText(/프로필을 등록하면 맞춤 세트로 바뀌어요/)).toBeInTheDocument();
+    const link = await screen.findByRole('link', { name: /세트 보러가기/ });
+    expect(link).toHaveAttribute('href', '/sets');
   });
 });

@@ -48,17 +48,27 @@
   color: var(--color-ash-soft);
 }
 
+/* 검정 밴드 위 흰 텍스트 링크 — 채움 버튼을 쓰지 않는다(DESIGN.md: 화면당 검정 알약은
+   픽 카드 [바로 담기] 하나). /sets 전용 비교 페이지로 넘어가는 진입점. */
+.bb-main__sets-link {
+  display: inline-block;
+  margin-top: var(--space-lg);
+  font-size: var(--fs-link-sm);
+  font-weight: var(--fw-link-sm);
+  line-height: var(--lh-link-sm);
+  letter-spacing: var(--ls-link-sm);
+  color: var(--color-on-primary);
+  text-decoration: underline;
+  text-underline-offset: var(--space-xxs);
+}
+
 /* ── 흰 콘텐츠 영역 ──────────────────────────────────────── */
 .bb-main__body {
   max-width: var(--landing-column);
   margin: 0 auto;
-  padding: 0 var(--space-lg);
-}
-
-/* 세트 섹션(확정/스켈레톤 공통)과 그 아래 앵커 네비 사이 간격만 — 나머지 렌더는 무수정. */
-.bb-main__body > .bb-set-tabs,
-.bb-main__body > .bb-set-tabs__skeleton {
-  margin-bottom: var(--space-xl);
+  /* 히어로 밴드 하단 경계와 앵커 네비 상단 사이에 --space-xl 이상의 흰 여백을 준다 —
+     탭이 있던 시절엔 탭이 이 자리를 채웠지만, 지금은 body 자체에 상단 여백이 필요하다. */
+  padding: var(--space-xl) var(--space-lg) 0;
 }
 
 /* 앵커 네비 — 5섹션 긴 스크롤의 현재 위치 표시이자 지름길.
@@ -144,9 +154,12 @@ html {
     padding: var(--space-xl) 0 var(--space-xxl);
   }
 
-  .bb-main__intro-inner,
-  .bb-main__body {
+  .bb-main__intro-inner {
     padding: 0 var(--space-md);
+  }
+
+  .bb-main__body {
+    padding: var(--space-xl) var(--space-md) 0;
   }
 
   .bb-main__nav-list {

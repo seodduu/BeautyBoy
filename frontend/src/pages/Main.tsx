@@ -1,17 +1,12 @@
-import { useEffect, useMemo, useState } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
 import { RoutineSection } from '../components/routine/RoutineSection';
-import { SetTabs } from '../components/routine/SetTabs';
 import { Button } from '../components/ui/Button';
-import { Skeleton } from '../components/ui/Skeleton';
 import { useToast } from '../components/ui/useToast';
 import { addSetToCart } from '../features/routine/addSetToCart';
 import { ROUTINE_STEPS } from '../features/routine/steps';
 import { useComposer } from '../features/affinity/useComposer';
-import { deriveSetConcepts } from '../features/affinity/setConcepts';
-import { fetchMe } from '../api/member';
-import { useAuthStore } from '../stores/authStore';
-import type { SkinType } from '../api/routine';
 import './Main.css';
 
 /**
@@ -33,27 +28,8 @@ export function Main() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const accessToken = useAuthStore((s) => s.accessToken);
-  // useComposer 내부와 같은 ['me'] 키 — 네트워크 왕복은 react-query 캐시가 흡수한다.
-  const meQuery = useQuery({ queryKey: ['me'], queryFn: fetchMe, enabled: !!accessToken });
-  // me가 확정되기 전에 탭을 그리면 프로필 도착 순간 탭이 갈아엎어진다(스펙 §5).
-  // 브리프 원안의 `!accessToken ||` 지름길은 뺐다 — /main은 RequireAuth 뒤라 마운트 시점엔
-  // accessToken이 항상 있으므로 불필요하고, 라우터 가드 없이 Main을 단독 렌더하는 테스트에서만
-  // "비로그인"을 흉내 내 SetTabs를 조기 마운트시켜 기존 케이스를 깼다(사용자 결정으로 유지).
-  const meSettled = meQuery.isSuccess || meQuery.isError;
-  const concepts = useMemo(
-    () =>
-      deriveSetConcepts(
-        meQuery.data?.concerns ?? [],
-        (meQuery.data?.skinType ?? null) as SkinType | null,
-      ),
-    [meQuery.data],
-  );
-  const [selectedSet, setSelectedSet] = useState(0);
-  // 확정 전에도 항상 호출한다(훅 순서). override는 meSettled로 게이트한다 — useComposer 내부
-  // signalsReady(읽기 전용 파일)는 `!accessToken ||`로 비로그인에서 즉시 열려, 게이트 없이
-  // 넘기면 폴백 슬러그가 비로그인 시뮬레이션에도 곧장 걸린다.
-  const states = useComposer(meSettled ? concepts[selectedSet].slug : null);
+  // 세트 컨셉 오버라이드 없이 호출한다 — 프로필 고민 전체로 조합하는 원래 동작(설계 §3).
+  const states = useComposer();
   const picks = states
     .map((state) => state.composition?.pick)
     .filter((pick): pick is NonNullable<typeof pick> => !!pick);
@@ -115,6 +91,9 @@ export function Main() {
           <p className="bb-main__lede">
             씻고, 정돈하고, 채우고, 덮고, 막는 다섯 단계. 아래로 내리는 순서가 그대로 루틴 순서입니다.
           </p>
+          <Link className="bb-main__sets-link" to="/sets">
+            컨셉별 세트 보러가기 →
+          </Link>
         </div>
       </header>
 
@@ -122,22 +101,6 @@ export function Main() {
           인트로(검정 밴드) 안에 두면 sticky 컨테이닝 블록이 밴드가 되어, 밴드가 스크롤로
           사라지는 순간 네비도 함께 사라진다(5섹션 내내 붙어 있어야 하는데). */}
       <div className="bb-main__body">
-        {meSettled ? (
-          <SetTabs concepts={concepts} selected={selectedSet} onSelect={setSelectedSet} />
-        ) : (
-          // .bb-set-tabs와 같은 3단(eyebrow → title → 탭 줄) 구조로 자리를 채운다 — 확정 후
-          // 실제 SetTabs와 같은 높이여야 프로필 도착 순간 앵커 네비·섹션들이 밀리지 않는다.
-          <div className="bb-set-tabs__skeleton" aria-hidden>
-            <Skeleton ratio="auto" className="bb-set-tabs__skeleton-eyebrow" />
-            <Skeleton ratio="auto" className="bb-set-tabs__skeleton-title" />
-            <div className="bb-set-tabs__skeleton-list">
-              <Skeleton ratio="auto" className="bb-set-tabs__skeleton-pill" />
-              <Skeleton ratio="auto" className="bb-set-tabs__skeleton-pill" />
-              <Skeleton ratio="auto" className="bb-set-tabs__skeleton-pill" />
-            </div>
-          </div>
-        )}
-
         <nav className="bb-main__nav" aria-label="루틴 단계 바로가기">
           <ol className="bb-main__nav-list">
             {ROUTINE_STEPS.map((step) => (
