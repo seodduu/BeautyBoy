@@ -25,7 +25,12 @@ export function Cart() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const cartQuery = useQuery({ queryKey: queryKeys.cart(), queryFn: fetchCartItems });
+  const cartQuery = useQuery({
+    queryKey: queryKeys.cart(),
+    queryFn: fetchCartItems,
+    // 수량·재고·합계가 곧 결제 금액이다 — 전역 60초 staleTime을 여기서 덮어써 항상 최신을 받는다.
+    staleTime: 0,
+  });
   const items = useMemo(() => cartQuery.data ?? [], [cartQuery.data]);
 
   // 담긴 goodsNo 집합이 바뀔 때만 궁합을 재조회한다 — 수량만 바뀌는 흔한 조작에는 다시 부르지 않는다.

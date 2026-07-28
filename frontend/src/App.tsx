@@ -6,7 +6,37 @@ import { router } from './router';
 import { useAuthStore } from './stores/authStore';
 import { refreshSession } from './api/auth';
 
-const queryClient = new QueryClient();
+export const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      /**
+       * 60초. 이 앱에서 가장 빨리 변하는 조회 데이터가 랭킹(집계 주기 분 단위)과
+       * 재고 표시이고, 그보다 짧게 잡을 이유가 없다. 60초면 한 화면 안에서 오가는 동안
+       * 재요청이 없고, 탭을 오래 비웠다 오면 다시 받는다.
+       */
+      staleTime: 60_000,
+      /**
+       * 5분. 화면을 떠나도 캐시를 이 시간만큼 들고 있어 뒤로가기가 즉시 그려진다.
+       * staleTime보다 길어야 의미가 있다(짧으면 신선한 데이터를 버리게 된다).
+       */
+      gcTime: 5 * 60_000,
+      /**
+       * 끈다. 탭 전환은 "데이터가 낡았다"는 신호가 아니다 — 여기가 켜져 있어서
+       * 알트탭 한 번에 화면 전체가 재요청을 걸었다. 신선도는 staleTime이 책임진다.
+       */
+      refetchOnWindowFocus: false,
+      /**
+       * 1회. 기본값 3회는 백엔드가 죽었을 때 오류 화면이 뜨기까지 손님을 오래 기다리게 한다.
+       * 일시적 네트워크 실패는 1회 재시도로 대부분 걷히고, 진짜 장애는 빨리 드러나야 한다.
+       */
+      retry: 1,
+    },
+    mutations: {
+      /** 재시도하지 않는다. 담기·주문·결제는 중복 실행이 곧 사고다. */
+      retry: 0,
+    },
+  },
+});
 
 /**
  * "이 실패는 세션이 없다는 뜻인가?" — 오직 401만 그렇다.

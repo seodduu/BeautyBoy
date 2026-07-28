@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { render, waitFor } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import { server } from './mocks/server';
-import App from './App';
+import App, { queryClient } from './App';
 import { useAuthStore } from './stores/authStore';
 import { refreshSession } from './api/auth';
 
@@ -150,5 +150,23 @@ describe('refreshSession — 부트스트랩 refresh의 in-flight 공유', () =>
     // 완료 후에는 공유가 해제되어 다음 부트스트랩이 새로 요청한다(세션이 영원히 굳지 않는다).
     await refreshSession();
     expect(refreshCalls).toBe(2);
+  });
+});
+
+describe('QueryClient 기본값', () => {
+  it('staleTime이 60초다 — 탭 전환마다 재요청하지 않는다', () => {
+    expect(queryClient.getDefaultOptions().queries?.staleTime).toBe(60_000);
+  });
+
+  it('refetchOnWindowFocus가 꺼져 있다', () => {
+    expect(queryClient.getDefaultOptions().queries?.refetchOnWindowFocus).toBe(false);
+  });
+
+  it('쿼리 재시도는 1회다 — 기본 3회는 오류 화면이 뜨기까지 너무 오래 걸린다', () => {
+    expect(queryClient.getDefaultOptions().queries?.retry).toBe(1);
+  });
+
+  it('뮤테이션은 재시도하지 않는다 — 담기·주문의 중복 실행은 사고다', () => {
+    expect(queryClient.getDefaultOptions().mutations?.retry).toBe(0);
   });
 });

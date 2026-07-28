@@ -57,7 +57,12 @@ function validateReceiver(v: ManualAddress): string | null {
 export function Order() {
   const member = useAuthStore((state) => state.member);
 
-  const cartQuery = useQuery({ queryKey: queryKeys.cart(), queryFn: fetchCartItems });
+  const cartQuery = useQuery({
+    queryKey: queryKeys.cart(),
+    queryFn: fetchCartItems,
+    // 결제 직전 금액 — 여기가 틀리면 토스 승인에서 금액 불일치가 난다. 전역 60초 staleTime을 덮어쓴다.
+    staleTime: 0,
+  });
   const addressQuery = useQuery({ queryKey: ['addresses'], queryFn: fetchAddresses });
 
   const [selectedId, setSelectedId] = useState<number | 'manual' | null>(null);
