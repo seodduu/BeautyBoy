@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { fetchGoodsDescription } from '../../api/goods';
 import { EmptyState } from '../common/EmptyState';
+import { ErrorState } from '../common/ErrorState';
 import { Skeleton } from '../ui/Skeleton';
 
 interface DescriptionPanelProps {
@@ -33,7 +34,7 @@ export function DescriptionPanel({ goodsNo, active }: DescriptionPanelProps) {
   }
 
   if (descriptionQuery.isError) {
-    return <p className="bb-detail-tabs__error">상품 설명을 불러오지 못했어요.</p>;
+    return <ErrorState title="상품 설명을 불러오지 못했어요" onRetry={() => descriptionQuery.refetch()} />;
   }
 
   const description = descriptionQuery.data?.description?.trim() ?? '';

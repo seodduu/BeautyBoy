@@ -11,6 +11,7 @@ import {
   type AddressInput,
 } from '../../api/member';
 import type { AgeBand, Concern, SkinType } from '../../api/auth';
+import { ErrorState } from '../../components/common/ErrorState';
 import { Button } from '../../components/ui/Button';
 import { Field } from '../../components/ui/Field';
 import { Skeleton } from '../../components/ui/Skeleton';
@@ -87,7 +88,13 @@ export function MyProfile() {
   if (meQuery.isError || addressesQuery.isError) {
     return (
       <div className="bb-my-profile">
-        <p className="bb-my-profile__error">프로필을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.</p>
+        <ErrorState
+          title="프로필을 불러오지 못했어요"
+          onRetry={() => {
+            meQuery.refetch();
+            addressesQuery.refetch();
+          }}
+        />
       </div>
     );
   }

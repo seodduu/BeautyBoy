@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { ErrorState } from '../common/ErrorState';
 import { GoodsGrid } from '../goods/GoodsGrid';
 import { PickCard } from './PickCard';
 import { ALTERNATIVE_COUNT, type StepComposition } from '../../features/affinity/composer';
@@ -19,6 +20,8 @@ interface RoutineSectionProps {
   pool?: GoodsListItem[];
   /** 풀 조회 실패. 이 섹션만 문구를 내고 다른 단계 진행을 막지 않는다. */
   isError?: boolean;
+  /** 풀 조회를 다시 시도한다. 상위(Main)가 쿼리의 refetch를 넘긴다. */
+  onRetry?: () => void;
 }
 
 /**
@@ -37,6 +40,7 @@ export function RoutineSection({
   composition,
   pool = [],
   isError = false,
+  onRetry,
 }: RoutineSectionProps) {
   const orderLabel = String(step.order).padStart(2, '0');
   const sideClass = index % 2 === 0 ? 'bb-routine--text-left' : 'bb-routine--text-right';
@@ -64,7 +68,7 @@ export function RoutineSection({
       </div>
 
       {isError ? (
-        <p className="bb-routine__error">상품을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.</p>
+        <ErrorState title="상품을 불러오지 못했어요" onRetry={onRetry} />
       ) : composition && pick ? (
         <>
           <PickCard pick={pick} reason={composition.reason} matched={composition.matched} />

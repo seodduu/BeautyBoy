@@ -216,9 +216,9 @@ describe('GoodsList — 카테고리 목록', () => {
 
     renderList('?category=C002');
 
-    expect(
-      await screen.findByText('상품을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.'),
-    ).toBeInTheDocument();
+    expect(await screen.findByRole('alert')).toBeInTheDocument();
+    expect(screen.getByText('상품을 불러오지 못했어요')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '다시 시도' })).toBeInTheDocument();
     expect(screen.queryByText(/개의 상품/)).not.toBeInTheDocument();
     expect(screen.queryByText('표시할 상품이 없어요')).not.toBeInTheDocument();
   });

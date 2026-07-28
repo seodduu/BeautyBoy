@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import * as wishlistApi from '../../api/wishlist';
 import { queryKeys } from '../../api/queryKeys';
 import { EmptyState } from '../../components/common/EmptyState';
+import { ErrorState } from '../../components/common/ErrorState';
 import { GoodsGrid } from '../../components/goods/GoodsGrid';
 import { Skeleton } from '../../components/ui/Skeleton';
 import './MyWishlist.css';
@@ -38,7 +39,7 @@ export function MyWishlist() {
   if (wishlistQuery.isError) {
     return (
       <div className="bb-my-wishlist">
-        <p className="bb-my-wishlist__error">찜 목록을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.</p>
+        <ErrorState title="찜 목록을 불러오지 못했어요" onRetry={() => wishlistQuery.refetch()} />
       </div>
     );
   }

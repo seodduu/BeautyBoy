@@ -10,6 +10,7 @@ import { promoteLocalSkinTypeIfNeeded, readLocalSkinType, writeLocalSkinType } f
 import { SkinTypeQuiz } from '../components/routine/SkinTypeQuiz';
 import { RoutineStepCard } from '../components/routine/RoutineStepCard';
 import { CompatBanner } from '../components/compat/CompatBanner';
+import { ErrorState } from '../components/common/ErrorState';
 import { Button } from '../components/ui/Button';
 import { Skeleton } from '../components/ui/Skeleton';
 import { useToast } from '../components/ui/useToast';
@@ -147,7 +148,7 @@ export function Routine() {
   if (routineQuery.isError || !routineQuery.data) {
     return (
       <div className="bb-routine">
-        <p className="bb-routine__error">루틴을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.</p>
+        <ErrorState title="루틴을 불러오지 못했어요" onRetry={() => routineQuery.refetch()} />
       </div>
     );
   }

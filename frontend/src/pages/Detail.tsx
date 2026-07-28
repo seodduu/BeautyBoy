@@ -5,6 +5,7 @@ import { fetchGoodsDetail } from '../api/goods';
 import { fetchAssessment } from '../api/assessment';
 import { addCartItem } from '../api/cart';
 import { queryKeys } from '../api/queryKeys';
+import { ErrorState } from '../components/common/ErrorState';
 import { Price } from '../components/ui/Price';
 import { Rating } from '../components/ui/Rating';
 import { Badge, TodayDreamBadge } from '../components/ui/Badge';
@@ -112,7 +113,7 @@ export function Detail() {
   }
 
   if (detailQuery.isError || !detailQuery.data) {
-    return <p className="bb-detail__error">상품 정보를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.</p>;
+    return <ErrorState title="상품 정보를 불러오지 못했어요" onRetry={() => detailQuery.refetch()} />;
   }
 
   const goods = detailQuery.data;

@@ -7,6 +7,7 @@ import { queryKeys } from '../api/queryKeys';
 import { CartLine } from '../components/cart/CartLine';
 import { CompatBanner } from '../components/compat/CompatBanner';
 import { EmptyState } from '../components/common/EmptyState';
+import { ErrorState } from '../components/common/ErrorState';
 import { Button } from '../components/ui/Button';
 import { Skeleton } from '../components/ui/Skeleton';
 import { formatWon } from '../components/ui/Price';
@@ -70,7 +71,7 @@ export function Cart() {
   if (cartQuery.isError) {
     return (
       <div className="bb-cart">
-        <p className="bb-cart__error">장바구니를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.</p>
+        <ErrorState title="장바구니를 불러오지 못했어요" onRetry={() => cartQuery.refetch()} />
       </div>
     );
   }

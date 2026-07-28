@@ -2,6 +2,7 @@ import { useRef } from 'react';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
 import { fetchGoodsList, type GoodsSort } from '../api/goods';
+import { ErrorState } from '../components/common/ErrorState';
 import { GoodsGrid } from '../components/goods/GoodsGrid';
 import { ListToolbar, PRICE_BAND_RANGE, type PriceBand } from '../components/goods/ListToolbar';
 import { Pager } from '../components/ui/Pager';
@@ -57,7 +58,7 @@ export function GoodsList() {
   // 헤더까지 올라가면 방금 바꾼 정렬·필터가 화면 밖으로 나가 맥락이 끊긴다.
   const toolbarRef = useRef<HTMLDivElement>(null);
 
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['goods-list', category, tag, sort, priceBand, page],
     // 페이지 전환 중 이전 목록을 유지한다 — 매번 스켈레톤으로 돌아가면 그리드 높이가 무너지고
     // 방금 누른 페이저가 발밑에서 움직인다.
@@ -135,7 +136,7 @@ export function GoodsList() {
       </div>
 
       {isError ? (
-        <p className="bb-goods-list__error">상품을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.</p>
+        <ErrorState title="상품을 불러오지 못했어요" onRetry={() => refetch()} />
       ) : (
         /* 카테고리로 들어온 목록만 문맥을 안다 — `/goods?tag=` 진입은 categoryCode가 null이라
            카드가 찜을 기록하지 않는다(설계 §6.1의 "문맥 없는 찜은 버린다"). */

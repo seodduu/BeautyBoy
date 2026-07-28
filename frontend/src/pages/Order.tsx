@@ -7,6 +7,7 @@ import { fetchAddresses } from '../api/member';
 import { createOrder } from '../api/order';
 import { requestTossPayment } from '../features/payment/toss';
 import { AddressSection, type ManualAddress } from '../components/order/AddressSection';
+import { ErrorState } from '../components/common/ErrorState';
 import { Button } from '../components/ui/Button';
 import { Skeleton } from '../components/ui/Skeleton';
 import { formatWon } from '../components/ui/Price';
@@ -90,7 +91,13 @@ export function Order() {
   if (cartQuery.isError || addressQuery.isError) {
     return (
       <div className="bb-order">
-        <p className="bb-order__error">주문서를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.</p>
+        <ErrorState
+          title="주문서를 불러오지 못했어요"
+          onRetry={() => {
+            cartQuery.refetch();
+            addressQuery.refetch();
+          }}
+        />
       </div>
     );
   }
