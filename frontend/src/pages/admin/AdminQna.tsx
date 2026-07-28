@@ -4,13 +4,8 @@ import { answerAdminQna, fetchAdminQna, type AdminQnaResponse } from '../../api/
 import { Button } from '../../components/ui/Button';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { useToast } from '../../components/ui/useToast';
+import { qnaStatusLabel } from '../../features/qna/status';
 import './AdminQna.css';
-
-/** 실제 백엔드 값은 WAITING이다(backend/.../qna/Qna.java:45,62) — QnaList.tsx와 동일 라벨. */
-const STATUS_LABEL: Record<string, string> = {
-  ANSWERED: '답변완료',
-  WAITING: '답변대기',
-};
 
 function AnswerCell({ item }: { item: AdminQnaResponse }) {
   const { toast } = useToast();
@@ -116,7 +111,7 @@ export function AdminQna() {
                 {items.map((item) => (
                   <tr key={item.qnaId} className="bb-admin-qna__row">
                     <td>{item.goodsNo}</td>
-                    <td>{STATUS_LABEL[item.status] ?? item.status}</td>
+                    <td>{qnaStatusLabel(item.status)}</td>
                     <td className="bb-admin-qna__question-cell">
                       {item.isSecret && <span className="bb-admin-qna__secret-badge">비밀글</span>}
                       <span>{item.question}</span>
