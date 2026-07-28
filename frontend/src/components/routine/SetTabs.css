@@ -1,0 +1,80 @@
+/* DESIGN.md `set-tabs` — /main 히어로 아래 "당신을 위한 세트" 섹션.
+   pill 탭의 값 체계는 list-toolbar 카테고리 탭(bb-list-toolbar__tab)과 동일하게 맞추되,
+   클래스는 분리한다 — list-toolbar 쪽 CSS를 재사용/수정하면 그 변경이 이 화면을 깨뜨린다. */
+
+.bb-set-tabs__eyebrow {
+  font-size: var(--fs-eyebrow);
+  font-weight: var(--fw-eyebrow);
+  line-height: var(--lh-eyebrow);
+  letter-spacing: var(--ls-eyebrow);
+  color: var(--color-slate);
+}
+
+.bb-set-tabs__title {
+  margin-top: var(--space-xxs);
+  font-size: var(--fs-heading-sm);
+  font-weight: var(--fw-heading-sm);
+  line-height: var(--lh-heading-sm);
+  letter-spacing: var(--ls-heading-sm);
+  color: var(--color-ink);
+  word-break: keep-all;
+}
+
+.bb-set-tabs__list {
+  display: flex;
+  gap: var(--space-xs);
+  margin-top: var(--space-md);
+  overflow-x: auto;
+}
+
+.bb-set-tabs__tab {
+  flex: none;
+  padding: var(--space-xs) var(--space-md);
+  border: 1px solid var(--color-hairline-soft);
+  border-radius: var(--rounded-full);
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: inherit;
+  font-size: var(--fs-link-sm);
+  font-weight: var(--fw-link-sm);
+  line-height: var(--lh-link-sm);
+  letter-spacing: var(--ls-link-sm);
+  white-space: nowrap;
+  word-break: keep-all;
+  cursor: pointer;
+}
+
+.bb-set-tabs__tab[aria-selected='true'] {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+.bb-set-tabs__fallback {
+  margin-top: var(--space-sm);
+  font-size: var(--fs-meta);
+  font-weight: var(--fw-meta);
+  line-height: var(--lh-meta);
+  letter-spacing: var(--ls-meta);
+  color: var(--color-slate);
+  word-break: keep-all;
+}
+
+.bb-set-tabs__fallback-link {
+  font-size: var(--fs-link-sm);
+  font-weight: var(--fw-link-sm);
+  line-height: var(--lh-link-sm);
+  color: var(--color-ink);
+  text-decoration: underline;
+}
+
+.bb-set-tabs__fallback-link:hover {
+  color: var(--color-graphite);
+}
+
+/* 모바일: 탭 가로 스크롤 (list-toolbar와 동일 전략). */
+@media (max-width: 767px) {
+  .bb-set-tabs__list {
+    flex-wrap: nowrap;
+  }
+}
