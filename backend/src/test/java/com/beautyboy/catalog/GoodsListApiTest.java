@@ -47,6 +47,8 @@ class GoodsListApiTest {
     @Autowired
     GoodsTagRepository goodsTagRepository;
     @Autowired
+    GoodsReviewCountCommand goodsReviewCountCommand;
+    @Autowired
     EntityManagerFactory entityManagerFactory;
     @jakarta.persistence.PersistenceContext
     jakarta.persistence.EntityManager entityManager;
@@ -149,6 +151,24 @@ class GoodsListApiTest {
 
         List<String> names = 이름목록(result);
         assertThat(names).containsExactly("대폭할인", "소폭할인", "할인없음");
+    }
+
+    @Test
+    void review_정렬은_review_count_내림차순이고_동률은_id_내림차순이다() throws Exception {
+        Brand brand = 브랜드_저장("브랜드1");
+        카테고리_저장("C001001001", 3);
+        Goods low = 상품_저장(brand, "C001001001", "리뷰적음", 10000, 10000);
+        Goods high = 상품_저장(brand, "C001001001", "리뷰많음", 10000, 10000);
+        goodsReviewCountCommand.syncReviewCount(low.getId(), 2);
+        goodsReviewCountCommand.syncReviewCount(high.getId(), 5);
+        entityManager.flush();
+
+        MvcResult result = mockMvc.perform(get("/api/v1/goods").param("sort", "review"))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        List<String> names = 이름목록(result);
+        assertThat(names).containsExactly("리뷰많음", "리뷰적음");
     }
 
     // ---------- 페이지네이션 ----------

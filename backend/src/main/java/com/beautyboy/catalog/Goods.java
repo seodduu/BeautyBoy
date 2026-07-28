@@ -73,6 +73,10 @@ public class Goods {
     @Column(name = "sales_count", nullable = false)
     private int salesCount = 0;
 
+    /** 리뷰 많은 순 정렬용 비정규화 값. 진실은 review의 goods_review_stat — 재집계가 동기화한다(V84). */
+    @Column(name = "review_count", nullable = false)
+    private int reviewCount = 0;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -168,6 +172,10 @@ public class Goods {
 
     public int getSalesCount() {
         return salesCount;
+    }
+
+    public int getReviewCount() {
+        return reviewCount;
     }
 
     public LocalDateTime getCreatedAt() {
