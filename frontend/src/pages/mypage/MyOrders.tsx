@@ -1,10 +1,20 @@
-import { useNavigate, useParams } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { fetchOrderDetail, fetchOrders } from '../../api/order';
 import { EmptyState } from '../../components/common/EmptyState';
+import { Pager } from '../../components/ui/Pager';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { formatWon } from '../../components/ui/Price';
 import './MyOrders.css';
+
+/** 한 페이지 건수 — 서버 기본값(size=10)과 맞춘다. */
+const PAGE_SIZE = 10;
+
+/** URL의 page는 1-based 표시값이다. 손으로 친 미지값·0 이하는 1로 접어 빈 화면을 막는다. */
+function normalizePage(raw: string | null): number {
+  const parsed = Number(raw);
+  return Number.isInteger(parsed) && parsed >= 1 ? parsed : 1;
+}
 
 /** 목록·상세 공용 "대표상품 외 N건" 표기. itemCount가 1이면 대표상품명만 보여준다. */
 function buildOrderLabel(representativeGoodsName: string, itemCount: number): string {
@@ -33,7 +43,26 @@ export function MyOrders() {
 
 function OrderListView() {
   const navigate = useNavigate();
-  const ordersQuery = useQuery({ queryKey: ['myOrders'], queryFn: fetchOrders });
+  const [searchParams, setSearchParams] = useSearchParams();
+  const page = normalizePage(searchParams.get('page'));
+
+  const ordersQuery = useQuery({
+    queryKey: ['myOrders', page],
+    // 페이지 전환 중 이전 목록을 유지한다 — 매번 스켈레톤으로 돌아가면 목록 높이가 무너진다.
+    placeholderData: keepPreviousData,
+    // URL은 1-based 표시값, API는 0-based다.
+    queryFn: () => fetchOrders(page - 1, PAGE_SIZE),
+  });
+
+  const handlePageChange = (next: number) => {
+    setSearchParams((prev) => {
+      const params = new URLSearchParams(prev);
+      // 1페이지는 파라미터를 지운다 — `?page=1`과 무파라미터가 같은 화면의 두 주소가 되지 않게.
+      if (next <= 1) params.delete('page');
+      else params.set('page', String(next));
+      return params;
+    });
+  };
 
   if (ordersQuery.isLoading) {
     return (
@@ -43,7 +72,7 @@ function OrderListView() {
     );
   }
 
-  if (ordersQuery.isError) {
+  if (ordersQuery.isError || !ordersQuery.data) {
     return (
       <div className="bb-my-orders">
         <p className="bb-my-orders__error">주문내역을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.</p>
@@ -51,9 +80,9 @@ function OrderListView() {
     );
   }
 
-  const orders = ordersQuery.data ?? [];
+  const data = ordersQuery.data;
 
-  if (orders.length === 0) {
+  if (data.content.length === 0) {
     return (
       <div className="bb-my-orders">
         <EmptyState
@@ -66,29 +95,32 @@ function OrderListView() {
   }
 
   return (
-    <ul className="bb-my-orders__list">
-      {orders.map((order) => (
-        <li key={order.orderNo}>
-          <button
-            type="button"
-            className="bb-my-orders__row"
-            onClick={() => navigate(`/mypage/orders/${order.orderNo}`)}
-          >
-            <div className="bb-my-orders__row-info">
-              <span className="bb-my-orders__row-date">
-                {order.orderedAt.slice(0, 10)}
-              </span>
-              <span className="bb-my-orders__row-name">
-                {buildOrderLabel(order.representativeGoodsName, order.itemCount)}
-              </span>
-              {/* 재주문 등으로 날짜·상품명·금액이 같은 건이 쌓여도 구분할 수 있도록 주문번호를 보조 정보로 노출 */}
-              <span className="bb-my-orders__row-order-no">주문번호 {order.orderNo}</span>
-            </div>
-            <span className="bb-my-orders__row-amount">{formatWon(order.payableAmount)}</span>
-          </button>
-        </li>
-      ))}
-    </ul>
+    <div className="bb-my-orders">
+      <ul className="bb-my-orders__list">
+        {data.content.map((order) => (
+          <li key={order.orderNo}>
+            <button
+              type="button"
+              className="bb-my-orders__row"
+              onClick={() => navigate(`/mypage/orders/${order.orderNo}`)}
+            >
+              <div className="bb-my-orders__row-info">
+                <span className="bb-my-orders__row-date">
+                  {order.orderedAt.slice(0, 10)}
+                </span>
+                <span className="bb-my-orders__row-name">
+                  {buildOrderLabel(order.representativeGoodsName, order.itemCount)}
+                </span>
+                {/* 재주문 등으로 날짜·상품명·금액이 같은 건이 쌓여도 구분할 수 있도록 주문번호를 보조 정보로 노출 */}
+                <span className="bb-my-orders__row-order-no">주문번호 {order.orderNo}</span>
+              </div>
+              <span className="bb-my-orders__row-amount">{formatWon(order.payableAmount)}</span>
+            </button>
+          </li>
+        ))}
+      </ul>
+      <Pager page={page} totalPages={data.totalPages} onPageChange={handlePageChange} />
+    </div>
   );
 }
 

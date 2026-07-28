@@ -1,5 +1,5 @@
 import { api } from './client';
-import type { ApiEnvelope } from '../types/goods';
+import type { ApiEnvelope, PageResponse } from '../types/goods';
 
 /** POST /orders 요청 바디. 금액 필드가 없는 게 의도다 — 서버가 가격·재고를 재검증한다. */
 export interface OrderCreateRequest {
@@ -57,9 +57,11 @@ export interface OrderSummary {
   orderedAt: string;
 }
 
-/** GET /orders */
-export async function fetchOrders(): Promise<OrderSummary[]> {
-  const response = await api.get<ApiEnvelope<OrderSummary[]>>('/orders');
+/** GET /orders — 페이지 단위. page는 0-based(서버 계약), size 상한은 서버가 100으로 깎는다. */
+export async function fetchOrders(page = 0, size = 10): Promise<PageResponse<OrderSummary>> {
+  const response = await api.get<ApiEnvelope<PageResponse<OrderSummary>>>('/orders', {
+    params: { page, size },
+  });
   return response.data.data;
 }
 
