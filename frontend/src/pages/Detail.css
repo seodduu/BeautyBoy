@@ -94,6 +94,15 @@
   min-height: 52px;
 }
 
+/* {typography.meta} / graphite — 카드 위 보조 텍스트 최저선 */
+.bb-detail__option-hint {
+  margin: var(--space-xs) 0 0;
+  font-size: var(--fs-meta);
+  line-height: var(--lh-meta);
+  color: var(--color-graphite);
+  word-break: keep-all;
+}
+
 .bb-detail__error {
   padding: var(--space-lg);
   color: var(--color-graphite);

@@ -87,7 +87,8 @@
   font-size: var(--fs-meta);
   font-weight: var(--fw-meta);
   line-height: var(--lh-meta);
-  color: var(--color-slate);
+  /* 카드 위 보조 텍스트 최저선(DESIGN.md) — surface 위 slate는 4.2:1로 AA 미달 */
+  color: var(--color-graphite);
 }
 
 .bb-goods-card__name {

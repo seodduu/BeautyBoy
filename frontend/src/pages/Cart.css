@@ -44,6 +44,14 @@
   color: var(--color-ink);
 }
 
+.bb-cart__summary-note {
+  margin: calc(-1 * var(--space-md)) 0 var(--space-lg);
+  font-size: var(--fs-meta);
+  color: var(--color-graphite);
+  text-align: right;
+  word-break: keep-all;
+}
+
 .bb-cart__cta {
   width: 100%;
 }

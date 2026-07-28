@@ -75,10 +75,10 @@ describe('GoodsCard', () => {
     expect(stopPropagationSpy).toHaveBeenCalled();
   });
 
-  it('rating=0, reviewCount=0이면 "리뷰 없음"이 뜨고 카드가 정상 렌더된다', () => {
+  it('rating=0, reviewCount=0이면 "첫 리뷰를 기다려요"가 뜨고 카드가 정상 렌더된다', () => {
     renderCard({ ...baseItem, rating: 0, reviewCount: 0 });
 
-    expect(screen.getByText('리뷰 없음')).toBeInTheDocument();
+    expect(screen.getByText('첫 리뷰를 기다려요')).toBeInTheDocument();
     expect(screen.getByText('상품명')).toBeInTheDocument();
   });
 

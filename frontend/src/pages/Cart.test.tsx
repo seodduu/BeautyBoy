@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { http, HttpResponse } from 'msw';
@@ -14,6 +14,8 @@ function envelope<T>(data: T) {
   return { code: 'OK', message: 'success', data };
 }
 
+const fixtureThumbnailUrl = '/images/goods/greentea-toner.jpg';
+
 const TWO_ITEMS: CartItem[] = [
   {
     cartItemId: 1,
@@ -24,8 +26,11 @@ const TWO_ITEMS: CartItem[] = [
     unitPrice: 20000,
     quantity: 2,
     lineAmount: 40000,
+    thumbnailUrl: fixtureThumbnailUrl,
+    stock: 30,
   },
   {
+    // stock=1·quantity=1 — 스텝퍼 상한 min(재고, 99) 검증용 저재고 항목
     cartItemId: 2,
     goodsNo: 2,
     optionNo: null,
@@ -34,6 +39,8 @@ const TWO_ITEMS: CartItem[] = [
     unitPrice: 3000,
     quantity: 1,
     lineAmount: 3000,
+    thumbnailUrl: null,
+    stock: 1,
   },
 ];
 
@@ -47,6 +54,8 @@ const ONE_ITEM: CartItem[] = [
     unitPrice: 20000,
     quantity: 2,
     lineAmount: 40000,
+    thumbnailUrl: fixtureThumbnailUrl,
+    stock: 30,
   },
 ];
 
@@ -163,6 +172,35 @@ describe('Cart — 장바구니', () => {
     const emptyMessage = await screen.findByText(/비어 있/);
     expect(emptyMessage.closest('[role="status"]')).toHaveTextContent(/비어 있/);
     expect(screen.queryByRole('button', { name: '주문하기' })).not.toBeInTheDocument();
+  });
+
+  it('장바구니 줄에 썸네일과 개당 가격이 보인다', async () => {
+    registerHandlers();
+
+    renderCart();
+
+    const line = await screen.findByTestId('cart-line-1');
+    // alt=""(장식 이미지 — 상품명이 바로 옆에 있다)라 접근성 role은 presentation이다
+    expect(within(line).getByRole('presentation')).toHaveAttribute('src', fixtureThumbnailUrl);
+    expect(line).toHaveTextContent('개당 20,000원'); // unitPrice 표기 형식이 사양이다
+  });
+
+  it('수량 스텝퍼 상한은 min(재고, 99)다 — 재고 1이면 1에서 + 버튼이 비활성', async () => {
+    registerHandlers();
+
+    renderCart();
+
+    const line = await screen.findByTestId('cart-line-2'); // stock=1, quantity=1
+    expect(within(line).getByRole('button', { name: '수량 늘리기' })).toBeDisabled();
+  });
+
+  it('합계 라벨은 "결제 예상 금액"이고 배송비 안내가 붙는다', async () => {
+    registerHandlers();
+
+    renderCart();
+
+    expect(await screen.findByText('결제 예상 금액')).toBeInTheDocument();
+    expect(screen.getByText('배송비는 주문서에서 계산됩니다')).toBeInTheDocument();
   });
 
   it('CONFLICT면 경고 배너를 보여주고 이유를 읽어준다', async () => {

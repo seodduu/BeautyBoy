@@ -167,6 +167,8 @@ let cartItemsFixture: CartItem[] = [
     unitPrice: 20000,
     quantity: 2,
     lineAmount: 40000,
+    thumbnailUrl: goodsFixtures[0].thumbnailUrl,
+    stock: 3, // 작은 값 — 스텝퍼 재고 상한(+ 비활성)을 mock에서 바로 볼 수 있게 한다
   },
   {
     cartItemId: 2,
@@ -177,6 +179,8 @@ let cartItemsFixture: CartItem[] = [
     unitPrice: 32000,
     quantity: 1,
     lineAmount: 32000,
+    thumbnailUrl: goodsFixtures[3].thumbnailUrl,
+    stock: 2147483647, // 옵션 없는 상품 — Integer.MAX_VALUE
   },
 ];
 

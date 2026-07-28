@@ -90,6 +90,7 @@ public interface GoodsQueryService {
             String goodsName,
             String optionName,
             int unitPrice,
-            int stock) {
+            int stock,
+            String thumbnailUrl) {
     }
 }

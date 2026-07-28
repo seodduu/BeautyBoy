@@ -10,23 +10,31 @@ interface CartLineProps {
 }
 
 /**
- * 장바구니에서 늘릴 수 있는 상한. 상세 페이지와 달리 라인에는 남은 재고 정보가
- * 내려오지 않으므로(CartItem 계약), 실 재고 초과는 주문 시점에 서버가 재검증한다(project law).
+ * 장바구니에서 늘릴 수 있는 상한(오입력 방지 캡). 실제 상한은 min(재고, 99)로,
+ * 스텝퍼는 UX 게이트일 뿐 재고 검증의 진실은 서버다(돈과 재고는 서버).
  */
 const MAX_QUANTITY = 99;
 
-/** 장바구니 한 줄 — 상품명/옵션 + 수량 스텝퍼 + 라인 금액(서버 lineAmount 그대로) + 삭제. */
+/** 장바구니 한 줄 — 썸네일 + 상품명/옵션/개당가 + 수량 스텝퍼 + 라인 금액(서버 lineAmount 그대로) + 삭제. */
 export function CartLine({ item, onQuantityChange, onRemove }: CartLineProps) {
   return (
-    <article className="bb-cart-line">
+    <article className="bb-cart-line" data-testid={`cart-line-${item.cartItemId}`}>
+      {/* alt="" — 상품명 텍스트가 바로 옆에 있어 이미지는 장식이다 */}
+      {item.thumbnailUrl ? (
+        <img className="bb-cart-line__thumbnail" src={item.thumbnailUrl} alt="" />
+      ) : (
+        <div className="bb-cart-line__thumbnail" aria-hidden="true" />
+      )}
+
       <div className="bb-cart-line__info">
         <p className="bb-cart-line__name">{item.goodsName}</p>
         {item.optionName && <p className="bb-cart-line__option">{item.optionName}</p>}
+        <p className="bb-cart-line__unit-price">개당 {formatWon(item.unitPrice)}</p>
       </div>
 
       <QuantityStepper
         quantity={item.quantity}
-        max={MAX_QUANTITY}
+        max={Math.min(item.stock, MAX_QUANTITY)}
         onChange={(next) => onQuantityChange(item.cartItemId, next)}
       />
 
