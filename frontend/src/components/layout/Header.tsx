@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import './Header.css';
@@ -43,6 +44,73 @@ export function Header() {
      공용 헤더를 얹으면 스플릿 상단이 잘리므로 이 화면들에서는 헤더를 렌더하지 않는다. */
   const isAuth = pathname === '/login' || pathname === '/signup';
 
+  /* 768px 이하에서 PRIMARY_NAV/LANDING_NAV가 접힐 때 그 대체 진입로가 되는 시트 상태.
+     닫는 경로는 넷 — 링크 클릭 · 버튼 재클릭 · Esc · 라우트 변경. 바깥 클릭 감지는 붙이지
+     않는다(§2 결정 6) — 시트가 오버레이 없이 상단바 바로 아래 붙는 형태라, 바깥 클릭 감지를
+     추가하면 그 아래 콘텐츠의 첫 클릭을 삼킨다. */
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  // 라우트가 바뀌면 시트를 닫는다 — 안 닫으면 이동 후에도 시트가 남는다.
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [pathname]);
+
+  // Esc로 닫는다. 리스너는 시트가 열려 있을 때만 붙인다.
+  useEffect(() => {
+    if (!menuOpen) {
+      return;
+    }
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [menuOpen]);
+
+  // 769px 이상으로 넓어지면 시트는 미디어쿼리로 이미 숨지만, 상태도 닫아 둔다 — 다시 768px
+  // 이하로 좁혀졌을 때 이전에 열려 있던 상태가 그대로 튀어나오지 않게 하기 위해서다.
+  useEffect(() => {
+    // jsdom 기반 테스트 환경 중 이 리스너를 쓰지 않는 화면은 matchMedia를 목킹해 두지
+    // 않는다 — 존재할 때만 붙인다(실제 브라우저에는 항상 있다).
+    if (typeof window.matchMedia !== 'function') {
+      return;
+    }
+    const mql = window.matchMedia('(min-width: 769px)');
+    const handleChange = (event: MediaQueryListEvent) => {
+      if (event.matches) {
+        setMenuOpen(false);
+      }
+    };
+    mql.addEventListener('change', handleChange);
+    return () => mql.removeEventListener('change', handleChange);
+  }, []);
+
+  const menuToggle = (
+    <button
+      type="button"
+      className="bb-header__menu-toggle"
+      aria-label={menuOpen ? '메뉴 닫기' : '메뉴 열기'}
+      aria-expanded={menuOpen}
+      aria-controls="bb-header-menu-sheet"
+      onClick={() => setMenuOpen((prev) => !prev)}
+    >
+      {menuOpen ? (
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+          <path d="M4 4L16 16" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+          <path d="M16 4L4 16" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+        </svg>
+      ) : (
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+          <path d="M3 6H17" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+          <path d="M3 10H17" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+          <path d="M3 14H17" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+        </svg>
+      )}
+    </button>
+  );
+
   /*
    * enabled: !!member — GET /cart/items는 인증이 필요하다. 비로그인에 그냥 쏘면 401 →
    * 리프레시 인터셉터가 매 페이지에서 불필요한 왕복을 만든다. 비로그인 사용자에게는
@@ -86,7 +154,24 @@ export function Header() {
               </Link>
             ))}
           </nav>
+
+          {menuToggle}
         </div>
+
+        {menuOpen && (
+          <nav id="bb-header-menu-sheet" className="bb-header__sheet" aria-label="메뉴">
+            {LANDING_NAV.map(({ label, to }) => (
+              <Link
+                to={to}
+                className="bb-header__nav-link"
+                key={to}
+                onClick={() => setMenuOpen(false)}
+              >
+                {label}
+              </Link>
+            ))}
+          </nav>
+        )}
       </header>
     );
   }
@@ -149,7 +234,24 @@ export function Header() {
             </Link>
           )}
         </nav>
+
+        {menuToggle}
       </div>
+
+      {menuOpen && (
+        <nav id="bb-header-menu-sheet" className="bb-header__sheet" aria-label="메뉴">
+          {PRIMARY_NAV.map(({ label, to }) => (
+            <Link
+              to={to}
+              className="bb-header__nav-link"
+              key={to}
+              onClick={() => setMenuOpen(false)}
+            >
+              {label}
+            </Link>
+          ))}
+        </nav>
+      )}
     </header>
   );
 }

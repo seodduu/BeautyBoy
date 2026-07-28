@@ -94,7 +94,8 @@
   display: flex;
   align-items: baseline;
   gap: var(--space-xs);
-  padding-bottom: var(--space-xxs);
+  /* §2 결정 7: 29px였던 히트영역을 세로 패딩으로 44px까지 넓힌다(폰트 크기는 그대로). */
+  padding: var(--space-sm) 0;
   white-space: nowrap;
   text-decoration: none;
   color: var(--color-stone);
