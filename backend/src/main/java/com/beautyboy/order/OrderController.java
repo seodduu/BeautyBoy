@@ -6,6 +6,7 @@ import com.beautyboy.order.dto.OrderCreateRequest;
 import com.beautyboy.order.dto.OrderCreateResponse;
 import com.beautyboy.order.dto.OrderDetailResponse;
 import com.beautyboy.order.dto.OrderSummaryResponse;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -28,7 +29,7 @@ public class OrderController {
     @PostMapping("/api/v1/orders")
     public ResponseEntity<ApiResponse<OrderCreateResponse>> create(
             @AuthenticationPrincipal Long memberId,
-            @RequestBody OrderCreateRequest request) {
+            @Valid @RequestBody OrderCreateRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.ok(orderService.create(memberId, request)));
     }

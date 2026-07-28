@@ -4,6 +4,7 @@ import com.beautyboy.common.ApiResponse;
 import com.beautyboy.common.PageResponse;
 import com.beautyboy.qna.dto.QnaCreateRequest;
 import com.beautyboy.qna.dto.QnaResponse;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -29,7 +30,7 @@ public class QnaController {
 
     @PostMapping("/api/v1/qna")
     public ResponseEntity<ApiResponse<Void>> create(@AuthenticationPrincipal Long memberId,
-                                                     @RequestBody QnaCreateRequest request) {
+                                                     @Valid @RequestBody QnaCreateRequest request) {
         qnaService.create(memberId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(null));
     }
