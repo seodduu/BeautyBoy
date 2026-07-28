@@ -42,4 +42,13 @@ describe('addSetToCart — 세트 일괄 담기 집계', () => {
     expect(spy).not.toHaveBeenCalled();
     spy.mockRestore();
   });
+
+  it('전량 실패해도 장바구니 캐시를 무효화한다 (추출 전 동작 보존)', async () => {
+    const spy = vi.spyOn(pickCard, 'addPickToCart').mockRejectedValue(new Error('실패'));
+    const client = clientOf();
+    const invalidate = vi.spyOn(client, 'invalidateQueries');
+    await addSetToCart(client, [101, 202]);
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: ['cart'] });
+    spy.mockRestore();
+  });
 });

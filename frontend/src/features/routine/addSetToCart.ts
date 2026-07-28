@@ -23,8 +23,9 @@ export async function addSetToCart(
       // 품절·네트워크 실패 모두 이 픽만 건너뛴다.
     }
   }
-  if (added > 0) {
-    queryClient.invalidateQueries({ queryKey: ['cart'] });
-  }
+  // 전량 실패해도 무효화한다. 담기 실패의 원인이 "이미 장바구니에 있음"이나 서버 측 상태
+  // 변화일 수 있어, 실패했다는 이유로 캐시를 낡은 채 두면 화면이 서버와 어긋난다.
+  // 추출 전 동작과도 같다.
+  queryClient.invalidateQueries({ queryKey: ['cart'] });
   return { added, skipped: goodsNos.length - added };
 }
