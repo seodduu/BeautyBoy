@@ -6,8 +6,8 @@ import com.beautyboy.compat.dto.CompatCheckRequest;
 import com.beautyboy.compat.dto.CompatCheckResponse;
 import com.beautyboy.compat.dto.CompatFinding;
 import com.beautyboy.ingredient.GoodsIngredientQueryService;
-import com.beautyboy.ingredient.IngredientRule;
-import com.beautyboy.ingredient.IngredientRuleRepository;
+import com.beautyboy.ingredient.IngredientRuleQueryService;
+import com.beautyboy.ingredient.IngredientRuleQueryService.RuleVerdict;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -29,7 +29,7 @@ class CompatServiceTest {
     @Mock
     GoodsIngredientQueryService goodsIngredientQueryService;
     @Mock
-    IngredientRuleRepository ruleRepository;
+    IngredientRuleQueryService ruleQueryService;
     @InjectMocks
     CompatService compatService;
 
@@ -37,8 +37,8 @@ class CompatServiceTest {
     void 레티노이드와_AHA가_한_선택에_있으면_CONFLICT를_낸다() {
         given(goodsIngredientQueryService.findCategoriesByGoodsIds(List.of(1L, 2L)))
                 .willReturn(Map.of(1L, Set.of("RETINOID"), 2L, Set.of("AHA")));
-        given(ruleRepository.findNormalized("AHA", "RETINOID"))
-                .willReturn(Optional.of(new IngredientRule(null, "AHA", "RETINOID", "CONFLICT", "자극 중첩")));
+        given(ruleQueryService.findNormalized("AHA", "RETINOID"))
+                .willReturn(Optional.of(new RuleVerdict("AHA", "RETINOID", "CONFLICT", "자극 중첩")));
 
         CompatCheckResponse r = compatService.check(new CompatCheckRequest(List.of(1L, 2L)));
 
@@ -56,7 +56,7 @@ class CompatServiceTest {
     void 규칙_없는_조합은_OK다() {
         given(goodsIngredientQueryService.findCategoriesByGoodsIds(List.of(1L, 2L)))
                 .willReturn(Map.of(1L, Set.of("HYALURONIC"), 2L, Set.of("CERAMIDE")));
-        given(ruleRepository.findNormalized("CERAMIDE", "HYALURONIC"))
+        given(ruleQueryService.findNormalized("CERAMIDE", "HYALURONIC"))
                 .willReturn(Optional.empty());
 
         CompatCheckResponse r = compatService.check(new CompatCheckRequest(List.of(1L, 2L)));
@@ -85,8 +85,8 @@ class CompatServiceTest {
     void 한_제품이_두_분류를_다_가지면_자기충돌도_잡는다() {
         given(goodsIngredientQueryService.findCategoriesByGoodsIds(List.of(1L)))
                 .willReturn(Map.of(1L, Set.of("AHA", "RETINOID")));
-        given(ruleRepository.findNormalized("AHA", "RETINOID"))
-                .willReturn(Optional.of(new IngredientRule(null, "AHA", "RETINOID", "CONFLICT", "자극 중첩")));
+        given(ruleQueryService.findNormalized("AHA", "RETINOID"))
+                .willReturn(Optional.of(new RuleVerdict("AHA", "RETINOID", "CONFLICT", "자극 중첩")));
 
         CompatCheckResponse r = compatService.check(new CompatCheckRequest(List.of(1L)));
 
@@ -107,18 +107,18 @@ class CompatServiceTest {
                         2L, Set.of("RETINOID"),
                         3L, Set.of("VITAMINC"),
                         4L, Set.of("BHA")));
-        given(ruleRepository.findNormalized("AHA", "BHA"))
-                .willReturn(Optional.of(new IngredientRule(null, "AHA", "BHA", "CAUTION", "각질 이중 사용 주의")));
-        given(ruleRepository.findNormalized("AHA", "RETINOID"))
-                .willReturn(Optional.of(new IngredientRule(null, "AHA", "RETINOID", "CONFLICT", "자극 중첩")));
-        given(ruleRepository.findNormalized("AHA", "VITAMINC"))
+        given(ruleQueryService.findNormalized("AHA", "BHA"))
+                .willReturn(Optional.of(new RuleVerdict("AHA", "BHA", "CAUTION", "각질 이중 사용 주의")));
+        given(ruleQueryService.findNormalized("AHA", "RETINOID"))
+                .willReturn(Optional.of(new RuleVerdict("AHA", "RETINOID", "CONFLICT", "자극 중첩")));
+        given(ruleQueryService.findNormalized("AHA", "VITAMINC"))
                 .willReturn(Optional.empty());
-        given(ruleRepository.findNormalized("BHA", "RETINOID"))
+        given(ruleQueryService.findNormalized("BHA", "RETINOID"))
                 .willReturn(Optional.empty());
-        given(ruleRepository.findNormalized("BHA", "VITAMINC"))
+        given(ruleQueryService.findNormalized("BHA", "VITAMINC"))
                 .willReturn(Optional.empty());
-        given(ruleRepository.findNormalized("RETINOID", "VITAMINC"))
-                .willReturn(Optional.of(new IngredientRule(null, "RETINOID", "VITAMINC", "SYNERGY", "항산화 시너지")));
+        given(ruleQueryService.findNormalized("RETINOID", "VITAMINC"))
+                .willReturn(Optional.of(new RuleVerdict("RETINOID", "VITAMINC", "SYNERGY", "항산화 시너지")));
 
         CompatCheckResponse r = compatService.check(new CompatCheckRequest(List.of(1L, 2L, 3L, 4L)));
 
@@ -137,9 +137,9 @@ class CompatServiceTest {
         // 정규화(사전순)로 ca=NIACINAMIDE, cb=VITAMIN_C — 라벨도 그 순서로 내려간다.
         given(goodsIngredientQueryService.findCategoriesByGoodsIds(List.of(1L, 2L)))
                 .willReturn(Map.of(1L, Set.of("VITAMIN_C"), 2L, Set.of("NIACINAMIDE")));
-        given(ruleRepository.findNormalized("NIACINAMIDE", "VITAMIN_C"))
-                .willReturn(Optional.of(new IngredientRule(
-                        null, "NIACINAMIDE", "VITAMIN_C", "CAUTION", "동시 사용 주의")));
+        given(ruleQueryService.findNormalized("NIACINAMIDE", "VITAMIN_C"))
+                .willReturn(Optional.of(new RuleVerdict(
+                        "NIACINAMIDE", "VITAMIN_C", "CAUTION", "동시 사용 주의")));
 
         CompatCheckResponse response = compatService.check(new CompatCheckRequest(List.of(1L, 2L)));
 
@@ -153,11 +153,11 @@ class CompatServiceTest {
         // AHA-RETINOID CONFLICT, AHA-BHA CONFLICT -> categoryA 동률(AHA)이면 categoryB 순 (BHA < RETINOID)
         given(goodsIngredientQueryService.findCategoriesByGoodsIds(List.of(1L, 2L, 3L)))
                 .willReturn(Map.of(1L, Set.of("AHA"), 2L, Set.of("RETINOID"), 3L, Set.of("BHA")));
-        given(ruleRepository.findNormalized("AHA", "BHA"))
-                .willReturn(Optional.of(new IngredientRule(null, "AHA", "BHA", "CONFLICT", "b")));
-        given(ruleRepository.findNormalized("AHA", "RETINOID"))
-                .willReturn(Optional.of(new IngredientRule(null, "AHA", "RETINOID", "CONFLICT", "r")));
-        given(ruleRepository.findNormalized("BHA", "RETINOID"))
+        given(ruleQueryService.findNormalized("AHA", "BHA"))
+                .willReturn(Optional.of(new RuleVerdict("AHA", "BHA", "CONFLICT", "b")));
+        given(ruleQueryService.findNormalized("AHA", "RETINOID"))
+                .willReturn(Optional.of(new RuleVerdict("AHA", "RETINOID", "CONFLICT", "r")));
+        given(ruleQueryService.findNormalized("BHA", "RETINOID"))
                 .willReturn(Optional.empty());
 
         CompatCheckResponse r = compatService.check(new CompatCheckRequest(List.of(1L, 2L, 3L)));
