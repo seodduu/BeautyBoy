@@ -4,6 +4,7 @@ import com.beautyboy.cart.CartService;
 import com.beautyboy.catalog.GoodsQueryService;
 import com.beautyboy.common.BusinessException;
 import com.beautyboy.common.ErrorCode;
+import com.beautyboy.common.PageRequests;
 import com.beautyboy.order.dto.OrderCreateRequest;
 import com.beautyboy.order.dto.OrderCreateResponse;
 import com.beautyboy.common.PageResponse;
@@ -34,8 +35,6 @@ public class OrderService implements OrderQueryService {
     private static final int ORDER_NO_MAX_ATTEMPTS = 5;
     /** 목록 기본 크기. 마이페이지 주문내역 한 화면 분량이며 admin 문의 목록과 같은 값이다. */
     private static final int DEFAULT_PAGE_SIZE = 10;
-    /** 상한. /goods(GoodsController)·/qna(QnaService)와 <b>같은 값</b>이다 — 엔드포인트마다 다르면 방어가 아니다. */
-    private static final int MAX_PAGE_SIZE = 100;
 
     private final OrderRepository orderRepository;
     private final GoodsQueryService goodsQueryService;
@@ -103,8 +102,8 @@ public class OrderService implements OrderQueryService {
     @Transactional(readOnly = true)
     public PageResponse<OrderSummaryResponse> ordersOf(Long memberId, int page, int size) {
         // 손으로 친 파라미터를 그대로 PageRequest에 넣으면 음수·0에서 IllegalArgumentException(500)이 난다.
-        int safePage = Math.max(page, 0);
-        int safeSize = Math.min(Math.max(size, 1), MAX_PAGE_SIZE);
+        int safePage = PageRequests.clampPage(page);
+        int safeSize = PageRequests.clampSize(size);
 
         Page<Order> found = orderRepository.findByMemberIdOrderByOrderedAtDescIdDesc(
                 memberId, PageRequest.of(safePage, safeSize));

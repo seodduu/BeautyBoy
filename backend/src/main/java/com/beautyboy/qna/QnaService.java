@@ -2,6 +2,7 @@ package com.beautyboy.qna;
 
 import com.beautyboy.common.BusinessException;
 import com.beautyboy.common.ErrorCode;
+import com.beautyboy.common.PageRequests;
 import com.beautyboy.common.PageResponse;
 import com.beautyboy.qna.dto.AdminQnaResponse;
 import com.beautyboy.qna.dto.QnaCreateRequest;
@@ -19,8 +20,6 @@ import java.util.List;
 public class QnaService {
 
     private static final int DEFAULT_PAGE_SIZE = 10;
-    /** 페이지 크기 상한 — GoodsController.MAX_PAGE_SIZE와 같은 값·같은 이유(응답 폭주 방지). */
-    private static final int MAX_PAGE_SIZE = 100;
 
     private final QnaRepository qnaRepository;
 
@@ -46,13 +45,14 @@ public class QnaService {
 
     @Transactional(readOnly = true)
     public PageResponse<QnaResponse> list(Long goodsNo, Long viewerId, int page) {
+        int pageNumber = PageRequests.clampPage(page);
         List<Qna> items = qnaRepository.findByGoodsIdOrderByCreatedAtDesc(
-                goodsNo, PageRequest.of(page, DEFAULT_PAGE_SIZE));
+                goodsNo, PageRequest.of(pageNumber, DEFAULT_PAGE_SIZE));
         long total = qnaRepository.countByGoodsId(goodsNo);
         List<QnaResponse> responses = items.stream()
                 .map(qna -> toResponse(qna, viewerId))
                 .toList();
-        return PageResponse.of(responses, page, DEFAULT_PAGE_SIZE, total);
+        return PageResponse.of(responses, pageNumber, DEFAULT_PAGE_SIZE, total);
     }
 
     /**
@@ -68,13 +68,14 @@ public class QnaService {
      */
     @Transactional(readOnly = true)
     public PageResponse<AdminQnaResponse> adminList(int page, int size) {
-        int pageSize = Math.min(Math.max(size, 1), MAX_PAGE_SIZE);
-        List<Qna> items = qnaRepository.findAllOrderByWaitingFirst(PageRequest.of(page, pageSize));
+        int pageNumber = PageRequests.clampPage(page);
+        int pageSize = PageRequests.clampSize(size);
+        List<Qna> items = qnaRepository.findAllOrderByWaitingFirst(PageRequest.of(pageNumber, pageSize));
         long total = qnaRepository.count();
         List<AdminQnaResponse> responses = items.stream()
                 .map(this::toAdminResponse)
                 .toList();
-        return PageResponse.of(responses, page, pageSize, total);
+        return PageResponse.of(responses, pageNumber, pageSize, total);
     }
 
     private QnaResponse toResponse(Qna qna, Long viewerId) {

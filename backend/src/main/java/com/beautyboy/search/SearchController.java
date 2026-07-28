@@ -3,6 +3,7 @@ package com.beautyboy.search;
 import com.beautyboy.common.ApiResponse;
 import com.beautyboy.common.BusinessException;
 import com.beautyboy.common.ErrorCode;
+import com.beautyboy.common.PageRequests;
 import com.beautyboy.common.PageResponse;
 import com.beautyboy.search.dto.SearchCondition;
 import com.beautyboy.search.dto.SearchResultItem;
@@ -17,7 +18,6 @@ import java.util.List;
 @RestController
 public class SearchController {
 
-    private static final int MAX_PAGE_SIZE = 100;
     /** ngram_token_size 기본값이 2다. 1자 검색어는 FULLTEXT에서 아무것도 매칭시키지 못한다. */
     private static final int MIN_KEYWORD_LENGTH = 2;
     /** 프론트가 300ms 디바운스로 호출한다(설계 7장). 서버는 상위 10건만 준다. */
@@ -44,7 +44,7 @@ public class SearchController {
         }
 
         SearchCondition condition = new SearchCondition(
-                keyword, SearchSort.fromParam(sort), page, Math.min(size, MAX_PAGE_SIZE));
+                keyword, SearchSort.fromParam(sort), PageRequests.clampPage(page), PageRequests.clampSize(size));
 
         return ResponseEntity.ok(ApiResponse.ok(searchService.search(condition, memberId)));
     }
