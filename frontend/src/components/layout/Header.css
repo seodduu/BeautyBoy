@@ -143,12 +143,12 @@
   color: var(--color-primary);
 }
 
+/* 우측 내비 안의 첫 묶음. 부모(.bb-header__nav)의 gap과 같은 값이라 시각적으로는
+   한 줄로 이어 보이고, 좁은 화면에서는 이 묶음만 통째로 접힌다. */
 .bb-header__primary-nav {
-  flex: 0 0 auto;
   display: flex;
   align-items: center;
   gap: 20px;
-  font-size: 14px;
 }
 
 /* 다크 헤더에서 nav-link 기본색이 이미 on-primary이므로, 현재 위치는 굵기로만 구분한다 */

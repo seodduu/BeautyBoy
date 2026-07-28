@@ -103,19 +103,6 @@ export function Header() {
           BEAUTY BOY<span className="bb-header__logo-dot">.</span>
         </Link>
 
-        <nav className="bb-header__primary-nav" aria-label="주요 메뉴">
-          {PRIMARY_NAV.map(({ label, to }) => (
-            <Link
-              to={to}
-              className="bb-header__nav-link"
-              key={to}
-              aria-current={pathname === to ? 'page' : undefined}
-            >
-              {label}
-            </Link>
-          ))}
-        </nav>
-
         {/* 검색 기능은 이 태스크의 범위가 아님 — 자리만 확보 */}
         <div className="bb-header__search" role="search" aria-label="상품 검색(준비 중)">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
@@ -126,6 +113,21 @@ export function Header() {
         </div>
 
         <nav className="bb-header__nav" aria-label="주요 메뉴">
+          {/* 주요 메뉴는 장바구니·계정과 같은 우측 그룹에 둔다 — 상단바의 조작 지점을
+              한쪽으로 모으고, 좁은 화면에서는 이 묶음만 접는다. */}
+          <div className="bb-header__primary-nav">
+            {PRIMARY_NAV.map(({ label, to }) => (
+              <Link
+                to={to}
+                className="bb-header__nav-link"
+                key={to}
+                aria-current={pathname === to ? 'page' : undefined}
+              >
+                {label}
+              </Link>
+            ))}
+          </div>
+
           <Link to="/cart" className="bb-header__nav-link" aria-label="장바구니">
             장바구니
             {/* 로딩 중(cartCount === undefined)에는 배지를 그리지 않는다 — 하드코드 0을 그려

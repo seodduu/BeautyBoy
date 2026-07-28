@@ -185,4 +185,22 @@ describe('Header — 앱(로그인 이후) 내비', () => {
     expect(screen.getByRole('link', { name: '랭킹' })).toHaveAttribute('aria-current', 'page');
     expect(screen.getByRole('link', { name: '루틴 가이드' })).not.toHaveAttribute('aria-current');
   });
+
+  it('우측 그룹이 루틴 가이드 → 랭킹 → 전체 상품 → 장바구니 → 프로필 → 로그아웃 순서다', () => {
+    useAuthStore.getState().setAuth('token-abc', {
+      id: 1,
+      email: 'test@beautyboy.dev',
+      nickname: '민수',
+      grade: 'BRONZE',
+    });
+
+    renderHeaderAt('/main');
+
+    // 로고·검색을 제외한 헤더 우측 내비의 실제 DOM 순서를 본다.
+    const nav = screen.getByRole('navigation', { name: '주요 메뉴' });
+    const labels = Array.from(nav.querySelectorAll('a, button')).map((el) =>
+      el.textContent?.trim(),
+    );
+    expect(labels).toEqual(['루틴 가이드', '랭킹', '전체 상품', '장바구니', '민수님', '로그아웃']);
+  });
 });
