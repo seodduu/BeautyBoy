@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Route, Routes, useLocation, type Location } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { http, HttpResponse } from 'msw';
 import { server } from '../../mocks/server';
@@ -10,6 +10,21 @@ import type { OrderDetail, OrderSummary } from '../../api/order';
 
 function envelope<T>(data: T) {
   return { code: 'OK', message: 'success', data };
+}
+
+/** 목 서버가 마지막으로 받은 /orders 요청의 searchParams — 배선 테스트의 관측 지점(GoodsList와 동일). */
+let capturedSearchParams: URLSearchParams | null = null;
+/** MemoryRouter 내부의 현재 위치 — "URL이 상태의 진실" 단언용. */
+let location: Location | null = null;
+
+function LocationProbe() {
+  location = useLocation();
+  return null;
+}
+
+function currentLocation(): Location {
+  if (!location) throw new Error('LocationProbe가 아직 렌더되지 않았다');
+  return location;
 }
 
 const ORDER_SUMMARY: OrderSummary = {
@@ -65,10 +80,22 @@ const ORDER_DETAIL: OrderDetail = {
   ],
 };
 
-function registerHandlers(options: { orders?: OrderSummary[] } = {}) {
-  const { orders = [ORDER_SUMMARY] } = options;
+function registerHandlers(options: { orders?: OrderSummary[]; totalPages?: number } = {}) {
+  const { orders = [ORDER_SUMMARY], totalPages = 1 } = options;
   server.use(
-    http.get('/api/v1/orders', () => HttpResponse.json(envelope(orders))),
+    http.get('/api/v1/orders', ({ request }) => {
+      capturedSearchParams = new URL(request.url).searchParams;
+      return HttpResponse.json(
+        envelope({
+          content: orders,
+          page: 0,
+          size: 10,
+          totalElements: orders.length,
+          totalPages,
+          hasNext: totalPages > 1,
+        }),
+      );
+    }),
     http.get('/api/v1/orders/:orderNo', () => HttpResponse.json(envelope(ORDER_DETAIL))),
     // 현재 회원 배송지 — 주문 상세가 이걸 참조하면 안 된다(위 주석 참고).
     http.get('/api/v1/members/me/addresses', () =>
@@ -87,12 +114,15 @@ function renderMyOrders(initialPath = '/mypage/orders') {
           <Route path="/mypage/orders" element={<MyOrders />} />
           <Route path="/mypage/orders/:orderNo" element={<MyOrders />} />
         </Routes>
+        <LocationProbe />
       </MemoryRouter>
     </QueryClientProvider>,
   );
 }
 
 beforeEach(() => {
+  capturedSearchParams = null;
+  location = null;
   window.matchMedia = vi.fn().mockImplementation((query: string) => ({
     matches: false,
     media: query,
@@ -147,5 +177,45 @@ describe('MyOrders — 마이페이지 주문내역', () => {
     expect(screen.queryByText(/강남구/)).not.toBeInTheDocument();
     // 금액도 서버 응답(payableAmount)을 그대로 보여준다 — 프론트가 다시 계산하지 않는다.
     expect(screen.getByText('58,000원')).toBeInTheDocument();
+  });
+
+  it('주문이 두 페이지 이상이면 페이저가 보인다', async () => {
+    registerHandlers({ totalPages: 3 });
+
+    renderMyOrders();
+
+    expect(await screen.findByRole('navigation', { name: '페이지 이동' })).toBeInTheDocument();
+  });
+
+  it('한 페이지뿐이면 페이저를 렌더하지 않는다', async () => {
+    registerHandlers({ totalPages: 1 });
+
+    renderMyOrders();
+
+    await screen.findByText('그린티 토너 외 2건');
+    expect(screen.queryByRole('navigation', { name: '페이지 이동' })).not.toBeInTheDocument();
+  });
+
+  it('2페이지를 누르면 URL이 ?page=2가 되고 서버에 page=1을 보낸다 (URL은 1-based, API는 0-based)', async () => {
+    registerHandlers({ totalPages: 3 });
+
+    renderMyOrders();
+
+    fireEvent.click(await screen.findByRole('button', { name: '2' }));
+
+    expect(currentLocation().search).toContain('page=2');
+    await waitFor(() => {
+      expect(capturedSearchParams?.get('page')).toBe('1');
+    });
+  });
+
+  it('1페이지로 돌아가면 page 파라미터를 URL에서 지운다', async () => {
+    registerHandlers({ totalPages: 3 });
+
+    renderMyOrders('/mypage/orders?page=2');
+
+    fireEvent.click(await screen.findByRole('button', { name: '1' }));
+
+    expect(currentLocation().search).not.toContain('page=');
   });
 });

@@ -367,6 +367,20 @@ const myOrdersFixture: OrderSummary[] = [
     payableAmount: 21000,
     orderedAt: '2026-06-20T09:05:00',
   },
+  // 아래는 페이저(Task 2-3)를 dev 화면에서 실제로 확인하기 위한 목 데이터다 —
+  // 실 서버 시드는 계정당 10건을 넘지 않을 수 있어, 목이 대신 여러 페이지를 만든다.
+  ...Array.from({ length: 13 }, (_, i) => {
+    const index = i + 3; // ORD-...-0003부터
+    const goods = goodsFixtures[index % goodsFixtures.length];
+    return {
+      orderNo: `ORD-20260601-${String(index + 1).padStart(4, '0')}`,
+      status: 'PAID' as const,
+      representativeGoodsName: goods.name,
+      itemCount: (index % 3) + 1,
+      payableAmount: goods.salePrice * ((index % 3) + 1),
+      orderedAt: `2026-0${(index % 5) + 1}-${String((index % 27) + 1).padStart(2, '0')}T10:00:00`,
+    };
+  }),
 ];
 
 const myOrderDetailFixture: Record<string, OrderDetail> = {
@@ -1110,10 +1124,32 @@ export const handlers = [
   }),
 
   // 마이페이지 주문내역 목록 — Task 4-13 이전에는 빈 배열 고정이었다. 목 dev 데이터(myOrdersFixture)로
-  // 채워 목록·상세 화면을 실제로 확인할 수 있게 한다.
-  http.get('/api/v1/orders', () =>
-    HttpResponse.json({ code: 'OK', message: 'success', data: myOrdersFixture }),
-  ),
+  // 채워 목록·상세 화면을 실제로 확인할 수 있게 한다. Task 2-3부터 페이지 응답(PageResponse)이다 —
+  // goods 목록 핸들러(위)와 같은 page/size 파싱 방식을 따른다.
+  http.get('/api/v1/orders', ({ request }) => {
+    const url = new URL(request.url);
+    const page = Number(url.searchParams.get('page') ?? '0');
+    const size = Number(url.searchParams.get('size') ?? '10');
+
+    const start = page * size;
+    const content = myOrdersFixture.slice(start, start + size);
+    const totalElements = myOrdersFixture.length;
+    const totalPages = Math.max(1, Math.ceil(totalElements / size));
+
+    const body: ApiEnvelope<PageResponse<OrderSummary>> = {
+      code: 'OK',
+      message: 'success',
+      data: {
+        content,
+        page,
+        size,
+        totalElements,
+        totalPages,
+        hasNext: start + size < totalElements,
+      },
+    };
+    return HttpResponse.json(body);
+  }),
 
   // 결제 승인 — Task 4-11(성공/실패 화면)이 소비하지만, 목 스택 일관성을 위해 여기서 함께 등록한다.
   // 같은 주문번호로 두 번 들어오면 실 서버처럼 PAYMENT_ALREADY_CONFIRMED로 막는다 — 완료 화면이

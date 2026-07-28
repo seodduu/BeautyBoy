@@ -9,6 +9,11 @@
   flex: 1 1 auto;
 }
 
+/* 지연 로딩 라우트 폴백 — 화면 안쪽 여백만 준다. 형태(비율·라운드·색)는 Skeleton 자체 규칙. */
+.bb-layout__fallback {
+  margin: var(--space-lg);
+}
+
 .bb-skip-link {
   position: absolute;
   left: var(--space-sm);
