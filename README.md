@@ -204,6 +204,25 @@ pkill -f bootRun; lsof -ti:8080 | xargs kill -9 2>/dev/null
 docker rm -f bb-e2e-mysql
 ```
 
+## 번들
+
+라우트 코드 스플리팅(`React.lazy` + `Suspense`, `frontend/src/router.tsx`) 전후 초기 청크(entry +
+정적 임포트, `npm run build` 실측):
+
+| | JS | CSS | 합계 |
+|---|---|---|---|
+| 전(단일 번들) | 497.92 kB (gzip 151.87 kB) | 91.10 kB (gzip 12.57 kB) | 589.02 kB (gzip 164.44 kB) |
+| 후(초기 청크만) | 449.87 kB (gzip 144.45 kB) | 64.26 kB (gzip 11.31 kB) | 514.13 kB (gzip 155.76 kB) |
+
+`@tosspayments/tosspayments-sdk`는 `Order`가 유일한 임포터라 `manualChunks` 없이도 Rollup이
+`Order-*.js` 청크로 자연히 밀어냈다(초기 청크에는 없음).
+
+쪼갠 것(`admin/*`, `mypage/*`, `Order`·`OrderComplete`·`OrderFail`, `Search`, `Ranking`,
+`dev/Showcase`)은 대부분의 손님이 평생 안 가거나(관리자·마이페이지), 결제 SDK를 물고 있거나
+(주문 계열), 상용 라우트가 아니다(Showcase). 남긴 것(`Layout`·`Home`·`Login`·`Signup`·`Main`·
+`GoodsList`·`Detail`·`Cart`·`Routine`)은 첫 진입과 탐색 주 경로라 — 여기까지 쪼개면 첫 클릭마다
+네트워크 왕복이 하나 더 붙어 번들을 줄이려다 체감 속도를 깎는다.
+
 ## 주요 화면
 
 데스크톱(1280px) 기준, 시드 계정(`dry@beautyboy.dev`)으로 탐색→루틴 담기→주문 완료까지의

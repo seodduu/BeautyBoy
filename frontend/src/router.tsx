@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react';
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { Layout } from './components/layout/Layout';
 import { Home } from './pages/Home';
@@ -7,26 +8,46 @@ import { Main } from './pages/Main';
 import { Sets } from './pages/Sets';
 import { GoodsList } from './pages/GoodsList';
 import { Detail } from './pages/Detail';
-import { Search } from './pages/Search';
-import { Ranking } from './pages/Ranking';
 import { Routine } from './pages/Routine';
 import { Cart } from './pages/Cart';
-import { Order } from './pages/Order';
-import { OrderComplete } from './pages/OrderComplete';
-import { OrderFail } from './pages/OrderFail';
 import { RequireAuth } from './components/auth/RequireAuth';
 import { RequireAdmin } from './components/auth/RequireAdmin';
-import { Showcase } from './pages/dev/Showcase';
 import { RouteError } from './components/common/RouteError';
-import { MyPageLayout } from './pages/mypage/MyPageLayout';
-import { MyOrders } from './pages/mypage/MyOrders';
-import { MyWishlist } from './pages/mypage/MyWishlist';
-import { MyReviews } from './pages/mypage/MyReviews';
-import { MyProfile } from './pages/mypage/MyProfile';
-import { AdminLayout } from './pages/admin/AdminLayout';
-import { AdminGoods } from './pages/admin/AdminGoods';
-import { AdminRoutine } from './pages/admin/AdminRoutine';
-import { AdminQna } from './pages/admin/AdminQna';
+
+// 쪼개는 화면: 대부분의 손님이 안 가거나(관리자·마이페이지), 결제 SDK를 물고 있거나(주문 계열),
+// 상용 라우트가 아니다(Showcase). 첫 진입·탐색 주 경로는 정적 임포트로 남긴다 — 거기까지
+// 쪼개면 첫 클릭마다 네트워크 왕복이 하나 더 붙어 번들을 줄이려다 체감 속도를 깎는다.
+const Search = lazy(() => import('./pages/Search').then((m) => ({ default: m.Search })));
+const Ranking = lazy(() => import('./pages/Ranking').then((m) => ({ default: m.Ranking })));
+const Order = lazy(() => import('./pages/Order').then((m) => ({ default: m.Order })));
+const OrderComplete = lazy(() =>
+  import('./pages/OrderComplete').then((m) => ({ default: m.OrderComplete })),
+);
+const OrderFail = lazy(() => import('./pages/OrderFail').then((m) => ({ default: m.OrderFail })));
+const Showcase = lazy(() => import('./pages/dev/Showcase').then((m) => ({ default: m.Showcase })));
+const MyPageLayout = lazy(() =>
+  import('./pages/mypage/MyPageLayout').then((m) => ({ default: m.MyPageLayout })),
+);
+const MyOrders = lazy(() => import('./pages/mypage/MyOrders').then((m) => ({ default: m.MyOrders })));
+const MyWishlist = lazy(() =>
+  import('./pages/mypage/MyWishlist').then((m) => ({ default: m.MyWishlist })),
+);
+const MyReviews = lazy(() =>
+  import('./pages/mypage/MyReviews').then((m) => ({ default: m.MyReviews })),
+);
+const MyProfile = lazy(() =>
+  import('./pages/mypage/MyProfile').then((m) => ({ default: m.MyProfile })),
+);
+const AdminLayout = lazy(() =>
+  import('./pages/admin/AdminLayout').then((m) => ({ default: m.AdminLayout })),
+);
+const AdminGoods = lazy(() =>
+  import('./pages/admin/AdminGoods').then((m) => ({ default: m.AdminGoods })),
+);
+const AdminRoutine = lazy(() =>
+  import('./pages/admin/AdminRoutine').then((m) => ({ default: m.AdminRoutine })),
+);
+const AdminQna = lazy(() => import('./pages/admin/AdminQna').then((m) => ({ default: m.AdminQna })));
 
 export const router = createBrowserRouter([
   {
@@ -160,5 +181,13 @@ export const router = createBrowserRouter([
     ],
   },
   // 헤더/푸터 없이 토큰·프리미티브·카드 상태만 대조하는 dev 전용 화면. 상용 라우트가 아니다.
-  { path: 'dev/components', element: <Showcase /> },
+  // Layout 밖 라우트라 Layout의 Suspense 경계를 못 타므로 여기서 직접 감싼다.
+  {
+    path: 'dev/components',
+    element: (
+      <Suspense fallback={null}>
+        <Showcase />
+      </Suspense>
+    ),
+  },
 ]);

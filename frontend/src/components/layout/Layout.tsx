@@ -1,6 +1,8 @@
+import { Suspense } from 'react';
 import { Outlet, ScrollRestoration } from 'react-router-dom';
 import { Header } from './Header';
 import { Footer } from './Footer';
+import { Skeleton } from '../ui/Skeleton';
 import './Layout.css';
 
 /**
@@ -21,7 +23,12 @@ export function Layout() {
       </a>
       <Header />
       <main id="main-content" className="bb-layout__main">
-        <Outlet />
+        {/* 지연 로딩 라우트의 폴백. 스켈레톤 한 블록으로 통일한다 — 화면마다 다른 폴백을 두면
+            "로딩 중"이 화면마다 다르게 생기고, 그 자체가 레이아웃 점프의 원인이 된다.
+            (DESIGN.md "상태: 로딩·빈 상태·진행" — 300ms 넘는 로딩은 스켈레톤) */}
+        <Suspense fallback={<Skeleton ratio="16 / 6" className="bb-layout__fallback" />}>
+          <Outlet />
+        </Suspense>
       </main>
       <Footer />
     </div>
