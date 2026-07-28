@@ -1,0 +1,59 @@
+/* DESIGN.md footer-beautyboy — 시스템의 종단면. 2단 스택 + 하단 스트립. */
+
+.bb-footer {
+  background: var(--color-footer);
+  color: var(--color-on-primary);
+  padding: var(--space-section) var(--space-lg);
+  word-break: keep-all;
+}
+
+.bb-footer__guides {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  margin: 0 0 var(--space-lg);
+  padding: 0;
+  list-style: none;
+  color: var(--color-stone);
+  font: var(--fw-meta) var(--fs-meta) / var(--lh-meta) var(--font-body);
+}
+
+.bb-footer__legal {
+  color: var(--color-stone);
+  font: var(--fw-meta) var(--fs-meta) / var(--lh-meta) var(--font-body);
+}
+
+.bb-footer__legal p {
+  margin: 0 0 var(--space-xs);
+}
+
+.bb-footer__strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-md);
+  margin-top: var(--space-xl);
+}
+
+/* 워드마크는 헤더와 동일 표기 — 헤더처럼 토큰 밖 raw 값(의도적 보류) */
+.bb-footer__wordmark {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 2px;
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--color-on-primary);
+}
+
+.bb-footer__wordmark-dot {
+  color: var(--color-on-primary);
+}
+
+.bb-footer__copyright {
+  color: var(--color-stone);
+  font: var(--fw-meta) var(--fs-meta) / var(--lh-meta) var(--font-body);
+}
