@@ -237,7 +237,7 @@ javadoc의 "NPE 함정" 문단은 아래 사실로 교체한다(문구는 그대
 **Files:** `features/qna/status.ts`(신규), `features/qna/status.test.ts`(신규), `QnaList.tsx`, `AdminQna.tsx`
 **Interfaces:** Produces `qnaStatusLabel(status: string): string` (§3-1 전량)
 
-- [ ] **1. 실패 테스트** — `frontend/src/features/qna/status.test.ts`:
+- [x] **1. 실패 테스트** — `frontend/src/features/qna/status.test.ts`:
 
 ```ts
 import { describe, expect, it } from 'vitest';
@@ -255,23 +255,23 @@ describe('qnaStatusLabel', () => {
 });
 ```
 
-- [ ] **2. RED 확인**: `npx vitest run src/features/qna/status.test.ts` — 모듈 부재로 실패
-- [ ] **3. §3-1 그대로 구현 → GREEN**
-- [ ] **4. 두 소비자 교체**: `QnaList.tsx`·`AdminQna.tsx`의 지역 `STATUS_LABEL` 상수와 그 주석을
+- [x] **2. RED 확인**: `npx vitest run src/features/qna/status.test.ts` — 모듈 부재로 실패
+- [x] **3. §3-1 그대로 구현 → GREEN**
+- [x] **4. 두 소비자 교체**: `QnaList.tsx`·`AdminQna.tsx`의 지역 `STATUS_LABEL` 상수와 그 주석을
   지우고 `qnaStatusLabel(...)` 호출로 바꾼다. **표시 문구는 그대로**이므로 두 화면의 기존
   테스트는 단언 수정 없이 통과해야 한다 — 깨지면 중단·보고
-- [ ] **5. `npm test` + `npx tsc -p tsconfig.app.json --noEmit` 전체 녹색**
-- [ ] **6. 커밋** `refactor(qna): 상태 라벨을 features/qna/status로 모으고 미지 코드는 코드 그대로 노출`
+- [x] **5. `npm test` + `npx tsc -p tsconfig.app.json --noEmit` 전체 녹색**
+- [x] **6. 커밋** `refactor(qna): 상태 라벨을 features/qna/status로 모으고 미지 코드는 코드 그대로 노출`
 
 ### T1-B: 페이저 공용화 + admin 문의 재사용
 
 **Files:** `components/ui/Pager.*`(goods/에서 이동), `GoodsList.tsx`(import 한 줄), `AdminQna.tsx`, `AdminQna.css`
 
-- [ ] **1. 이동**: `git mv frontend/src/components/goods/Pager.tsx frontend/src/components/ui/Pager.tsx`
+- [x] **1. 이동**: `git mv frontend/src/components/goods/Pager.tsx frontend/src/components/ui/Pager.tsx`
   (`.css`·`.test.tsx`도 같은 방식). `GoodsList.tsx`의 import 경로를 고친다.
   `npm test`로 **여기서 한 번 녹색을 확인**한다 — 이동만으로 깨진 게 없어야 다음 단계의 실패가
   admin 작업 때문임이 분명해진다
-- [ ] **2. 실패 테스트** — `frontend/src/pages/admin/AdminQna.test.tsx`(이미 있다). 그 파일의
+- [x] **2. 실패 테스트** — `frontend/src/pages/admin/AdminQna.test.tsx`(이미 있다). 그 파일의
   기존 렌더 헬퍼·MSW 관례를 그대로 따르고, 기존 케이스는 건드리지 않는다:
 
 ```tsx
@@ -294,19 +294,19 @@ it('번호를 누르면 0-based page로 변환해 그 페이지를 조회한다'
 
   (목이 페이지 정보를 충분히 내려주지 않으면 **핸들러를 임의로 바꾸지 말고**, 그 테스트 안에서
   `server.use(...)`로 그 케이스만 덮어쓴다 — 기존 관례다.)
-- [ ] **3. RED → 구현**(§3-3): 인라인 페이저 블록 제거, `<Pager page={page + 1} … />` 배선,
+- [x] **3. RED → 구현**(§3-3): 인라인 페이저 블록 제거, `<Pager page={page + 1} … />` 배선,
   `AdminQna.css`에서 쓰이지 않게 된 `.bb-admin-qna__pagination*` 규칙 삭제
   (`grep -rn "bb-admin-qna__pagination" frontend/src`로 잔재 0건 확인)
-- [ ] **4. GREEN + `npm test` + `npx tsc -p tsconfig.app.json --noEmit`**
-- [ ] **5. 스크린샷**: `VITE_USE_MOCK=true npm run dev` → admin 문의 목록(`/admin/qna`)에
+- [x] **4. GREEN + `npm test` + `npx tsc -p tsconfig.app.json --noEmit`**
+- [x] **5. 스크린샷**: `VITE_USE_MOCK=true npm run dev` → admin 문의 목록(`/admin/qna`)에
   번호 페이저가 보이는 상태 → 파일 경로 보고
-- [ ] **6. 커밋** `refactor(admin): 문의 목록에 공용 번호 페이저 적용 — Pager를 components/ui로 이동`
+- [x] **6. 커밋** `refactor(admin): 문의 목록에 공용 번호 페이저 적용 — Pager를 components/ui로 이동`
 
 ### T2-A: 대표 옵션 비교자 방어
 
 **Files:** `GoodsService.java`, `GoodsServiceTest.java`
 
-- [ ] **1. 실패 테스트** — `GoodsServiceTest`에 추가(기존 옵션 픽스처 관례 사용):
+- [x] **1. 실패 테스트** — `GoodsServiceTest`에 추가(기존 옵션 픽스처 관례 사용):
 
 ```java
 @Test
@@ -324,15 +324,15 @@ void 미저장_옵션_섞임() {
   비교자가 `private static final`이라 테스트에서 직접 못 부르면, **비교자를 public으로 열지 말고**
   이미 그것을 쓰는 공개 경로(`findOrderSnapshot`)로 같은 사실을 단언한다 — 미저장 옵션이 섞인
   상품에서 스냅샷이 예외 없이 저장된 옵션을 고르는지. 어느 쪽을 택했는지 보고서에 남긴다.
-- [ ] **2. RED 확인**(현재 코드에서 NPE) → **3. §3-5 구현 + javadoc 교체 → GREEN**
-- [ ] **4. `./gradlew test` 전체 녹색 → 커밋**
+- [x] **2. RED 확인**(현재 코드에서 NPE) → **3. §3-5 구현 + javadoc 교체 → GREEN**
+- [x] **4. `./gradlew test` 전체 녹색 → 커밋**
   `fix(catalog): 대표 옵션 비교자를 nullsLast로 방어 — 미저장 옵션 NPE 함정 제거`
 
 ### T2-B: admin 문의 페이지 크기 파라미터
 
 **Files:** `QnaService.java`, `AdminQnaController.java`, `QnaServiceTest.java`
 
-- [ ] **1. 실패 테스트** — `QnaServiceTest`(없으면 신규, 기존 qna 테스트 픽스처 관례 사용):
+- [x] **1. 실패 테스트** — `QnaServiceTest`(없으면 신규, 기존 qna 테스트 픽스처 관례 사용):
 
 ```java
 @Test
@@ -358,31 +358,55 @@ void admin_목록_size_하한() {
 }
 ```
 
-- [ ] **2. RED 확인**(시그니처 불일치로 컴파일 실패) → **3. §3-4 구현 → GREEN.**
+- [x] **2. RED 확인**(시그니처 불일치로 컴파일 실패) → **3. §3-4 구현 → GREEN.**
   기존 `adminList(int)` 호출부(컨트롤러·테스트)는 새 시그니처로 배선만 바꾼다
-- [ ] **4. 기본값 보존 확인**: `size` 없이 호출하면 10건인지 — 기존 admin 테스트가 이를 이미
+- [x] **4. 기본값 보존 확인**: `size` 없이 호출하면 10건인지 — 기존 admin 테스트가 이를 이미
   단언하고 있으면 그대로 통과해야 한다(단언 수정 금지)
-- [ ] **5. `./gradlew test` 전체 녹색 → 커밋**
+- [x] **5. `./gradlew test` 전체 녹색 → 커밋**
   `feat(qna): admin 문의 목록에 size 파라미터(기본 10, 상한 100)`
 
 ---
 
 ## 6. W2 — 직렬 검증 웨이브 (오케스트레이터, 머지 후)
 
-- [ ] 2개 브랜치 리뷰(단언 무수정 원칙 준수 확인) 후 main 머지
-- [ ] 잔재 확인:
+- [x] 2개 브랜치 리뷰(단언 무수정 원칙 준수 확인) 후 main 머지
+- [x] 잔재 확인:
   - `grep -rn "STATUS_LABEL" frontend/src` → 0건
   - `grep -rn "components/goods/Pager" frontend/src` → 0건
   - `grep -rn "bb-admin-qna__pagination" frontend/src` → 0건
-- [ ] `./gradlew test` + `integrationTest` + `npm test` + `tsc` + E2E
+- [x] `./gradlew test` + `integrationTest` + `npm test` + `tsc` + E2E
   ([[e2e-needs-e2e-profile-backend]] 절차 — compose 백엔드 내리고 e2e 프로필 bootRun,
   시드 계정 장바구니 비우기)
-- [ ] admin 문의 페이저 스크린샷 열어 판정 + 실스택에서 `/admin/qna` 번호 이동 1회 확인
-- [ ] **`5268693` 회고 리뷰**(§5 마지막 항목): 상세 페이지 담기 후 `['cart']` 무효화 커밋의
+- [x] admin 문의 페이저 스크린샷 열어 판정 + 실스택에서 `/admin/qna` 번호 이동 1회 확인
+- [x] **`5268693` 회고 리뷰**(§5 마지막 항목): 상세 페이지 담기 후 `['cart']` 무효화 커밋의
   diff를 읽고 ① 무효화 키가 Header/Cart와 같은 `['cart']`인지 ② 테스트가 그 동작을 실제로
   잡는지 확인한다. 문제가 없으면 "회고 리뷰 완료"로 §5에서 소거하고, 있으면 별도 항목으로 남긴다
-- [ ] `docs/plans/2026-07-26-다음-작업.md` §5 정리: 이번 4건 + compose 항목(이미 완료) 소거,
+- [x] `docs/plans/2026-07-26-다음-작업.md` §5 정리: 이번 4건 + compose 항목(이미 완료) 소거,
   남는 것이 없으면 §5 자체를 "비었음"으로 마감 표기
+
+### W2 검증 결과 (2026-07-28)
+
+머지: `7b57e41`(백엔드) → `38126e7`(프론트), 충돌 없음. 4개 태스크 커밋 모두 계획대로.
+
+| 게이트 | 결과 |
+|---|---|
+| 잔재 grep 3종 | `components/goods/Pager` 0건, `bb-admin-qna__pagination` 0건, `STATUS_LABEL`은 새 모듈 내부 상수 2건만(의도) |
+| `npm test` | 59파일 385개 통과 |
+| `npx tsc -p tsconfig.app.json --noEmit` | 통과 |
+| `./gradlew test` | BUILD SUCCESSFUL |
+| `./gradlew integrationTest` | BUILD SUCCESSFUL (1m 6s) |
+| E2E (e2e 프로필 bootRun) | 3/3 통과 |
+| 스크린샷 | `docs/screenshots/w2-admin-qna-pager-page1.png`·`-page2.png` |
+
+**단언 무수정 원칙 준수 확인**: T2가 건드린 기존 테스트 2개(`AdminQnaControllerTest`,
+`AdminQnaListTest`)는 `adminList(0)` → `adminList(0, 10)` 배선만 바뀌었고 단언은 그대로다.
+T1이 지운 admin 인라인 페이저의 기존 테스트(`이전`/`다음` 버튼 단언)는 **Pager가 같은 접근성
+이름·disabled 의미를 제공**해 수정 없이 통과한다 — 동작 보존의 직접 증거다.
+
+**스크린샷을 목이 아니라 실스택으로 찍은 이유**: 목 픽스처가 문의 3건뿐이라 `totalPages=1`이고,
+Pager는 1페이지면 아무것도 렌더하지 않는다(의도된 사양). 목 모드로는 페이저를 볼 수 없어
+compose 스택에 문의 25건을 임시 시드해 3페이지 상태로 확인하고, 확인 후 시드를 지워 원상복구했다
+(원래 `qna` 0건). 실스택 번호 이동 1회도 이때 함께 확인 — 1페이지→2페이지 목록이 실제로 교체됐다.
 
 ---
 
