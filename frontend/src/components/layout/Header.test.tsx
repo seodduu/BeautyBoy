@@ -22,6 +22,20 @@ function renderHeader() {
   );
 }
 
+/* 랜딩(/)은 헤더가 다른 가지를 렌더한다(투명 오버레이 + 내비만). 위 renderHeader는 '/'를
+   로그아웃 이동 확인용 HOME_MARKER로 잡아두므로, 경로를 지정해 헤더 자체를 그리는 헬퍼를 따로 둔다. */
+function renderHeaderAt(path: string) {
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter initialEntries={[path]}>
+        <Header />
+      </MemoryRouter>
+    </QueryClientProvider>,
+  );
+}
+
 function envelope<T>(data: T) {
   return { code: 'OK', message: 'success', data };
 }
@@ -130,5 +144,26 @@ describe('Header — 장바구니 배지', () => {
     const link = screen.getByRole('link', { name: '장바구니' });
     expect(link).toHaveAttribute('href', '/cart');
     expect(link.getAttribute('aria-label')).not.toContain('준비 중');
+  });
+});
+
+describe('Header — 랜딩 내비', () => {
+  beforeEach(() => {
+    useAuthStore.setState({ accessToken: null, member: null, isBootstrapping: false });
+  });
+
+  it('랜딩(/) 내비는 실제 라우트로 가는 링크다 — 자리표시 텍스트가 아니다', () => {
+    renderHeaderAt('/');
+    expect(screen.getByRole('link', { name: '루틴 가이드' })).toHaveAttribute('href', '/routine');
+    expect(screen.getByRole('link', { name: '랭킹' })).toHaveAttribute('href', '/ranking');
+    expect(screen.getByRole('link', { name: '전체 상품' })).toHaveAttribute('href', '/goods');
+    expect(screen.getByRole('link', { name: '로그인' })).toHaveAttribute('href', '/login');
+  });
+
+  it('자리표시 항목(About/Work/Services/Packages)은 더 이상 없다', () => {
+    renderHeaderAt('/');
+    for (const stale of ['About', 'Work', 'Services', 'Packages', 'Login']) {
+      expect(screen.queryByText(stale)).not.toBeInTheDocument();
+    }
   });
 });

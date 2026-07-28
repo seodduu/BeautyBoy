@@ -5,8 +5,16 @@ import { useAuthStore } from '../../stores/authStore';
 import { logout } from '../../api/auth';
 import { fetchCartItems } from '../../api/cart';
 
-/* 라우트가 없는 자리표시 항목들. Login은 실제 화면이 있으므로 아래에서 링크로 따로 낸다. */
-const LANDING_NAV = ['About', 'Work', 'Services', 'Packages'] as const;
+/* 랜딩 내비의 실제 IA. 라벨은 전부 한글이다 — DESIGN.md "영문/한글 혼용 규칙"이 영문을
+   아이브로우·배지/워드마크 두 자리로만 한정한다(내비 라벨은 그 밖의 UI 문구).
+   비로그인으로 /routine 외의 항목을 누르면 RequireAuth가 /login으로 보내는데, 이는
+   랜딩의 Get started와 같은 종착이라 의도된 퍼널이다. */
+const LANDING_NAV = [
+  { label: '루틴 가이드', to: '/routine' },
+  { label: '랭킹', to: '/ranking' },
+  { label: '전체 상품', to: '/goods' },
+  { label: '로그인', to: '/login' },
+] as const;
 
 /**
  * 올리브영식 헤더: 로고 / 검색바 자리(실제 검색은 후속 웨이브) / 장바구니·로그인.
@@ -68,16 +76,12 @@ export function Header() {
             BEAUTY BOY<span className="bb-header__logo-dot">.</span>
           </Link>
 
-          {/* 해당 화면들은 후속 웨이브 범위 — 기존 헤더의 "준비 중" 항목과 같이 자리만 잡는다 */}
           <nav className="bb-landing-nav" aria-label="주요 메뉴">
-            {LANDING_NAV.map((label) => (
-              <span className="bb-landing-nav__item" key={label}>
+            {LANDING_NAV.map(({ label, to }) => (
+              <Link to={to} className="bb-landing-nav__item" key={to}>
                 {label}
-              </span>
+              </Link>
             ))}
-            <Link to="/login" className="bb-landing-nav__item bb-landing-nav__item--link">
-              Login
-            </Link>
           </nav>
         </div>
       </header>
