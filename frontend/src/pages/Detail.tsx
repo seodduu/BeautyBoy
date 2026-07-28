@@ -183,10 +183,17 @@ export function Detail() {
             variant="primary"
             loading={adding}
             disabled={optionRequired}
+            aria-describedby={optionRequired ? 'detail-option-hint' : undefined}
             onClick={handleAddToCart}
           >
             장바구니 담기
           </Button>
+          {/* 버튼이 왜 비활성인지 알려준다 — 자동 선택 확대는 하지 않는다(§2 결정 6: 가격 혼란). */}
+          {optionRequired && (
+            <p id="detail-option-hint" className="bb-detail__option-hint">
+              옵션을 선택해주세요
+            </p>
+          )}
         </div>
       </header>
 

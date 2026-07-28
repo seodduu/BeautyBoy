@@ -400,6 +400,27 @@ describe('Detail — 옵션 선택', () => {
     expect(screen.getByRole('button', { name: '장바구니 담기' })).toBeDisabled();
   });
 
+  it('옵션 미선택이면 담기 버튼 아래에 힌트가 보이고, 선택하면 사라진다', async () => {
+    registerDefaultHandlers({ detail: MULTI_OPTION_DETAIL });
+
+    renderDetail();
+
+    expect(await screen.findByText('옵션을 선택해주세요')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('radio', { name: /300ml/ }));
+
+    expect(screen.queryByText('옵션을 선택해주세요')).not.toBeInTheDocument();
+  });
+
+  it('옵션이 1개라 자동 선택되면 힌트를 보여주지 않는다', async () => {
+    registerDefaultHandlers();
+
+    renderDetail();
+
+    await screen.findByRole('button', { name: '장바구니 담기' });
+    expect(screen.queryByText('옵션을 선택해주세요')).not.toBeInTheDocument();
+  });
+
   it('옵션을 고르면 표시 가격에 addPrice가 더해진다', async () => {
     registerDefaultHandlers({ detail: MULTI_OPTION_DETAIL });
 
