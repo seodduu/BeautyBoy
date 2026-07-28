@@ -53,12 +53,12 @@
 .bb-main__sets-link {
   display: inline-block;
   margin-top: var(--space-lg);
-  /* lede(body-lg 18px)보다 한 단 크고 굵게 — 채움 버튼을 못 쓰는 자리라
-     크기와 굵기가 유일한 강조 수단이다(DESIGN.md 세트 진입 링크). */
-  font-size: var(--fs-subtitle);
-  font-weight: var(--fw-link-sm);
-  line-height: var(--lh-subtitle);
-  letter-spacing: var(--ls-subtitle);
+  /* 히어로 안의 다른 글자(아이브로우·제목·lede)가 전부 400이라 굵기로 강조하면 혼자 튄다.
+     편집디자인 계열이므로 **크기로만** 세운다 — lede 18px 위 24px(DESIGN.md 세트 진입 링크). */
+  font-size: var(--fs-heading-sm);
+  font-weight: var(--fw-heading-sm);
+  line-height: var(--lh-heading-sm);
+  letter-spacing: var(--ls-heading-sm);
   color: var(--color-on-primary);
   text-decoration: underline;
   text-underline-offset: var(--space-xxs);
