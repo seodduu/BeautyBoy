@@ -4,6 +4,7 @@ import com.beautyboy.catalog.dto.GoodsListItem;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -45,6 +46,32 @@ public interface GoodsQueryService {
      * @return 주문 가능한 상품이면 스냅샷, 아니면 빈 값
      */
     Optional<OrderGoodsSnapshot> findOrderSnapshot(Long goodsNo, Long optionNo);
+
+    /**
+     * 여러 (상품, 옵션) 쌍의 스냅샷을 한 번에 조회한다.
+     *
+     * <p>왜 필요한가: 장바구니·주문처럼 여러 줄을 한 화면에 그리는 호출자가 줄마다
+     * {@link #findOrderSnapshot}을 부르면 줄 수만큼 쿼리가 나간다(N+1). {@code findListItems}가
+     * 목록 카드에 대해 하는 일을 주문 스냅샷에 대해 하는 짝이다.
+     *
+     * <p><b>반환 맵의 키는 호출자가 넘긴 키 그대로다.</b> 스냅샷의 {@code optionId}는 서버가
+     * 해석한 대표 옵션일 수 있어({@code optionNo=null} 요청) 응답 값으로는 요청을 되찾을 수
+     * 없다 — 호출자가 자기 줄과 결과를 짝지으려면 요청 키가 살아 있어야 한다.
+     *
+     * <p>숨김 상품과 상품-옵션 불일치는 <b>맵에 키가 없는 것</b>으로 답한다. 단건 조회가 빈 값을
+     * 주는 것과 같은 계약이라, 호출자의 "조용히 목록에서 제외한다" 정책이 그대로 유지된다.
+     *
+     * @param keys 조회할 키 목록. 비어 있으면 쿼리 없이 빈 맵.
+     * @return 조회에 성공한 키만 담긴 맵. 입력 순서를 보존하지 않는다(호출자가 자기 순서로 읽는다).
+     */
+    Map<OrderSnapshotKey, OrderGoodsSnapshot> findOrderSnapshots(Collection<OrderSnapshotKey> keys);
+
+    /**
+     * {@link #findOrderSnapshots}의 조회 키. {@code optionNo}의 null 의미는
+     * {@link #findOrderSnapshot}과 같다 — "옵션을 특정하지 않았다"이지 "옵션이 없다"가 아니다.
+     */
+    record OrderSnapshotKey(Long goodsNo, Long optionNo) {
+    }
 
     /** goods_no 목록 → 카드 아이템. HIDDEN 제외. 입력 순서를 보존하지 않는다.
      *  viewerId는 wished 판정에만 쓰이며 비로그인이면 null이다. */
