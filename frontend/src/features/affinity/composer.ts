@@ -24,6 +24,15 @@ export interface ComposerSignals {
   textures: string[];
   /** aggregate() 결과 — key `${cat3}|${tag}`, value 가중치 합. */
   affinity: Map<string, number>;
+  /**
+   * true면 concerns가 세트 탭의 단독 컨셉 대체(useComposer concernOverride, 스펙 §5) —
+   * 배열 길이가 항상 1이라 아래 고민 항의 `Math.min(concernHits.length, 2)` 캡이 다중 고민
+   * 대비 절반(2.0/4.0)에서 멈춘다. 반면 flow(1.0)+behavior(1.5)=2.5는 그대로라, 행동
+   * 이벤트가 쌓인 회원에게는 컨셉과 무관한 인기 후보가 이겨 세트 A/B/C가 같은 픽으로
+   * 수렴할 수 있다(최종 리뷰 지적). 히트가 하나라도 있으면 만점(2)으로 정규화해 캡을
+   * 다중 고민과 동급으로 맞춘다.
+   */
+  concernOverride?: boolean;
 }
 
 export interface PrevPick {
@@ -88,8 +97,11 @@ export function composeStep(input: {
     const slugs = p.tags.map((t) => t.slug);
     const concernHits = slugs.filter((s) => signals.concerns.includes(s));
     const behaviorHits = slugs.filter((s) => (affinityByTag.get(s) ?? 0) > 0);
+    // 단독 오버라이드는 히트 1개도 만점(2) 취급 — 위 ComposerSignals.concernOverride 주석 참고.
+    const concernScoreUnits =
+      signals.concernOverride && concernHits.length > 0 ? 2 : Math.min(concernHits.length, 2);
     const score =
-      WEIGHTS.concern * Math.min(concernHits.length, 2) +
+      WEIGHTS.concern * concernScoreUnits +
       WEIGHTS.behavior * (maxAffinity > 0 ? rawAffinity[i] / maxAffinity : 0) +
       WEIGHTS.flow * (flowTag !== null && slugs.includes(flowTag) ? 1 : 0) +
       WEIGHTS.texture * Math.min(slugs.filter((s) => signals.textures.includes(s)).length, 1) +

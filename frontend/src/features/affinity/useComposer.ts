@@ -143,6 +143,8 @@ export function useComposer(concernOverride: DerivedConcern | null = null): Step
           ),
       textures: preferredTextures(profileConcerns),
       affinity: aggregate(events),
+      // 단독 대체 여부 — composer.ts가 고민 캡을 다중 고민과 동급으로 정규화하는 데 쓴다.
+      concernOverride: !!concernOverride,
     };
   }, [events, meQuery.data, concernOverride]);
 
