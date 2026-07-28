@@ -1,10 +1,12 @@
 package com.beautyboy.review;
 
 import com.beautyboy.catalog.GoodsQueryService;
+import com.beautyboy.catalog.GoodsReviewCountCommand;
 import com.beautyboy.catalog.dto.GoodsListItem;
 import com.beautyboy.common.PageResponse;
 import com.beautyboy.order.OrderQueryService;
 import com.beautyboy.review.dto.MyReviewItem;
+import com.beautyboy.review.dto.ReviewCreateRequest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -14,11 +16,14 @@ import org.springframework.data.domain.PageRequest;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyCollection;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.verify;
 
 /**
  * `GET /reviews/me` — 마이페이지 "내 리뷰". 상품명·썸네일은 GoodsQueryService를 통해서만
@@ -37,6 +42,8 @@ class ReviewServiceTest {
     GoodsQueryService goodsQueryService;
     @Mock
     ReviewHelpfulRepository reviewHelpfulRepository;
+    @Mock
+    GoodsReviewCountCommand goodsReviewCountCommand;
     @InjectMocks
     ReviewService reviewService;
 
@@ -74,5 +81,19 @@ class ReviewServiceTest {
         given(reviewRepository.countByMemberId(회원2)).willReturn(0L);
 
         assertThat(reviewService.myReviews(회원2, 0, 10).content()).isEmpty();
+    }
+
+    @Test
+    void 리뷰를_쓰면_goods_review_count가_재집계된_리뷰수로_동기화된다() {
+        given(goodsQueryService.exists(상품A)).willReturn(true);
+        given(orderQueryService.hasPurchased(회원1, 상품A)).willReturn(true);
+        given(reviewRepository.existsByMemberIdAndGoodsId(회원1, 상품A)).willReturn(false);
+        // recalculateStat이 aggregate 결과를 List<Object[]>를 Object[]로 감아 반환하므로 raw[0]가 [count, sum]이다.
+        given(reviewRepository.aggregate(상품A)).willReturn(new Object[] { new Object[] { 2, 9 } });
+        given(goodsReviewStatRepository.findById(상품A)).willReturn(Optional.empty());
+
+        reviewService.create(회원1, new ReviewCreateRequest(상품A, 5, "좋아요"));
+
+        verify(goodsReviewCountCommand).syncReviewCount(eq(상품A), eq(2));
     }
 }

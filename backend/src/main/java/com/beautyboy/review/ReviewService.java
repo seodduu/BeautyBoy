@@ -1,6 +1,7 @@
 package com.beautyboy.review;
 
 import com.beautyboy.catalog.GoodsQueryService;
+import com.beautyboy.catalog.GoodsReviewCountCommand;
 import com.beautyboy.catalog.dto.GoodsListItem;
 import com.beautyboy.common.BusinessException;
 import com.beautyboy.common.ErrorCode;
@@ -39,17 +40,20 @@ public class ReviewService {
     private final OrderQueryService orderQueryService;
     private final GoodsQueryService goodsQueryService;
     private final ReviewHelpfulRepository reviewHelpfulRepository;
+    private final GoodsReviewCountCommand goodsReviewCountCommand;
 
     public ReviewService(ReviewRepository reviewRepository,
                          GoodsReviewStatRepository goodsReviewStatRepository,
                          OrderQueryService orderQueryService,
                          GoodsQueryService goodsQueryService,
-                         ReviewHelpfulRepository reviewHelpfulRepository) {
+                         ReviewHelpfulRepository reviewHelpfulRepository,
+                         GoodsReviewCountCommand goodsReviewCountCommand) {
         this.reviewRepository = reviewRepository;
         this.goodsReviewStatRepository = goodsReviewStatRepository;
         this.orderQueryService = orderQueryService;
         this.goodsQueryService = goodsQueryService;
         this.reviewHelpfulRepository = reviewHelpfulRepository;
+        this.goodsReviewCountCommand = goodsReviewCountCommand;
     }
 
     @Transactional
@@ -121,7 +125,7 @@ public class ReviewService {
 
     /**
      * 그 상품의 리뷰를 통째로 재집계해 goods_review_stat을 upsert한다.
-     * 작성·삭제 어느 경로에서도 이 한 메서드만 부르면 통계가 항상 리뷰와 일치한다.
+     * 작성·삭제 어느 경로에서도 이 한 메서드만 부르면 통계와 goods.review_count가 항상 리뷰와 일치한다.
      */
     private void recalculateStat(Long goodsNo) {
         // [count, sum]을 한 쿼리로. 리뷰가 0건이면 count=0, sum=0.
@@ -136,6 +140,8 @@ public class ReviewService {
                 .orElseGet(() -> new GoodsReviewStat(goodsNo));
         stat.update(count, sum, LocalDateTime.now());
         goodsReviewStatRepository.save(stat);
+
+        goodsReviewCountCommand.syncReviewCount(goodsNo, count);
     }
 
     /**
