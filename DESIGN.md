@@ -771,6 +771,24 @@ The system avoids drop shadows entirely. Depth is created by photographic layeri
   거르지 않는다(돈은 서버).
 - 모바일(768px 미만): 탭이 가로 스크롤, 정렬 셀렉트는 줄바꿈해 우측 정렬 유지.
 
+**`set-tabs`** — /main 히어로 아래 "당신을 위한 세트" 섹션
+- 구성: 아이브로우 "PERSONAL SETS"(`{typography.eyebrow}`) + 섹션 제목 "당신을 위한 세트"
+  (`{typography.heading-sm}`) + pill 탭 3개 한 줄. 탭 라벨은 "세트 A · 모공" 형식
+  (세트 문자 + 고민 태그와 같은 문구).
+- 탭 pill은 `{rounded.full}`. 타이포·크기·간격은 **list-toolbar 카테고리 탭 pill과 동일 사양**을
+  그대로 쓴다(패딩 `{spacing.xs}` × `{spacing.md}`, 1px 테두리, 타이포 `{typography.link-sm}`) —
+  같은 조작(카테고리 전환/세트 전환)이 화면마다 다르게 생기면 안 된다.
+  선택 상태는 "선택 상태 — 색 반전" 규칙(배경 `{colors.primary}` + 글자 `{colors.on-primary}`),
+  비선택은 1px `{colors.hairline-soft}` 테두리 + `{colors.ink}` 글자 + 배경 `{colors.canvas}`.
+- 액센트(signal-*) 금지 — 이 섹션도 무채색 사다리 안이다. 개인화 여부를 색으로 구분하지 않는다.
+- 폴백 상태(전부 비개인화): 탭 아래 안내 한 줄 "프로필을 등록하면 맞춤 세트로 바뀌어요" —
+  `{typography.meta}` / `{colors.slate}`(list-toolbar·goods-card의 메타 텍스트와 동일 조합,
+  본문보다 한 단 낮은 무채색). 문구 끝에 `{typography.link-sm}` / `{colors.ink}` 텍스트 링크
+  (밑줄, list-toolbar "전체 보기"류 링크와 동일 사양)로 프로필/가입 화면을 연결한다.
+- 로딩(프로필 확정 전): 같은 크기의 스켈레톤 pill 3개(공용 `{Skeleton}` 컴포넌트를 `{rounded.full}`로
+  덮어써 pill 모양을 유지), 조작 불가. 확정 후 높이가 흔들리지 않는다.
+- 모바일(768px 미만): 탭 가로 스크롤(list-toolbar와 동일). 한글이므로 `word-break: keep-all`.
+
 **`pager`** — 페이지 이동 공용 컴포넌트 (상품 그리드 아래 중앙 / admin 표 아래)
 - **페이지를 나누는 화면은 전부 이 하나를 쓴다.** 목록·검색은 그리드 아래 중앙,
   admin 표는 표 아래 중앙 — 같은 컴포넌트다. 화면마다 "이전/다음"만 있는 페이저를 따로 만들면
