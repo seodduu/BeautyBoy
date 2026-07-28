@@ -73,20 +73,17 @@
   gap: var(--space-xl);
 }
 
+/* 전 항목이 실제 링크다 — 호버 피드백을 기본 스타일로 합쳤다(과거 Login 전용 --link modifier) */
 .bb-landing-nav__item {
   font-family: var(--font-body);
   font-size: var(--fs-nav-link);
   line-height: var(--lh-nav-link);
   color: var(--color-on-primary);
   white-space: nowrap;
-}
-
-/* Login만 실제 링크다 — 호버로 눌리는 항목임을 알린다 */
-.bb-landing-nav__item--link {
   transition: opacity 0.15s ease;
 }
 
-.bb-landing-nav__item--link:hover {
+.bb-landing-nav__item:hover {
   opacity: 0.7;
 }
 
