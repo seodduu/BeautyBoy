@@ -8,6 +8,7 @@ import { ROUTINE_STEPS, type RoutineStep } from '../routine/steps';
 import { readEvents, toCat3 } from './events';
 import { EMPTY_RULES, loadFlowRules } from './flowRules';
 import { aggregate, effectiveConcerns, preferredTextures } from './profile';
+import type { DerivedConcern } from './profile';
 import { POOL_SIZE, composeStep } from './composer';
 import type { ComposerSignals, PrevPick, StepComposition } from './composer';
 import type { SkinType } from '../../api/routine';
@@ -25,6 +26,8 @@ import type { FlowRulesResponse } from '../../types/routine';
  *
  * **이 훅은 던지지 않는다.** 규칙을 못 받으면 reason 없이, 궁합 판정을 못 받으면 게이트 없이
  * 진행한다 — 부가 정보의 실패로 메인이 멈추면 안 된다(설계 §3.3).
+ *
+ * concernOverride — 세트 탭이 지정한 컨셉. 단독 대체라 세트 간 구성이 겹치지 않는다(스펙 §5).
  */
 
 /** 규칙의 category_code 길이(중분류 7자). 단계 코드가 이보다 짧으면 픽의 중분류를 따로 알아내야 한다. */
@@ -119,7 +122,7 @@ function useStepComposition(input: {
   };
 }
 
-export function useComposer(): StepState[] {
+export function useComposer(concernOverride: DerivedConcern | null = null): StepState[] {
   const accessToken = useAuthStore((state) => state.accessToken);
 
   // 마운트 시점 스냅샷. localStorage는 이벤트를 발생시키지 않으므로 렌더 중에 다시 읽어봐야
@@ -132,14 +135,16 @@ export function useComposer(): StepState[] {
   const signals: ComposerSignals = useMemo(() => {
     const profileConcerns = meQuery.data?.concerns ?? [];
     return {
-      concerns: effectiveConcerns(
-        profileConcerns,
-        (meQuery.data?.skinType ?? null) as SkinType | null,
-      ),
+      concerns: concernOverride
+        ? [concernOverride]
+        : effectiveConcerns(
+            profileConcerns,
+            (meQuery.data?.skinType ?? null) as SkinType | null,
+          ),
       textures: preferredTextures(profileConcerns),
       affinity: aggregate(events),
     };
-  }, [events, meQuery.data]);
+  }, [events, meQuery.data, concernOverride]);
 
   // 신호가 도착하기 전에 조합하면 프로필이 붙는 순간 픽이 갈아엎어진다 — 확정을 한 번만 한다.
   // loadFlowRules는 던지지 않으므로(실패 시 EMPTY_RULES) 규칙 쿼리는 사실상 항상 성공한다.

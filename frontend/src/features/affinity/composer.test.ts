@@ -404,3 +404,42 @@ describe('composeStep — 결정성과 대안', () => {
     expect(result.alternatives.map((p) => p.goodsNo)).toEqual([1, 2, 3]);
   });
 });
+
+describe('composeStep — 컨셉 단독 오버라이드(세트 A/B/C, 스펙 §5)', () => {
+  const step = stepOf('C001002');
+  const base = { step, prevPick: null, flowRules: [], concernRules: [], verdicts: null };
+
+  it('concerns가 단독 슬러그면 그 태그 보유 후보가 인기 1위를 제친다 (concern 2.0 > popularity 0.3)', () => {
+    const result = composeStep({
+      ...base,
+      candidates: [goods(1, []), goods(2, ['pore'])],
+      signals: signalsOf({ concerns: ['pore'] }),
+    });
+    expect(result.pick?.goodsNo).toBe(2);
+    expect(result.matched.concerns).toEqual(['pore']);
+  });
+
+  it('오버라이드가 texture tie-break를 죽이지 않는다 (texture 0.5 > 인기 격차 0.15)', () => {
+    const result = composeStep({
+      ...base,
+      candidates: [goods(1, ['pore']), goods(2, ['pore', 'matte'])],
+      signals: signalsOf({ concerns: ['pore'], textures: ['matte'] }),
+    });
+    expect(result.pick?.goodsNo).toBe(2);
+  });
+
+  it('단독 concerns의 reason은 그 컨셉을 겨냥한 규칙에서 나온다', () => {
+    const poreRule = concernRule({
+      concernTagSlug: 'pore',
+      toCategoryCode: 'C001002',
+      reason: '모공은 세럼 단계에서 정면으로 잡는 게 효율적이에요',
+    });
+    const result = composeStep({
+      ...base,
+      candidates: [goods(1, ['pore'])],
+      signals: signalsOf({ concerns: ['pore'] }),
+      concernRules: [concernRule({ concernTagSlug: 'moisture' }), poreRule],
+    });
+    expect(result.reason).toBe(poreRule.reason);
+  });
+});
