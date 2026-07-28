@@ -513,3 +513,24 @@ describe('Main — 루틴 조합기', () => {
     expect(await pickNameOf('에센스/세럼')).toBe('에센스/세럼 6위');
   });
 });
+
+describe('세트 진입 링크 (/sets 스펙 §3)', () => {
+  it('세트 탭이 더 이상 렌더되지 않는다', async () => {
+    serveMe({ skinType: null, concerns: ['pore', 'trouble', 'moisture'] });
+
+    renderMain();
+
+    // 화면이 뜬 뒤 판정. 텍스트 '클렌징'은 앵커 네비 라벨과 섹션 제목 양쪽에 있어 모호하므로
+    // 섹션 제목(h2)으로 단일 매치를 잡는다.
+    await screen.findByRole('heading', { level: 2, name: '클렌징' });
+    expect(screen.queryAllByRole('tab')).toHaveLength(0);
+    expect(screen.queryByText(/당신을 위한 세트/)).not.toBeInTheDocument();
+  });
+
+  it('히어로에 /sets로 가는 링크가 있다', async () => {
+    renderMain();
+
+    const link = await screen.findByRole('link', { name: /세트 보러가기/ });
+    expect(link).toHaveAttribute('href', '/sets');
+  });
+});

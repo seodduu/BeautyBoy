@@ -48,11 +48,22 @@
   color: var(--color-ash-soft);
 }
 
+/* 검정 밴드 위 흰 텍스트 링크 — 채움 버튼을 쓰지 않는다(DESIGN.md: 화면당 검정 알약은
+   픽 카드 [바로 담기] 하나). /sets 전용 비교 페이지로 넘어가는 진입점. */
+/* 타이포·색·모양은 전부 {button-primary-on-dark}(Button.css)가 준다 — 여기서는 배치만 맡는다.
+   크기로 소리치는 대신 채움으로 무게를 주므로, 글자는 본문 언저리(button 14px/600)로 내려온다. */
+.bb-main__sets-cta {
+  margin-top: var(--space-lg);
+  text-decoration: none;
+}
+
 /* ── 흰 콘텐츠 영역 ──────────────────────────────────────── */
 .bb-main__body {
   max-width: var(--landing-column);
   margin: 0 auto;
-  padding: 0 var(--space-lg);
+  /* 히어로 밴드 하단 경계와 앵커 네비 상단 사이에 --space-xl 이상의 흰 여백을 준다 —
+     탭이 있던 시절엔 탭이 이 자리를 채웠지만, 지금은 body 자체에 상단 여백이 필요하다. */
+  padding: var(--space-xl) var(--space-lg) 0;
 }
 
 /* 앵커 네비 — 5섹션 긴 스크롤의 현재 위치 표시이자 지름길.
@@ -138,9 +149,12 @@ html {
     padding: var(--space-xl) 0 var(--space-xxl);
   }
 
-  .bb-main__intro-inner,
-  .bb-main__body {
+  .bb-main__intro-inner {
     padding: 0 var(--space-md);
+  }
+
+  .bb-main__body {
+    padding: var(--space-xl) var(--space-md) 0;
   }
 
   .bb-main__nav-list {

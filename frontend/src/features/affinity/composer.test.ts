@@ -404,3 +404,89 @@ describe('composeStep — 결정성과 대안', () => {
     expect(result.alternatives.map((p) => p.goodsNo)).toEqual([1, 2, 3]);
   });
 });
+
+describe('composeStep — 컨셉 단독 오버라이드(세트 A/B/C, 스펙 §5)', () => {
+  const step = stepOf('C001002');
+  const base = { step, prevPick: null, flowRules: [], concernRules: [], verdicts: null };
+
+  it('concerns가 단독 슬러그면 그 태그 보유 후보가 인기 1위를 제친다 (concern 2.0 > popularity 0.3)', () => {
+    const result = composeStep({
+      ...base,
+      candidates: [goods(1, []), goods(2, ['pore'])],
+      signals: signalsOf({ concerns: ['pore'], concernOverride: true }),
+    });
+    expect(result.pick?.goodsNo).toBe(2);
+    expect(result.matched.concerns).toEqual(['pore']);
+  });
+
+  it('오버라이드가 texture tie-break를 죽이지 않는다 (texture 0.5 > 인기 격차 0.15)', () => {
+    const result = composeStep({
+      ...base,
+      candidates: [goods(1, ['pore']), goods(2, ['pore', 'matte'])],
+      signals: signalsOf({ concerns: ['pore'], textures: ['matte'], concernOverride: true }),
+    });
+    expect(result.pick?.goodsNo).toBe(2);
+  });
+
+  it('단독 concerns의 reason은 그 컨셉을 겨냥한 규칙에서 나온다', () => {
+    const poreRule = concernRule({
+      concernTagSlug: 'pore',
+      toCategoryCode: 'C001002',
+      reason: '모공은 세럼 단계에서 정면으로 잡는 게 효율적이에요',
+    });
+    const result = composeStep({
+      ...base,
+      candidates: [goods(1, ['pore'])],
+      signals: signalsOf({ concerns: ['pore'], concernOverride: true }),
+      concernRules: [concernRule({ concernTagSlug: 'moisture' }), poreRule],
+    });
+    expect(result.reason).toBe(poreRule.reason);
+  });
+
+  it('단독 컨셉 히트가 flow+behavior 조합을 이긴다 — 정규화 없인 세트가 수렴한다', () => {
+    // 정규화 전: 단독 대체라 concernHits.length가 최대 1이라 고민 항이 2.0으로 반토막 난다.
+    // A = 고민 1히트(정규화 전 2.0, 정규화 후 4.0) + 인기 2위(0.15)
+    // B = 행동 최대(1.5) + 흐름(1.0) + 인기 1위(0.3) = 2.8
+    // 정규화 없으면 B(2.8) > A(2.15)로 B가 이겨 컨셉이 무력화된다.
+    // 정규화 있으면 A(4.15) > B(2.8)로 A가 이겨 컨셉 단독 대체의 존재 이유가 지켜진다.
+    const candidates = [goods(1, ['soothe']), goods(2, ['pore'])];
+
+    const result = composeStep({
+      ...base,
+      candidates,
+      signals: signalsOf({
+        concerns: ['pore'],
+        concernOverride: true,
+        affinity: new Map([['C001002|soothe', 3]]),
+      }),
+      prevPick: { goodsNo: 99, cat3: 'C001001', tags: ['exfoliate'] },
+      flowRules: [
+        flowRule({
+          fromCategoryCode: 'C001001',
+          fromTagSlug: 'exfoliate',
+          toCategoryCode: 'C001002',
+          toTagSlug: 'soothe',
+          edgeKind: 'BUFFER',
+          reason: '각질 토너 다음 단계는 진정 세럼으로 완충하세요',
+          priority: 10,
+        }),
+      ],
+    });
+
+    expect(result.pick?.goodsNo).toBe(2);
+  });
+
+  it('세트 차별화 실측 — 컨셉이 다르면 같은 후보 풀에서 픽이 서로 다르다', () => {
+    const candidates = [goods(1, ['pore']), goods(2, ['trouble']), goods(3, ['moisture'])];
+    const picks = (['pore', 'trouble', 'moisture'] as const).map(
+      (concept) =>
+        composeStep({
+          ...base,
+          candidates,
+          signals: signalsOf({ concerns: [concept], concernOverride: true }),
+        }).pick?.goodsNo,
+    );
+
+    expect(new Set(picks).size).toBe(3);
+  });
+});

@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
 import { RoutineSection } from '../components/routine/RoutineSection';
-import { addPickToCart } from '../components/routine/PickCard';
 import { Button } from '../components/ui/Button';
 import { useToast } from '../components/ui/useToast';
+import { addSetToCart } from '../features/routine/addSetToCart';
 import { ROUTINE_STEPS } from '../features/routine/steps';
 import { useComposer } from '../features/affinity/useComposer';
 import './Main.css';
@@ -27,6 +28,7 @@ export function Main() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // 세트 컨셉 오버라이드 없이 호출한다 — 프로필 고민 전체로 조합하는 원래 동작(설계 §3).
   const states = useComposer();
   const picks = states
     .map((state) => state.composition?.pick)
@@ -55,25 +57,17 @@ export function Main() {
   }, []);
 
   /**
-   * 루틴 전체 담기(설계 §4.3) — 픽을 순차로 담고 **실패는 건너뛰고 집계로 알린다.**
-   * 전부 롤백하지 않는 이유: 장바구니는 편집 가능한 중간 상태라, 4개를 담아 두는 편이
-   * "하나가 품절이라 아무것도 못 담았다"보다 항상 낫다.
+   * 루틴 전체 담기(설계 §4.3) — 담기 루프와 집계는 `addSetToCart`에 위임하고,
+   * 여기서는 토스트 문구와 로딩 상태만 맡는다. 정책 설명(왜 부분 실패를 롤백하지 않는가)은
+   * `addSetToCart` 쪽 주석 참고.
    */
   async function handleAddAll() {
     setAddingAll(true);
-    let added = 0;
     try {
-      for (const pick of picks) {
-        try {
-          await addPickToCart(queryClient, pick.goodsNo);
-          added += 1;
-        } catch {
-          // 품절·네트워크 실패 모두 이 픽만 건너뛴다.
-        }
-      }
-      queryClient.invalidateQueries({ queryKey: ['cart'] });
-
-      const skipped = picks.length - added;
+      const { added, skipped } = await addSetToCart(
+        queryClient,
+        picks.map((pick) => pick.goodsNo),
+      );
       if (added === 0) {
         toast('담지 못했어요. 잠시 후 다시 시도해 주세요', { tone: 'danger' });
       } else if (skipped === 0) {
@@ -94,9 +88,17 @@ export function Main() {
         <div className="bb-main__intro-inner">
           <p className="bb-main__eyebrow">DAILY ROUTINE</p>
           <h1 className="bb-main__title">순서대로 따라오면 됩니다</h1>
+          {/* 마지막 문장이 아래 CTA를 받는다 — "스크롤하세요"로 끝내면 다른 화면으로 보내는
+              버튼이 바로 뒤에 와서 충돌한다. 두 경로(단계별/세트)를 한 문장에 담아 다리를 놓는다. */}
           <p className="bb-main__lede">
-            씻고, 정돈하고, 채우고, 덮고, 막는 다섯 단계. 아래로 내리는 순서가 그대로 루틴 순서입니다.
+            씻고, 정돈하고, 채우고, 덮고, 막는 다섯 단계. 하나씩 살펴봐도 좋고, 한 번에 세트로 시작해도
+            됩니다.
           </p>
+          {/* 검정 밴드 위 흰 채움 알약({button-primary-on-dark}). 밴드 안이라 같은 화면의 픽 카드
+              [바로 담기](검정 알약)와 색이 반전돼 서로 경쟁하지 않는다. */}
+          <Link className="bb-btn bb-btn--primary-on-dark bb-main__sets-cta" to="/sets">
+            맞춤형 세트 보러가기 →
+          </Link>
         </div>
       </header>
 
