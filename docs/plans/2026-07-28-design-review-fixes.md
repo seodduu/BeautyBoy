@@ -302,7 +302,7 @@ T1은 규칙 엔진이 아니라 표시 라벨, T4는 재고 차감이 아니라
 **Files:** `IngredientCategoryLabels.java`(신규), `IngredientCategoryLabelsTest.java`(신규), `CompatService.java`
 **Interfaces:** Produces `IngredientCategoryLabels.labelOf(String): String` (§3-1 전량)
 
-- [ ] **1. 실패 테스트** — `backend/src/test/java/com/beautyboy/ingredient/IngredientCategoryLabelsTest.java`
+- [x] **1. 실패 테스트** — `backend/src/test/java/com/beautyboy/ingredient/IngredientCategoryLabelsTest.java`
 
 ```java
 package com.beautyboy.ingredient;
@@ -342,9 +342,9 @@ class IngredientCategoryLabelsTest {
 }
 ```
 
-- [ ] **2. RED 확인**: `./gradlew test --tests IngredientCategoryLabelsTest` — 클래스 부재로 컴파일 실패
-- [ ] **3. §3-1 코드 그대로 구현 → GREEN 확인**
-- [ ] **4. CompatService 적용 테스트** — 기존 `CompatServiceTest`(없으면 신규)에 추가.
+- [x] **2. RED 확인**: `./gradlew test --tests IngredientCategoryLabelsTest` — 클래스 부재로 컴파일 실패
+- [x] **3. §3-1 코드 그대로 구현 → GREEN 확인**
+- [x] **4. CompatService 적용 테스트** — 기존 `CompatServiceTest`(없으면 신규)에 추가.
   기존 테스트가 세우는 픽스처·목 관례를 그대로 따르되 케이스는 이것이어야 한다:
 
 ```java
@@ -360,10 +360,10 @@ void 카테고리_표시명_변환() {
 }
 ```
 
-- [ ] **5. RED 확인(코드 그대로 내려와 실패) → §3-1 적용 지점 수정 → GREEN**
-- [ ] **6. `./gradlew test` 전체 녹색 확인.** e2e 스펙이 카테고리 코드 원문을 단언하는지
+- [x] **5. RED 확인(코드 그대로 내려와 실패) → §3-1 적용 지점 수정 → GREEN**
+- [x] **6. `./gradlew test` 전체 녹색 확인.** e2e 스펙이 카테고리 코드 원문을 단언하는지
   `grep -rn "VITAMIN_C\|HYALURONIC" frontend/e2e/`로 확인 — 걸리면 수정하지 말고 보고
-- [ ] **7. 커밋** `feat(compat): 궁합 카테고리를 한글 표시명으로 응답`
+- [x] **7. 커밋** `feat(compat): 궁합 카테고리를 한글 표시명으로 응답`
 
 ### T1-B: 궁합 배너 verdict별 분리 (프론트)
 

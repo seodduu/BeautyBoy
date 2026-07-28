@@ -6,6 +6,7 @@ import com.beautyboy.compat.dto.CompatCheckRequest;
 import com.beautyboy.compat.dto.CompatCheckResponse;
 import com.beautyboy.compat.dto.CompatFinding;
 import com.beautyboy.ingredient.GoodsIngredientQueryService;
+import com.beautyboy.ingredient.IngredientCategoryLabels;
 import com.beautyboy.ingredient.IngredientRule;
 import com.beautyboy.ingredient.IngredientRuleRepository;
 import org.springframework.stereotype.Service;
@@ -86,7 +87,10 @@ public class CompatService implements CompatQueryService {
                 TreeSet<Long> contributors = new TreeSet<>(byCategory.get(ca));
                 contributors.addAll(byCategory.get(cb));
                 findings.add(new CompatFinding(
-                        rule.get().getVerdict(), ca, cb, rule.get().getReason(),
+                        rule.get().getVerdict(),
+                        IngredientCategoryLabels.labelOf(ca),
+                        IngredientCategoryLabels.labelOf(cb),
+                        rule.get().getReason(),
                         List.copyOf(contributors)));
             }
         }
