@@ -552,6 +552,11 @@ If `abcNormal` is unavailable, the closest open-source substitutes are **ABC Dia
   `overflow-wrap: anywhere`를 함께 준다.
 - 대문자 사용 규칙(`eyebrow`, `micro-caps`)은 **라틴 문자에만** 적용한다. 한글에는 대문자가 없으므로
   해당 자리는 영문 레이블(`SKINCARE`, `RANKING`)을 쓰거나 자간만 벌린 한글로 대체한다.
+- **영문/한글 혼용 규칙 — 영문은 두 자리에만 허용한다.** ① 섹션 아이브로우·타이틀 장식
+  (`TODAY'S PICK`, `STEP 01`, `DAILY ROUTINE` — `eyebrow`/`micro-caps` 타이포가 걸리는 자리),
+  ② 배지·워드마크(`SALE`, `COUPON`, `GIFT`, `BEAUTY BOY.`). 그 밖의 UI 문구(버튼, 본문, 안내,
+  placeholder, 폼 라벨)는 전부 한글이다. 이 두 자리 밖에서 영문 라벨이 필요해 보이면
+  이 규칙에 먼저 추가하고 쓴다.
 
 ## Layout
 
@@ -704,6 +709,18 @@ The system avoids drop shadows entirely. Depth is created by photographic layeri
 **`footer-link`** — link-list items
 - Background `{colors.footer}`, text `{colors.on-primary}`, type `{typography.body}`.
 
+**`footer-beautyboy`** — 뷰티보이 실제 푸터 (위 runwai 원형의 축소 적용)
+- 배경 `{colors.footer}`, 텍스트 `{colors.on-primary}`, 상하 `{spacing.section}` / 좌우 `{spacing.lg}`.
+  **랜딩(`/`)에서는 렌더하지 않는다** — 풀블리드 히어로 한 장이 그 화면의 전부다.
+- 6열 그리드 대신 **2단 스택**: ① 안내 링크 줄(이용약관 · 개인정보처리방침 · 고객센터 —
+  대상 화면이 생기기 전까지는 `{colors.stone}` 텍스트로 두고 링크로 위장하지 않는다) →
+  ② 사업자 표기 블록(`{typography.meta}` / `{colors.stone}`, 전자상거래 필수 표기 항목 형태:
+  상호·대표·사업자등록번호·통신판매업 신고번호·주소·이메일).
+- **사업자 표기 값은 실존 정보처럼 쓰지 않는다.** 포트폴리오 데모임을 표기 블록 첫 줄에 명시하고
+  ("본 사이트는 취업 포트폴리오용 데모입니다. 아래 표기는 형식 예시입니다."), 등록번호류는
+  자릿수만 맞춘 자리표시 값(`000-00-00000` 등)을 쓴다.
+- 하단 스트립: 좌측 `BEAUTY BOY.` 워드마크(헤더와 동일 표기) + 우측 `© 2026 BeautyBoy — Portfolio Demo`.
+
 ### 커머스 컴포넌트 (뷰티보이)
 
 **`goods-card`** — 목록·검색·랭킹·추천·루틴이 **전부 재사용하는 단일 상품 카드**. 이 시스템에서 가장 많이
@@ -716,9 +733,17 @@ The system avoids drop shadows entirely. Depth is created by photographic layeri
 - 내부 스택(위→아래): `{goods-thumbnail}` (1:1, `{rounded.md}`, `{colors.surface-cool}` 플레이스홀더,
   lazy load) → 배지 줄 → 브랜드명(`{typography.meta}` / `{colors.slate}`) →
   상품명(`{typography.body-tight}` / `{colors.ink}`, **2줄 고정 말줄임**) →
-  가격 줄 → 평점 줄(`{typography.meta}` / `{colors.ash}`)
+  가격 줄 → 평점 줄(아래 "평점 줄" 규칙)
 - **가격 줄**: `{price-discount-rate}`(할인율, signal-sale) → `{price-sale}`(판매가, ink) →
   `{price-list-struck}`(정가 취소선, ash). 할인율이 0이면 **정가 노드를 렌더하지 않는다.**
+- **평점 줄**: 리뷰가 있으면 `★`(별 글리프 1개) + 점수 소수 1자리 + `(리뷰수)` —
+  `{typography.meta}` / `{colors.graphite}`. 별 5개를 그리지 않는다(카드 밀도에 비해 과함).
+  리뷰가 없으면 "첫 리뷰를 기다려요"(같은 토큰) — "리뷰 없음"은 죽은 정보처럼 읽히므로 쓰지 않는다.
+- **카드(surface) 위 보조 텍스트의 최저선은 `{colors.graphite}`다.** `{colors.ash}`(#999999)는
+  `{colors.surface}`(#ebebeb) 위에서 대비 약 2.6:1, `{colors.slate}`도 약 4.2:1로 WCAG AA(4.5:1)에
+  못 미친다. graphite는 약 8.7:1. 브랜드명·평점 줄 모두 graphite로 통일하고, 위계는 색이 아니라
+  크기(`{typography.meta}` vs `{typography.body-tight}`)와 굵기로 만든다.
+  `{colors.canvas}`(#f7f7f7) 위에서는 slate(약 4.7:1)까지 허용한다.
 - **높이 안정성**: 평점 영역은 값이 없어도 자리를 유지한다. 리뷰 기능이 나중에 붙어 값이 채워질 때
   카드 높이가 흔들리면 그리드 전체가 다시 흐른다.
 - 찜 버튼은 썸네일 우상단. **카드 링크 안에 중첩하지 않고 형제로 배치**해 클릭이 링크로 새지 않게 한다.
@@ -731,6 +756,30 @@ The system avoids drop shadows entirely. Depth is created by photographic layeri
 
 **상품 그리드** — 1440px 5열 / 1024px 4열 / 768px 3열 / 640px 2열. 열 간격 `{spacing.lg}`,
 행 간격 `{spacing.xl}`. 구분선 없음.
+
+**`list-toolbar`** — 카테고리 목록의 제목 아래·그리드 위 한 줄
+- 좌측: **카테고리 탭** — 루틴 5단계(클렌징~선크림) pill. 현재 카테고리가 5단계 중 하나일 때만
+  렌더하고, 선택 상태는 "선택 상태 — 색 반전" 규칙을 따른다(검정 채움 + 흰 글자).
+  탭 전환은 같은 화면의 쿼리스트링(`?category=`)만 바꾼다 — 루틴 STEP 맥락이 유지된다.
+- 우측: **정렬 `<select>`** — 네이티브 셀렉트, `{typography.body-tight}` / `{colors.ink}`,
+  1px `{colors.hairline-soft}` 테두리, 배경 `{colors.canvas}`. 라벨은 시각적으로 숨기고
+  `aria-label="정렬"`. 항목과 순서: 인기순 / 최신순 / 판매량순 / 낮은 가격순 / 높은 할인율순
+  (서버 `GoodsSort` 5종 popular/new/sales/priceAsc/discount와 1:1 — 임의로 늘리지 않는다).
+- 정렬 아래 **가격대 필터** pill 3종: 1만원 미만 / 1~3만원 / 3만원 이상. 다중 선택 없음(단일 토글),
+  선택 상태는 색 반전. 해제하면 전체. 서버 `minPrice`/`maxPrice`로만 거른다 — 클라이언트에서
+  거르지 않는다(돈은 서버).
+- 모바일(768px 미만): 탭이 가로 스크롤, 정렬 셀렉트는 줄바꿈해 우측 정렬 유지.
+
+**`compat-banner`** — 장바구니 성분 궁합 안내 (설계 8장 적용 지점 ③)
+- **verdict마다 별도 섹션으로 분리해 위→아래로 쌓는다**: CONFLICT → CAUTION → SYNERGY 순.
+  경고와 긍정을 한 박스에 섞으면 메시지가 상쇄된다 — 같은 박스 안에 다른 verdict의 항목을 넣지 않는다.
+- 섹션 공통: 배경 `{colors.canvas}`, 1px `{colors.hairline-soft}` 테두리, `{rounded.md}`,
+  안쪽 여백 `{spacing.md}`. 톤은 **좌측 4px 보더 + 원형 아이콘 + 텍스트로만** 표현한다
+  (`{colors.signal-danger}` / `{colors.signal-caution}` / `{colors.signal-success}`) — 배경 채움 금지 규칙 그대로.
+- 접근성: CONFLICT·CAUTION 섹션은 `role="alert"`, SYNERGY 섹션은 경고가 아니므로 `role="status"`.
+  색 단독 금지 — verdict는 색 외에 제목 문구와 아이콘(`!` / `✓`)으로도 구분한다.
+- overall이 OK면 아무것도 렌더하지 않는다. 궁합은 조언이지 금지가 아니므로 어떤 verdict도
+  버튼·주문을 비활성화하지 않는다.
 
 ### 루틴 조합기 컴포넌트 (메인 개인화 v2)
 
