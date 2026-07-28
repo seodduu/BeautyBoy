@@ -1,0 +1,94 @@
+/* DESIGN.md `list-toolbar` — 제목 아래·그리드 위 한 줄.
+   선택 상태는 "선택 상태 — 색 반전"(검정 채움 + 흰 글자), 배경 채움 액센트 금지. */
+.bb-list-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-lg);
+}
+
+.bb-list-toolbar__row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+}
+
+/* ---- 좌측: 루틴 5단계 카테고리 탭 ---- */
+.bb-list-toolbar__tabs {
+  display: flex;
+  gap: var(--space-xs);
+  overflow-x: auto;
+}
+
+.bb-list-toolbar__tab {
+  padding: var(--space-xs) var(--space-md);
+  border: 1px solid var(--color-hairline-soft);
+  border-radius: var(--rounded-full);
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-size: var(--fs-link-sm);
+  font-weight: var(--fw-link-sm);
+  line-height: var(--lh-link-sm);
+  letter-spacing: var(--ls-link-sm);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.bb-list-toolbar__tab[aria-current='page'] {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+/* ---- 우측: 정렬 셀렉트 (네이티브, 라벨은 aria-label로만) ---- */
+.bb-list-toolbar__sort {
+  margin-left: auto;
+  padding: var(--space-xs) var(--space-sm);
+  border: 1px solid var(--color-hairline-soft);
+  border-radius: var(--rounded-sm);
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: inherit;
+  font-size: var(--fs-body-tight);
+  line-height: var(--lh-body-tight);
+  letter-spacing: var(--ls-body-tight);
+}
+
+/* ---- 정렬 아래: 가격대 pill (단일 토글) ---- */
+.bb-list-toolbar__price {
+  display: flex;
+  gap: var(--space-xs);
+  justify-content: flex-end;
+}
+
+.bb-list-toolbar__pill {
+  padding: var(--space-xs) var(--space-md);
+  border: 1px solid var(--color-hairline-soft);
+  border-radius: var(--rounded-full);
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: inherit;
+  font-size: var(--fs-button);
+  font-weight: var(--fw-button);
+  line-height: var(--lh-button);
+  letter-spacing: var(--ls-button);
+  cursor: pointer;
+}
+
+.bb-list-toolbar__pill[aria-pressed='true'] {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+/* 모바일: 탭은 가로 스크롤(위 overflow-x), 정렬은 줄바꿈해도 우측 정렬 유지 */
+@media (max-width: 767px) {
+  .bb-list-toolbar__row {
+    row-gap: var(--space-xs);
+  }
+
+  .bb-list-toolbar__tabs {
+    flex: 1 1 100%;
+  }
+}
