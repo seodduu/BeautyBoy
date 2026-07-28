@@ -76,7 +76,9 @@
   z-index: 10;
   padding: var(--space-sm) 0;
   background: var(--color-canvas);
-  border-bottom: 1px solid var(--color-hairline);
+  /* hairline(#e7eaf0)은 canvas(#f7f7f7) 위에서 사실상 안 보인다 —
+     구분선 역할을 해야 하므로 한 단계 진한 hairline-soft를 쓴다. */
+  border-bottom: 1px solid var(--color-hairline-soft);
 }
 
 .bb-main__nav-list {
