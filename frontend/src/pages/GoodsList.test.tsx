@@ -119,9 +119,23 @@ describe('GoodsList — 카테고리 목록', () => {
     });
   });
 
-  // 계획서 원문 스텝 4의 "minPrice/maxPrice가 요청에 실린다" 테스트는 api/goods.ts의
-  // FetchGoodsListParams에 minPrice/maxPrice가 없어 배선이 불가능하다(소유 밖 파일 — 보고됨).
-  // 그때까지 URL 레벨 배선(?price=)만 검증한다.
+  it('sort=review가 fetch에 전달된다 — 리뷰 많은 순은 서버 정렬이다', async () => {
+    renderList('?category=C002&sort=review');
+    await screen.findByRole('combobox', { name: '정렬' });
+    await waitFor(() => {
+      expect(capturedSearchParams?.get('sort')).toBe('review');
+    });
+  });
+
+  it('가격대 pill 선택 시 minPrice/maxPrice가 실제 요청에 실린다', async () => {
+    renderList('?category=C002&price=FROM_10K_TO_30K');
+    await screen.findByRole('combobox', { name: '정렬' });
+    await waitFor(() => {
+      expect(capturedSearchParams?.get('minPrice')).toBe('10000');
+    });
+    expect(capturedSearchParams?.get('maxPrice')).toBe('29999');
+  });
+
   it('가격대 pill 토글은 URL의 price 파라미터를 바꾸고, 선택 상태로 반영된다', async () => {
     renderList('?category=C002&price=UNDER_10K');
     await screen.findByRole('combobox', { name: '정렬' });

@@ -82,6 +82,16 @@ const BADGE_PLAN: BadgeType[][] = [
 const DISCOUNT_PLAN = [0, 10, 15, 0, 20, 25, 0, 30, 40, 5];
 
 /**
+ * sort=review(리뷰 많은 순) 확인용 리뷰수. 전부 0이면 목에서 정렬이 눈에 보이지 않는다
+ * (salesCount를 mock 전용으로 주입한 것과 같은 이유). 0을 섞어 둬야 `Rating`의 빈 상태
+ * "첫 리뷰를 기다려요"도 목록 화면에서 계속 검증된다.
+ */
+const REVIEW_COUNT_PLAN = [0, 12, 3, 87, 0, 41, 6, 152, 24, 0, 68];
+
+/** 리뷰가 있는 상품에만 붙는 평점. 리뷰수 0이면 평점도 0이다(둘이 갈라지면 카드가 거짓말한다). */
+const RATING_PLAN = [4.6, 4.2, 3.9, 4.8, 4.0, 3.5, 4.4];
+
+/**
  * 태그 샘플. 실 백엔드는 상품마다 최대 여러 개를 규칙 파생 + 수동 보정으로 채우지만(V72 시드),
  * mock은 목록/상세/카드 화면을 눈으로 확인할 수 있을 정도의 조합 몇 가지만 순환시킨다.
  * 빈 배열도 섞어 tags가 없는 상품에서 레이아웃이 무너지지 않는지 항상 검증되게 한다.
@@ -130,6 +140,7 @@ function buildGoodsFixtures(): GoodsFixture[] {
       const discountRate = DISCOUNT_PLAN[(goodsNo - 1) % DISCOUNT_PLAN.length];
       const listPrice = 12000 + ((goodsNo - 1) % 12) * 2500;
       const salePrice = Math.round((listPrice * (100 - discountRate)) / 100 / 100) * 100;
+      const reviewCount = REVIEW_COUNT_PLAN[(goodsNo - 1) % REVIEW_COUNT_PLAN.length];
 
       items.push({
         goodsNo,
@@ -140,9 +151,8 @@ function buildGoodsFixtures(): GoodsFixture[] {
         salePrice,
         discountRate,
         badges: BADGE_PLAN[(goodsNo - 1) % BADGE_PLAN.length],
-        // Wave 1 백엔드가 실제로 내려주는 기본값 — 리뷰 기능이 붙기 전까지 전부 0이다.
-        rating: 0,
-        reviewCount: 0,
+        rating: reviewCount === 0 ? 0 : RATING_PLAN[(goodsNo - 1) % RATING_PLAN.length],
+        reviewCount,
         wished: false,
         todayDreamAvailable: goodsNo % 4 === 0,
         tags: TAG_PLAN[(goodsNo - 1) % TAG_PLAN.length],

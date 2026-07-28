@@ -6,14 +6,26 @@ import './ListToolbar.css';
 /** DESIGN.md `list-toolbar` 가격대 3종. URL `?price=` 값이자 서버 min/max 매핑의 키다. */
 export type PriceBand = 'UNDER_10K' | 'FROM_10K_TO_30K' | 'OVER_30K';
 
-/** 서버 GoodsSort 5종과 1:1 — 임의로 늘리지 않는다 (DESIGN.md list-toolbar). */
+/** 서버 GoodsSort 6종과 1:1 — 임의로 늘리지 않는다 (DESIGN.md list-toolbar). */
 const SORT_OPTIONS: ReadonlyArray<{ value: GoodsSort; label: string }> = [
   { value: 'popular', label: '인기순' },
   { value: 'new', label: '최신순' },
   { value: 'sales', label: '판매량순' },
   { value: 'priceAsc', label: '낮은 가격순' },
   { value: 'discount', label: '높은 할인율순' },
+  { value: 'review', label: '리뷰 많은 순' },
 ];
+
+/**
+ * 가격대 pill → 서버 minPrice/maxPrice(경계 포함). 라벨과 같은 자리에 둬서 문구와 숫자가
+ * 갈라지지 않게 한다 — "1~3만원"이 10000~29999라는 사실의 출처는 여기 한 곳뿐이다.
+ * 거르는 주체는 서버다(DESIGN.md list-toolbar "돈은 서버") — 이 값은 요청 파라미터일 뿐이다.
+ */
+export const PRICE_BAND_RANGE: Record<PriceBand, { minPrice?: number; maxPrice?: number }> = {
+  UNDER_10K: { maxPrice: 9999 },
+  FROM_10K_TO_30K: { minPrice: 10000, maxPrice: 29999 },
+  OVER_30K: { minPrice: 30000 },
+};
 
 const PRICE_BANDS: ReadonlyArray<{ value: PriceBand; label: string }> = [
   { value: 'UNDER_10K', label: '1만원 미만' },

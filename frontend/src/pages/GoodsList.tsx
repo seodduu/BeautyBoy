@@ -2,14 +2,21 @@ import { useQuery } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
 import { fetchGoodsList, type GoodsSort } from '../api/goods';
 import { GoodsGrid } from '../components/goods/GoodsGrid';
-import { ListToolbar, type PriceBand } from '../components/goods/ListToolbar';
+import { ListToolbar, PRICE_BAND_RANGE, type PriceBand } from '../components/goods/ListToolbar';
 import { ROUTINE_STEPS } from '../features/routine/steps';
 import './GoodsList.css';
 
 /** 한 번에 불러오는 최대 건수. 페이지네이션은 목록이 실제로 커지는 웨이브에서 붙인다. */
 const PAGE_SIZE = 40;
 
-const SORT_VALUES: readonly GoodsSort[] = ['popular', 'new', 'sales', 'priceAsc', 'discount'];
+const SORT_VALUES: readonly GoodsSort[] = [
+  'popular',
+  'new',
+  'sales',
+  'priceAsc',
+  'discount',
+  'review',
+];
 const PRICE_BAND_VALUES: readonly PriceBand[] = ['UNDER_10K', 'FROM_10K_TO_30K', 'OVER_30K'];
 
 /** URL의 sort는 사용자가 손으로 칠 수 있다 — 미지값은 popular로 정규화해 서버 400을 막는다. */
@@ -41,14 +48,14 @@ export function GoodsList() {
   const { data, isLoading, isError } = useQuery({
     queryKey: ['goods-list', category, tag, sort, priceBand],
     queryFn: () =>
-      // NOTE: priceBand의 minPrice/maxPrice 전달은 FetchGoodsListParams(소유 밖 계약)에
-      // 필드가 없어 아직 배선하지 못했다 — 계약이 확장되면 여기서 매핑해 싣는다.
       fetchGoodsList({
         page: 0,
         size: PAGE_SIZE,
         sort,
         ...(category ? { categoryCode: category } : {}),
         ...(tag ? { tag } : {}),
+        // 가격대는 URL의 pill 값을 서버 경계값으로 풀어 싣는다 — 클라이언트에서 거르지 않는다.
+        ...(priceBand ? PRICE_BAND_RANGE[priceBand] : {}),
       }),
   });
 
