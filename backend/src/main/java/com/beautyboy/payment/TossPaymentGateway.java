@@ -25,7 +25,7 @@ import java.util.Map;
  * 그 검증은 PaymentService가 우리 주문의 payableAmount로 한다. 게이트웨이는 통신만 책임진다.
  */
 @Component
-@Profile("!e2e")
+@Profile("!e2e & !loadtest")
 public class TossPaymentGateway implements PaymentGateway {
 
     private final RestClient restClient;
