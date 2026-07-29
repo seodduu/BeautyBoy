@@ -31,6 +31,9 @@ beautyboy:
   view-count:
     # 기본은 DB 즉시 증가. Redis 컨테이너가 떠 있을 때만 true로 켠다.
     redis: ${VIEW_COUNT_REDIS:false}
+  cache:
+    # 기본은 캐시 없음(DB 직행). Redis 컨테이너가 떠 있을 때만 true로 켠다.
+    redis: ${CACHE_REDIS:false}
 
 jwt:
   secret: ${JWT_SECRET:}

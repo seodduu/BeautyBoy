@@ -43,6 +43,9 @@ services:
       # Redis가 죽어도 RedisViewCountRecorder는 warn 로그만 남기고 앱은 계속 뜬다(설계상 감수).
       REDIS_HOST: redis
       VIEW_COUNT_REDIS: "true"
+      # 랭킹/목록/궁합 읽기 캐시. Redis가 죽어도 CacheErrorHandler가 예외를 삼키고
+      # DB 직행으로 폴백한다(설계상 감수).
+      CACHE_REDIS: "true"
     ports: ["8080:8080"]
     depends_on:
       mysql:
