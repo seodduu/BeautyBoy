@@ -11,12 +11,6 @@
   남성 화장품 커머스 플랫폼
 </p>
 
-<p align="center">
-  <a href="docs/blog/2026-07-29-beautyboy-intro.md"><strong>소개 글</strong></a>
-  ·
-  <a href="docs/blog/2026-07-29-beautyboy-troubleshooting.md"><strong>트러블슈팅 글</strong></a>
-</p>
-
 # Table of Contents
 
 - [서비스 소개](#service-intro)

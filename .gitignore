@@ -49,3 +49,9 @@ BeautyBoy Video/
 CLAUDE.md
 DESIGN.md
 .claude/
+
+# 로컬 전용 — 블로그 원고·스크린샷·에셋 출처·개발 스크립트 (원격에는 docs/demo만)
+tools/
+docs/blog/
+docs/screenshots/
+docs/asset-credits.md
