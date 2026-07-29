@@ -140,10 +140,42 @@ public class CartService {
         cartItemRepository.delete(내_항목(memberId, cartItemId));
     }
 
-    /** 주문이 성립하면 장바구니를 비운다(T2-4가 호출). */
+    /** 회원의 장바구니를 통째로 비운다. */
     @Transactional
     public void clear(Long memberId) {
         cartItemRepository.deleteByMemberId(memberId);
+    }
+
+    /**
+     * 결제가 끝난 상품만 장바구니에서 뺀다(확정 후처리가 호출).
+     *
+     * <p>왜 {@link #clear(Long)}가 아닌가: 예전에는 주문 <b>생성</b> 시점에 장바구니를 통째로
+     * 비웠고, 그래서 결제를 포기해도 담아둔 것이 전부 사라졌다. 이제는 확정된 주문에 담긴
+     * 상품만 지운다 — 같은 시각에 다른 탭에서 담은 상품은 그대로 남는다.
+     *
+     * <p>옵션이 아니라 <b>상품 단위</b>로 지운다. 주문한 옵션만 지우면 같은 상품의 다른 옵션이
+     * 남아 "방금 산 걸 또 담아둔" 목록이 된다. 옵션 선택은 결국 같은 상품을 사려던 것이므로
+     * 상품 단위가 손님의 의도에 가깝다.
+     *
+     * <p>없는 항목을 지우는 것은 no-op이다 — 같은 이벤트를 두 번 소비해도 안전해야 하기 때문이다
+     * (A5의 cart-clear 컨슈머는 이 자연 멱등성에 기대어 처리 기록 테이블을 쓰지 않는다).
+     *
+     * <p>파생 삭제 쿼리({@code deleteByMemberIdAndGoodsIdIn}) 대신 이미 있는 조회로 거르는 이유는
+     * 순전히 파일 소유권이다 — 이 태스크의 Files 목록에 {@code CartItemRepository}가 없다.
+     * 장바구니는 회원당 수십 줄 규모라 실측 차이가 없고, 필요하면 A5에서 파생 쿼리로 바꾸면 된다.
+     */
+    @Transactional
+    public void removeByGoods(Long memberId, List<Long> goodsIds) {
+        if (goodsIds == null || goodsIds.isEmpty()) {
+            return;
+        }
+        List<CartItem> 지울_항목 = cartItemRepository.findByMemberIdOrderByIdAsc(memberId).stream()
+                .filter(item -> goodsIds.contains(item.getGoodsId()))
+                .toList();
+        if (지울_항목.isEmpty()) {
+            return;
+        }
+        cartItemRepository.deleteAll(지울_항목);
     }
 
     /**

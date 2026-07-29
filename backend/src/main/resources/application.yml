@@ -2,7 +2,11 @@ spring:
   application:
     name: beautyboy
   datasource:
-    url: ${DB_URL:jdbc:mysql://localhost:3306/beautyboy}
+    # useAffectedRows=true가 없으면 MySQL JDBC 드라이버가 `INSERT ... ON DUPLICATE KEY UPDATE`의
+    # 반환값을 "실제로 바뀐 행 수"가 아니라 "매치된 행 수"로 돌려준다(중복이어도 보통 2) —
+    # outbox의 processed_event/notification 멱등성 게이트(영향 행 0 == 중복)가 실 MySQL에서
+    # 조용히 깨진다(A7 Testcontainers MySQL 통합 테스트가 실측: 재발행 시 판매집계가 배로 늚).
+    url: ${DB_URL:jdbc:mysql://localhost:3306/beautyboy?useAffectedRows=true}
     username: ${DB_USERNAME:beautyboy}
     password: ${DB_PASSWORD:}
   jpa:
@@ -18,6 +22,12 @@ spring:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP:localhost:9092}
+    consumer:
+      group-id: beautyboy-post-order
+      auto-offset-reset: earliest
+      enable-auto-commit: false      # 커밋은 리스너 컨테이너가 처리 성공 후에 한다
   flyway:
     enabled: true
   # default 프로필(명시 프로필 없이 뜨는 운영 경로)에서만 mysql-search를 켠다.
@@ -31,6 +41,10 @@ beautyboy:
   view-count:
     # 기본은 DB 즉시 증가. Redis 컨테이너가 떠 있을 때만 true로 켠다.
     redis: ${VIEW_COUNT_REDIS:false}
+  events:
+    enabled: ${ORDER_EVENTS:false}   # 조회수 버퍼와 같은 철학 — Kafka 없이도 앱이 뜬다
+    relay-batch-size: 100
+    relay-delay-ms: 1000
 
 jwt:
   secret: ${JWT_SECRET:}

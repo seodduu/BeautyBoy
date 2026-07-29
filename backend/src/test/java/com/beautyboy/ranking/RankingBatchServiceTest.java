@@ -26,8 +26,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * 랭킹 배치 테스트.
  *
- * <p>판매·찜은 타 도메인(order/wishlist)이 아직 구현하지 않았으므로 가짜 Provider를 주입한다.
- * 이것이 인터페이스로 가른 이유 그 자체다 — T2·T3를 기다리지 않고 랭킹을 완성할 수 있다.
+ * <p>찜은 타 도메인(wishlist) 소유라 가짜 Provider를 주입한다 — 여기서 검증하려는 것은 실 집계
+ * 쿼리가 아니라 "받은 수치로 점수를 옳게 계산하는가"이기 때문이다.
+ *
+ * <p><b>판매는 더 이상 Provider로 들어오지 않는다(A4b).</b> 주문 확정 후처리가
+ * {@code upsertSalesIncrement}로 직접 증분하므로, 이 테스트도 배치를 돌리기 전에 같은 방식으로
+ * 판매량을 쌓아 둔다. 배치가 그 값을 덮어쓰지 않는다는 사실 자체가
+ * {@code 배치는_판매량을_덮어쓰지_않는다}로 명시돼 있다.
  */
 @SpringBootTest
 @ActiveProfiles("test")
@@ -44,25 +49,14 @@ class RankingBatchServiceTest {
     private static final AtomicReference<Long> 판매찜_대상_상품_id = new AtomicReference<>();
 
     /**
-     * 판매찜_대상_상품_id가 가리키는 상품은 오늘 3개 팔리고 5명이 찜했다.
+     * 판매찜_대상_상품_id가 가리키는 상품은 오늘 5명이 찜했다(판매 3은 각 테스트가 증분으로 쌓는다).
      *
-     * <p>{@code @Primary}가 필요한 이유(T2 통합 후): order 도메인이 머지되면서
-     * {@code OrderSalesStatProvider}(@Component)가 실 {@code SalesStatProvider}로 무조건 등록된다.
-     * 그러면 이 가짜와 둘이 되어 주입 시 NoUniqueBean이 난다. @Primary로 가짜를 우선시켜
-     * 배치가 결정적인 값(판매 3·찜 5)을 보게 한다 — 여기서 검증하려는 것은 실 집계 쿼리가 아니라
-     * "받은 수치로 점수를 옳게 계산하는가"이기 때문이다.
+     * <p>{@code @Primary}가 필요한 이유: wishlist 도메인의 실 구현
+     * {@code WishlistWishStatProvider}(@Component)와 공존하므로, 가짜를 우선시켜 배치가
+     * 결정적인 값(찜 5)을 보게 한다.
      */
     @TestConfiguration
     static class 가짜_통계_공급자 {
-        @Bean
-        @Primary
-        SalesStatProvider fakeSalesStatProvider() {
-            return date -> {
-                Long goodsId = 판매찜_대상_상품_id.get();
-                return (goodsId != null && date.equals(오늘)) ? Map.of(goodsId, 3) : Map.of();
-            };
-        }
-
         @Bean
         @Primary
         WishStatProvider fakeWishStatProvider() {
@@ -87,8 +81,26 @@ class RankingBatchServiceTest {
     EntityManager entityManager;
 
     @Test
-    void 배치가_Provider_수치를_일별통계에_반영한다() {
+    void 배치가_찜_수치를_일별통계에_반영한다() {
         Long goodsId = 상품_저장("C001001001");
+
+        rankingBatchService.rebuild();
+
+        TestPersistence.DB_왕복_강제(entityManager);
+
+        GoodsDailyStat stat = goodsDailyStatRepository
+                .findById(new GoodsDailyStat.Key(goodsId, 오늘)).orElseThrow();
+        assertThat(stat.getWishCount()).isEqualTo(5);
+    }
+
+    /**
+     * 판매 수집을 배치에서 뺀 뒤의 회귀(A4b). 찜 수집이 판매 컬럼을 함께 대입하면
+     * 확정 후처리가 쌓아 둔 증분이 매시 사라진다 — 설계 §2-3의 "한 시점에 한 경로만".
+     */
+    @Test
+    void 배치는_판매량을_덮어쓰지_않는다() {
+        Long goodsId = 상품_저장("C001001001");
+        판매_증분(goodsId, 3);
 
         rankingBatchService.rebuild();
 
@@ -103,6 +115,7 @@ class RankingBatchServiceTest {
     @Test
     void 점수는_판매3_찜2_조회1_가중합이다() {
         Long goodsId = 상품_저장("C001001001");
+        판매_증분(goodsId, 3);
         goodsDailyStatRepository.upsertViewCount(goodsId, 오늘, 10);
 
         TestPersistence.DB_왕복_강제(entityManager);
@@ -121,6 +134,7 @@ class RankingBatchServiceTest {
     @Test
     void 오래된_날짜일수록_가중치가_낮다() {
         Long goodsId = 상품_저장("C001001001");
+        판매_증분(goodsId, 3);
         // 어제 조회 10 → 가중치 0.6 → 6.0. 오늘 것(판매·찜)과 합산된다.
         goodsDailyStatRepository.upsertViewCount(goodsId, 오늘.minusDays(1), 10);
 
@@ -138,6 +152,7 @@ class RankingBatchServiceTest {
     @Test
     void 삼일보다_오래된_통계는_점수에_들어가지_않는다() {
         Long goodsId = 상품_저장("C001001001");
+        판매_증분(goodsId, 3);
         goodsDailyStatRepository.upsertViewCount(goodsId, 오늘.minusDays(5), 1000);
 
         TestPersistence.DB_왕복_강제(entityManager);
@@ -204,6 +219,11 @@ class RankingBatchServiceTest {
         TestPersistence.DB_왕복_강제(entityManager);
 
         assertThat(rankingSnapshotRepository.findAll()).isEmpty();
+    }
+
+    /** 주문 확정 후처리가 하는 것과 같은 증분. 판매량이 배치가 아니라 이 경로로 들어온다(A4b). */
+    private void 판매_증분(Long goodsId, int 수량) {
+        goodsDailyStatRepository.upsertSalesIncrement(goodsId, 오늘, 수량);
     }
 
     /**

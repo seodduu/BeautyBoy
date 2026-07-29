@@ -22,19 +22,21 @@ import static org.assertj.core.api.Assertions.assertThat;
 class RankingStatFallbackTest {
 
     /**
-     * T3(wishlist)까지 머지된 지금, sales·wish 두 도메인 모두 실 구현이 주입된다 —
-     * 더 이상 폴백으로 뜨는 도메인이 없다. 이 클래스는 그 통합 상태(둘 다 명명된 실 구현)를
-     * 검증한다: {@code SalesStatProvider}는 order의 {@code OrderSalesStatProvider},
-     * {@code WishStatProvider}는 wishlist의 {@code WishlistWishStatProvider}가 주입되어야
-     * 랭킹 점수 `판매×3 + 찜×2 + 조회×1`의 세 항이 모두 실 데이터로 채워진다.
+     * 현재 상태(A4b 이후): 찜만 실 구현이고 <b>판매는 폴백으로 뜬다.</b>
      *
-     * <p>폴백(람다/익명 클래스) 자체가 여전히 동작함은 아래 {@code 실_구현이_있을_때}에서
-     * @Primary 가짜로 격리 검증한다. {@code RankingStatFallbackAutoConfiguration}은 유지한다 —
-     * 다음에 어느 도메인이 실 구현 없이 빠지면 그 도메인만 폴백으로 앱을 띄우기 위함이다.
+     * <p>판매량이 주문 확정 이벤트의 증분으로 옮겨가면서 order의 {@code OrderSalesStatProvider}가
+     * 삭제됐다. 랭킹 배치도 더는 {@code SalesStatProvider}를 부르지 않는다 — 판매 항은
+     * {@code goods_daily_stat.sales_count}에 이미 쌓여 있고, 배치는 그것을 읽어 점수에만 쓴다.
+     * 그래서 이 인터페이스와 폴백 빈은 <b>지금 아무도 소비하지 않는다</b>. 폴백이 남아 있어야
+     * 앱이 그대로 뜨므로(주입 대상이 없어도 빈 등록 자체는 무해하다) 이 클래스는 그 사실을
+     * 회귀로 못 박는다: 판매는 폴백, 찜은 실 구현.
+     *
+     * <p>{@code SalesStatProvider}/{@code RankingStatFallbackAutoConfiguration} 자체는 이 태스크의
+     * Files 목록 밖이라 손대지 않았다. 정리 여부는 A5 이후에 판단한다.
      */
     @SpringBootTest
     @ActiveProfiles("test")
-    static class 두_공급자가_모두_실_구현으로_주입된다 {
+    static class 공급자_주입_상태 {
 
         @Autowired
         SalesStatProvider salesStatProvider;
@@ -48,12 +50,11 @@ class RankingStatFallbackTest {
         }
 
         @Test
-        void sales는_폴백_람다가_아니라_order의_실_구현이다() {
-            // 클래스 단순명으로 확인 — 패키지 경계상 order를 test에서 import하지 않는다.
-            // CGLIB 프록시("...$$SpringCGLIB$$0")로 감싸질 수 있어 startsWith로 비교한다.
-            // 폴백이라면 익명 클래스/람다라서 이 이름으로 시작하지 않는다.
-            assertThat(salesStatProvider.getClass().getSimpleName())
-                    .startsWith("OrderSalesStatProvider");
+        void sales는_실_구현이_없어_빈_맵_폴백이_주입된다() {
+            // 판매 수집 경로가 사라졌으므로 폴백(람다)이 남는다. 여기가 깨졌다면 어딘가에
+            // 판매 Provider 구현이 새로 생겼다는 뜻이고, 그러면 증분과 대입 두 경로가
+            // 다시 공존할 위험이 있으니 설계 §2-3부터 다시 읽어야 한다.
+            assertThat(salesStatProvider.salesQuantityByGoods(LocalDate.now())).isEmpty();
         }
 
         @Test
@@ -70,8 +71,9 @@ class RankingStatFallbackTest {
 
         @TestConfiguration
         static class 가짜_주문도메인 {
-            // @Primary: 실 OrderSalesStatProvider(@Component)와 공존하므로, 이 결정적 가짜를
-            // 우선시켜 "실 구현이 폴백을 이긴다"는 사실을 재현한다(둘 다 실 구현이라 @Primary가 없으면 NoUniqueBean).
+            // @Primary는 이제 필수는 아니지만(실 구현이 없어 충돌하지 않는다) 그대로 둔다 —
+            // 나중에 어느 도메인이 실 구현을 다시 올려도 이 테스트의 의도(폴백보다 실 구현이 이긴다)가
+            // 흔들리지 않는다.
             @Bean
             @Primary
             SalesStatProvider 실_구현_흉내() {

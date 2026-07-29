@@ -349,7 +349,7 @@ beautyboy:
 아웃박스 INSERT만 일어난다(PENDING 적체 — 무해). 로컬 bootRun과 기존 테스트가 Kafka 없이 돌아야 하기 때문.
 compose에서는 `ORDER_EVENTS: "true"`.
 
-- [ ] 위 계약대로 반영, `./gradlew test`가 Kafka 없이 여전히 녹색인지 확인 → 커밋
+- [x] 위 계약대로 반영, `./gradlew test`가 Kafka 없이 여전히 녹색인지 확인 → 커밋
 
 ### Task A2: 아웃박스 스키마 + 이벤트 계약
 
@@ -374,9 +374,9 @@ public interface OutboxAppender {
 //     eventId는 INSERT 후 채번되므로 append 시점엔 null로 넘기고 직렬화 시 채운다.
 ```
 
-- [ ] 테스트: `append는_호출자_트랜잭션에_참여해_PENDING_행을_남긴다`(단언: status=PENDING,
+- [x] 테스트: `append는_호출자_트랜잭션에_참여해_PENDING_행을_남긴다`(단언: status=PENDING,
       payload JSON에 orderNo·lines 포함, eventId=행 PK), `호출자_트랜잭션이_롤백되면_아웃박스도_남지_않는다`
-- [ ] 실패 확인 → 구현(직렬화는 Jackson `ObjectMapper`) → 통과 → 커밋
+- [x] 실패 확인 → 구현(직렬화는 Jackson `ObjectMapper`) → 통과 → 커밋
 
 ### Task A3: confirm 트랜잭션에 발행 지점 추가 [opus]
 
@@ -393,10 +393,10 @@ public interface OutboxAppender {
 같은 트랜잭션이므로 커밋의 원자성이 성립한다. 토스 호출(4)보다 뒤인 이유: 토스 실패 시 롤백에
 아웃박스도 포함돼 유령 이벤트가 없다.
 
-- [ ] 테스트: `확정_성공시_같은_트랜잭션에서_아웃박스가_남는다`,
+- [x] 테스트: `확정_성공시_같은_트랜잭션에서_아웃박스가_남는다`,
       `금액_불일치로_실패하면_아웃박스도_남지_않는다`(기존 불일치 테스트 픽스처 재사용),
       기존 `PaymentService` 테스트 전부 녹색 유지
-- [ ] 실패 확인 → 구현 → 통과 → 커밋
+- [x] 실패 확인 → 구현 → 통과 → 커밋
 
 ### Task A4: 아웃박스 릴레이 [opus]
 
@@ -429,9 +429,9 @@ public void relay() {
 }
 ```
 
-- [ ] 테스트(EmbeddedKafka 또는 KafkaTemplate 목): `PENDING을_생성순으로_발행하고_PUBLISHED로_마킹한다`,
+- [x] 테스트(EmbeddedKafka 또는 KafkaTemplate 목): `PENDING을_생성순으로_발행하고_PUBLISHED로_마킹한다`,
       `발행_실패시_마킹하지_않고_배치를_중단한다`, `PUBLISHED는_다시_발행하지_않는다`
-- [ ] 실패 확인 → 구현 → 통과 → 커밋
+- [x] 실패 확인 → 구현 → 통과 → 커밋
 
 ### Task A4b: 후처리 3종을 **동기로** 먼저 구현 (비교 기준선) [opus]
 
@@ -445,7 +445,8 @@ public void relay() {
 없는 개선을 주장하는 대신 실제 트레이드오프를 보여주는 쪽이 정직하고 설득력도 높다.
 
 **이 태스크의 커밋 SHA를 계획서 이 자리에 적어 둔다** — Wave 2(C2)가 그 지점을 체크아웃해
-"동기 버전" 수치를 잰다. 측정 지점: `동기 커밋 SHA: (A4b 완료 시 기입)`
+"동기 버전" 수치를 잰다. 측정 지점: `동기 커밋 SHA: d9ce1938b172555fdf86c1ac84c06a0f5ab73562`
+(브랜치 `feat/order-events`. C2는 이 커밋을 체크아웃해 `LOAD_MODEL=spread`로 confirm을 잰다.)
 
 **Files:**
 - Create: `backend/src/main/java/com/beautyboy/notification/Notification.java`,
@@ -477,10 +478,10 @@ public interface PostOrderTasks {
   `notification` INSERT를 순서대로 한다. **`PaymentService.confirm`의 트랜잭션 안에서** 호출하므로
   실패하면 결제까지 롤백된다 — 이것이 동기 방식의 대가이며, A5가 없애려는 바로 그 성질이다.
   이 사실을 코드 주석에 남긴다.
-- [ ] 테스트: `확정되면_주문_상품만_장바구니에서_지워진다`, `확정되면_판매집계가_수량만큼_는다`,
+- [x] 테스트: `확정되면_주문_상품만_장바구니에서_지워진다`, `확정되면_판매집계가_수량만큼_는다`,
       `확정되면_알림이_한건_생긴다`, `후처리가_실패하면_결제도_롤백된다`(동기 방식의 대가를 못 박는 테스트),
       `주문_생성_시점에는_장바구니가_비워지지_않는다`(OrderService 회귀)
-- [ ] 실패 확인 → 구현 → 통과 → 커밋 → **커밋 SHA를 이 문서에 기입**
+- [x] 실패 확인 → 구현 → 통과 → 커밋 → **커밋 SHA를 이 문서에 기입**
 
 ### Task A5: 동기 후처리를 Kafka 이벤트로 이관 [opus]
 
@@ -541,12 +542,12 @@ ON DUPLICATE KEY UPDATE sales_count = sales_count + :quantity
   new ExponentialBackOff(1000, 2.0))` — backOff에 `setMaxAttempts` 상당(재시도 3회) 설정,
   DLT 토픽명은 기본 규칙(`order-events.DLT`) 사용.
 
-- [ ] 테스트: `확정_이벤트를_받으면_주문_상품만_장바구니에서_지운다`,
+- [x] 테스트: `확정_이벤트를_받으면_주문_상품만_장바구니에서_지운다`,
       `같은_이벤트를_두번_소비해도_판매집계는_한번만_는다`,
       `같은_이벤트를_두번_소비해도_알림은_한건이다`,
       `컨슈머가_계속_실패하면_DLT로_이동하고_다음_메시지는_계속_소비된다`,
       `주문_생성_시점에는_장바구니가_비워지지_않는다`(OrderService 회귀)
-- [ ] 실패 확인 → 구현 → 통과 → 커밋
+- [x] 실패 확인 → 구현 → 통과 → 커밋
 
 ### Task A6: DLQ 재처리 admin API
 
@@ -561,7 +562,7 @@ poll → 각 메시지를 원 키 그대로 `order-events`에 재발행 → 오�
 응답: `{ "replayed": n }`. 통과 조건: DLT에 2건 있을 때 replay 후 원 토픽에 2건이 재적재되고,
 두 번째 호출은 `replayed: 0`.
 
-- [ ] 테스트 작성 → 실패 확인 → 구현 → 통과 → 커밋
+- [x] 테스트 작성 → 실패 확인 → 구현 → 통과 → 커밋
 
 ### Task A7: 통합 테스트 (Testcontainers Kafka + MySQL)
 
@@ -578,7 +579,7 @@ poll → 각 메시지를 원 키 그대로 `order-events`에 재발행 → 오�
   되돌려 강제 재발행 후, sales_count·알림 건수 불변
 - `컨슈머_예외가_계속되면_DLT로_가고_replay로_복구된다` — notification INSERT를 실패하게 만든 뒤
   (member 삭제 등 픽스처로) DLT 1건 확인 → 원인 복구 → replay API → 알림 1건 생성
-- [ ] `./gradlew integrationTest` 녹색 → 커밋
+- [x] `./gradlew integrationTest` 녹색 → 커밋
 
 ---
 
