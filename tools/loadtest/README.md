@@ -200,13 +200,38 @@ node --input-type=module --check < browse.js
 
 ## 5. 결과 저장 위치
 
-k6 결과(요약 JSON/텍스트)는 `docs/loadtest/<날짜>-baseline/`에 저장한다. 예:
+k6 결과(요약 JSON/텍스트)는 `docs/loadtest/<날짜>-baseline/`에 저장한다. **`--summary-trend-stats`
+플래그를 반드시 붙인다** — 빼면 p99가 k6 기본 summary에 없어 측정을 처음부터 다시 돌려야 한다
+(이번 웨이브에서 실제로 발생한 실수다). 파일명은 스크립트별로 `<스크립트명>-summary.json`으로
+맞춘다(예: `confirm-summary.json`, `browse-summary.json`):
 
 ```bash
 mkdir -p ../../docs/loadtest/2026-07-29-baseline
-k6 run --summary-export=../../docs/loadtest/2026-07-29-baseline/confirm.json confirm.js
-k6 run --summary-export=../../docs/loadtest/2026-07-29-baseline/browse.json browse.js
+k6 run --summary-trend-stats="avg,min,med,max,p(90),p(95),p(99)" \
+  --summary-export=../../docs/loadtest/2026-07-29-baseline/confirm-summary.json confirm.js
+k6 run --summary-trend-stats="avg,min,med,max,p(90),p(95),p(99)" \
+  --summary-export=../../docs/loadtest/2026-07-29-baseline/browse-summary.json browse.js
 ```
+
+**커밋 전 `confirm-summary.json`을 반드시 스크럽한다.** `confirm.js`는 `setup()`에서 로그인해
+액세스 토큰을 반환하는데, k6가 이 반환값을 `--summary-export` JSON의 `setup_data`에 그대로
+직렬화한다 — 스크럽하지 않으면 재사용 가능한 살아있는 JWT가 저장소에 커밋된다(이번 웨이브에서
+실제로 발생했다). 스크럽 절차:
+
+```bash
+python3 -c "
+import json
+p = 'docs/loadtest/<날짜>-.../confirm-summary.json'
+d = json.load(open(p))
+if isinstance(d.get('setup_data'), dict) and 'token' in d['setup_data']:
+    d['setup_data']['token'] = '(redacted)'
+with open(p, 'w') as f:
+    json.dump(d, f, indent=2); f.write('\n')
+"
+```
+
+`browse.js`는 `setup()`이 없어 `setup_data`가 애초에 없다(None) — 스크럽 대상 아님. 자세한
+배경은 `docs/loadtest/2026-07-29-baseline/conditions.md` §7-1(플래그)·§9-1(스크럽) 참고.
 
 Kafka/Redis 개선 이후 재측정할 때는 같은 규약으로 `docs/loadtest/<날짜>-after-kafka-redis/` 등
 디렉터리명만 바꿔 나란히 비교한다.

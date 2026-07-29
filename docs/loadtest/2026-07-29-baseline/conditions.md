@@ -60,7 +60,10 @@ JWT_SECRET=<.env 참조, Base64 문자열> \
   - `beautyboy-redis` — 이미지 `redis:7-alpine`, 호스트 포트 6379 (2달 전부터 기동 중, healthy)
     - `browse.js`/`confirm.js` 시나리오 자체는 Redis를 쓰지 않음(`VIEW_COUNT_REDIS=false` 기본값,
       조회수는 DB 즉시 증가). Wave 0 이후 캐싱을 얹은 재측정 때를 위해 미리 띄워만 둔 상태.
-- Flyway: 마이그레이션 34개, 스키마 버전 84, "up to date" (재측정 시에도 동일해야 함).
+- Flyway: 마이그레이션 34개, 스키마 버전 84, "up to date". **재현 조건은 "84까지의 마이그레이션이
+  전부 적용돼 있을 것"이다** — 세트 A·B(`V90__outbox_event.sql` 등)가 그 이후 번호를 추가하므로,
+  after 측정 시 버전 84보다 늘어나 있는 것이 정상이다(오히려 84 그대로면 A·B가 반영 안 된
+  것이므로 조건 불일치로 봐야 한다).
 
 ## 5. 재고 보충 (confirm.js 전용)
 
