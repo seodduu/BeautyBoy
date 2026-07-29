@@ -130,10 +130,13 @@ class OrderEventsFlowIT {
 
     @DynamicPropertySource
     static void 인프라를_실컨테이너로_연결한다(DynamicPropertyRegistry registry) {
-        // useAffectedRows=true는 프로덕션 URL(application.yml)과 같은 이유로 필요하다 — 이 파라미터가
-        // 없으면 outbox의 멱등성 게이트(processed_event/notification의 "영향 행 0 == 중복" 판정)가
-        // 실 MySQL에서 조용히 깨진다(이 클래스가 실측한 실제 결함, KafkaConsumerConfig 근처 커밋 참고).
-        registry.add("spring.datasource.url", () -> MYSQL.getJdbcUrl() + "?useAffectedRows=true");
+        // URL은 컨테이너가 준 것을 그대로 쓴다 — 여기에 `?useAffectedRows=true`를 덧붙이면
+        // 안 된다. 그렇게 하면 이 테스트가 프로덕션 설정 경로(application.yml의
+        // spring.datasource.hikari.data-source-properties)를 우회해, 그 설정이 통째로
+        // 사라져도 녹색이 나온다. 실제로 그 상태에서 local 프로필의 판매 집계 이중 계상이
+        // 통합 테스트를 뚫고 살아남았다. 설정이 실제로 켜져 있는지는
+        // 아래 케이스 0(멱등성_게이트가_설정_경로만으로_중복에_0을_돌려준다)이 직접 단언한다.
+        registry.add("spring.datasource.url", MYSQL::getJdbcUrl);
         registry.add("spring.datasource.username", MYSQL::getUsername);
         registry.add("spring.datasource.password", MYSQL::getPassword);
         registry.add("spring.datasource.driver-class-name", MYSQL::getDriverClassName);
@@ -194,6 +197,10 @@ class OrderEventsFlowIT {
     DlqReplayService dlqReplayService;
     @Autowired
     JdbcTemplate jdbcTemplate;
+    @Autowired
+    ProcessedEventRepository processedEventRepository;
+    @Autowired
+    org.springframework.transaction.PlatformTransactionManager transactionManager;
 
     /** notification 적재를 가로챌 스파이. 실패 대상 회원 id일 때만 예외를 던지고, 그 외는 원본에 위임한다. */
     @MockitoSpyBean
@@ -230,6 +237,41 @@ class OrderEventsFlowIT {
             return 원래_기본_응답.answer(invocation);
         }).when(notificationRepository)
                 .insertIfAbsent(anyLong(), anyLong(), anyString(), anyString(), any());
+    }
+
+    // ── 케이스 0 ──────────────────────────────────────────────────────────
+
+    /**
+     * 멱등성 게이트 전체가 딛고 서 있는 전제 — <b>드라이버가 {@code ON DUPLICATE KEY UPDATE}의
+     * 영향 행 수를 "실제로 바뀐 행 수"로 돌려주는가</b> — 를 이 테스트가 직접 붙든다.
+     *
+     * <p>이 단언이 필요한 이유는 사고 이력이 구체적이기 때문이다. 이 설정은 원래 JDBC URL의
+     * 쿼리스트링(`?useAffectedRows=true`)에 있었는데, {@code application-local.yml}이
+     * {@code spring.datasource.url}을 통째로 덮어써서 부하 측정 권장 기동인
+     * {@code --spring.profiles.active=local,loadtest}에서는 조용히 빠져 있었다.
+     * 그런데도 이 클래스는 녹색이었다 — {@code @DynamicPropertySource}가 URL에 직접
+     * 그 파라미터를 붙여 <b>프로덕션 설정 경로를 우회</b>했기 때문이다.
+     *
+     * <p>그래서 지금은 (1) URL을 컨테이너 값 그대로 쓰고, (2) 설정은
+     * {@code spring.datasource.hikari.data-source-properties}에만 두고, (3) 그것이 실제
+     * 커넥션에 반영됐는지를 여기서 확인한다. 설정이 사라지면 두 번째 INSERT가 0이 아니라
+     * 1(또는 2)을 돌려주며 이 테스트가 즉시 빨개진다.
+     */
+    @Test
+    @org.junit.jupiter.api.Order(0)
+    void 멱등성_게이트가_설정_경로만으로_중복에_0을_돌려준다() {
+        long eventId = System.nanoTime();
+        var tx = new org.springframework.transaction.support.TransactionTemplate(transactionManager);
+
+        int 첫_삽입 = tx.execute(status -> processedEventRepository.insertIfAbsent(
+                eventId, ProcessedEvent.CONSUMER_SALES_AGGREGATION, java.time.LocalDateTime.now()));
+        int 중복_삽입 = tx.execute(status -> processedEventRepository.insertIfAbsent(
+                eventId, ProcessedEvent.CONSUMER_SALES_AGGREGATION, java.time.LocalDateTime.now()));
+
+        assertThat(첫_삽입).isEqualTo(1);
+        // useAffectedRows=true가 빠지면 여기가 1이 되고, SalesAggregationConsumer의
+        // "0이면 스킵" 게이트가 통과해 같은 이벤트의 판매 수량이 한 번 더 더해진다.
+        assertThat(중복_삽입).isZero();
     }
 
     // ── 케이스 1 ──────────────────────────────────────────────────────────

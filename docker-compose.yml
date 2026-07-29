@@ -64,10 +64,10 @@ services:
     build: ./backend
     environment:
       # 컨테이너 안에서는 local 프로필(localhost:3306을 가리킴)을 쓰지 않고 환경변수로만 설정한다.
-      # useAffectedRows=true: 이게 없으면 MySQL JDBC가 ON DUPLICATE KEY UPDATE의 영향 행 수를
-      # "매치된 행 수"로 돌려줘 outbox 멱등성 게이트(영향 행 0 == 중복)가 조용히 깨진다
-      # (A7 통합 테스트가 실측 — application.yml 쪽 주석 참고).
-      DB_URL: jdbc:mysql://mysql:3306/beautyboy?useAffectedRows=true
+      # useAffectedRows는 여기(URL)가 아니라 application.yml의
+      # spring.datasource.hikari.data-source-properties에 있다 — URL을 덮어쓰는 경로가
+      # 여럿이라 URL에 매달아 두면 조용히 사라진다(그 사고가 실제로 있었다. 이유는 그 주석 참고).
+      DB_URL: jdbc:mysql://mysql:3306/beautyboy
       DB_USERNAME: root
       DB_PASSWORD: local1234
       # Base64 인코딩된 값이어야 한다: openssl rand -base64 48

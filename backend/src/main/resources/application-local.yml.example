@@ -10,6 +10,12 @@
 # TokenProvider가 Base64.decode(secret)로 HMAC 키를 만들기 때문에 반드시 Base64로 인코딩된
 # 값이어야 한다. 예: export JWT_SECRET="$(openssl rand -base64 48)"
 # 평문 문자열을 그대로 넣으면 DecodingException으로 컨텍스트 로딩이 실패한다.
+#
+# 아래 url은 application.yml의 spring.datasource.url을 통째로 덮어쓴다. 그래도 안전한 이유:
+# outbox 멱등성에 필수인 useAffectedRows는 URL 쿼리스트링이 아니라 application.yml의
+# spring.datasource.hikari.data-source-properties에 있어 프로필과 무관하게 살아남는다.
+# (예전에는 URL에 매달려 있어서, 이 파일이 URL을 덮어쓴 `local,loadtest` 기동에서만
+#  판매 집계가 조용히 이중 계상됐다. url에 파라미터를 다시 적을 필요는 없다.)
 spring:
   datasource:
     url: jdbc:mysql://localhost:13306/beautyboy

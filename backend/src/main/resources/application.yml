@@ -2,13 +2,22 @@ spring:
   application:
     name: beautyboy
   datasource:
-    # useAffectedRows=true가 없으면 MySQL JDBC 드라이버가 `INSERT ... ON DUPLICATE KEY UPDATE`의
-    # 반환값을 "실제로 바뀐 행 수"가 아니라 "매치된 행 수"로 돌려준다(중복이어도 보통 2) —
-    # outbox의 processed_event/notification 멱등성 게이트(영향 행 0 == 중복)가 실 MySQL에서
-    # 조용히 깨진다(A7 Testcontainers MySQL 통합 테스트가 실측: 재발행 시 판매집계가 배로 늚).
-    url: ${DB_URL:jdbc:mysql://localhost:3306/beautyboy?useAffectedRows=true}
+    url: ${DB_URL:jdbc:mysql://localhost:3306/beautyboy}
     username: ${DB_USERNAME:beautyboy}
     password: ${DB_PASSWORD:}
+    hikari:
+      data-source-properties:
+        # useAffectedRows=true가 없으면 MySQL JDBC 드라이버가 `INSERT ... ON DUPLICATE KEY UPDATE`의
+        # 반환값을 "실제로 바뀐 행 수"가 아니라 "매치된 행 수"로 돌려준다(중복이어도 보통 2) —
+        # outbox의 processed_event/notification 멱등성 게이트(영향 행 0 == 중복)가 실 MySQL에서
+        # 조용히 깨진다(A7 Testcontainers MySQL 통합 테스트가 실측: 재발행 시 판매집계가 배로 늚).
+        #
+        # URL 쿼리스트링(`?useAffectedRows=true`)이 아니라 여기에 두는 이유: URL은 프로필마다
+        # 통째로 덮어쓰인다. 실제로 application-local.yml이 파라미터 없는 URL로 덮어써서
+        # `local,loadtest`(부하 측정 권장 기동)에서는 이 설정이 조용히 사라져 있었다 —
+        # 판매 집계만 이중 계상되고 로그도 남지 않는 결함이다. Hikari의 data-source-properties는
+        # DriverDataSource가 드라이버 커넥션 프로퍼티로 그대로 넘기므로 URL을 누가 덮어쓰든 살아남는다.
+        useAffectedRows: true
   jpa:
     hibernate:
       ddl-auto: validate
@@ -45,6 +54,12 @@ beautyboy:
     enabled: ${ORDER_EVENTS:false}   # 조회수 버퍼와 같은 철학 — Kafka 없이도 앱이 뜬다
     relay-batch-size: 100
     relay-delay-ms: 1000
+    # 발행 재시도 임계치. 이 횟수에 도달한 아웃박스 행은 status='FAILED'로 격리돼 폴링에서 빠진다(V93).
+    # 없으면 영구 실패 한 건이 created_at 최선두에 남아 뒤의 모든 주문 이벤트를 영영 막는다.
+    # 10인 이유: relay-delay-ms 1초 기준 약 10초. 브로커 재기동 같은 일시적 장애는 대개 이 안에
+    # 회복되지 않으므로, 회복되면 그때 PENDING으로 되돌려 재발행한다. 일시적 실패를 성급히
+    # 포기하는 쪽보다 영구 실패가 전체를 막는 쪽이 훨씬 나쁘다고 보고 정한 값이다.
+    relay-max-attempts: 10
   cache:
     # 기본은 캐시 없음(DB 직행). Redis 컨테이너가 떠 있을 때만 true로 켠다.
     redis: ${CACHE_REDIS:false}
