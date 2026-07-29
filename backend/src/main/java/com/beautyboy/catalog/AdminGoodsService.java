@@ -7,10 +7,8 @@ import com.beautyboy.catalog.dto.GoodsListItem;
 import com.beautyboy.common.BusinessException;
 import com.beautyboy.common.ErrorCode;
 import com.beautyboy.common.PageResponse;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.Cache;
-import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,14 +27,6 @@ public class AdminGoodsService {
     private final CategoryRepository categoryRepository;
     private final BrandRepository brandRepository;
     private final GoodsService goodsService;
-    // B4 — compat 캐시 evict용. beautyboy.cache.redis=false인 프로필엔 CacheManager 빈이
-    // 아예 없고, B3 슬라이스 테스트류는 goodsList만 등록한 자체 CacheManager를 쓰므로 nullable로
-    // 둔다 — @CacheEvict(cacheNames="compat") 선언형은 캐시가 없으면 예외로 죽어(SimpleCacheResolver),
-    // 다른 태스크의 슬라이스 테스트를 건드리지 않고는 못 쓴다. update()에서 직접 null-safe로 비운다.
-    // 생성자가 아니라 세터로 주입하는 이유: 기존 5-args 생성자를 직접 호출하는 다른 태스크의
-    // 테스트(GoodsListCacheTest, Files 목록 밖이라 수정 불가)가 있어 생성자 시그니처를 바꿀 수
-    // 없다 — 세터 주입은 생성자 오버로딩 없이 선택적 의존성을 안전하게 채운다.
-    private CacheManager cacheManager;
 
     public AdminGoodsService(GoodsRepository goodsRepository,
                               GoodsQueryRepository goodsQueryRepository,
@@ -48,11 +38,6 @@ public class AdminGoodsService {
         this.categoryRepository = categoryRepository;
         this.brandRepository = brandRepository;
         this.goodsService = goodsService;
-    }
-
-    @Autowired(required = false)
-    public void setCacheManager(CacheManager cacheManager) {
-        this.cacheManager = cacheManager;
     }
 
     /**
@@ -128,23 +113,14 @@ public class AdminGoodsService {
     }
 
     /**
-     * B4 — {@code compat} 캐시도 함께 비운다. 주의 둘:
-     * <ol>
-     *   <li>현재 {@link AdminGoodsSaveRequest}에는 성분(ingredient) 필드가 없다 — 이 저장소에는
-     *   admin이 상품 성분 구성을 바꾸는 쓰기 경로가 아직 없다(성분/규칙 테이블에 write 서비스가
-     *   없음). 계획서(B4)가 "성분 변경은 admin에서만 일어난다"고 가정했지만 실제로는 존재하지
-     *   않는 기능이라, 그 경로가 생기기 전까지는 이 evict가 실질적으로 트리거될 일이 없다 —
-     *   상품 일반 정보 수정 때마다 compat을 선제적으로 비우는 보수적 조치로 남겨둔다
-     *   (과소무효화보다 과대무효화가 안전하고, admin 변경 빈도가 낮아 비용도 작다).</li>
-     *   <li>선언형 {@code @CacheEvict(cacheNames="compat")}는 안 쓴다 — 기본 SimpleCacheResolver는
-     *   "compat" 캐시가 CacheManager에 없으면 예외를 던지는데, B3의 {@code GoodsListCacheTest}처럼
-     *   {@code goodsList}만 등록한 별도 슬라이스 CacheManager로 이 메서드를 호출하는 다른 태스크의
-     *   테스트가 있다(Files 목록 밖이라 수정 불가). 그래서 {@link #cacheManager}를 null-safe하게
-     *   직접 비우는 방식으로 대신한다 — 캐시가 없으면(=아직 compat을 쓰지 않는 컨텍스트) 조용히
-     *   넘어간다.</li>
-     * </ol>
+     * B4 — {@code compat} 캐시도 함께 비운다. 현재 {@link AdminGoodsSaveRequest}에는 성분
+     * (ingredient) 필드가 없어 이 저장소엔 실제 "성분 변경" 쓰기 경로가 아직 없다 — 그 경로가
+     * 생기기 전까지는 상품 일반 정보 수정 때마다 compat을 선제적으로 비우는 과대무효화로 둔다.
      */
-    @CacheEvict(cacheNames = "goodsList", allEntries = true)
+    @Caching(evict = {
+            @CacheEvict(cacheNames = "goodsList", allEntries = true),
+            @CacheEvict(cacheNames = "compat", allEntries = true)
+    })
     @Transactional
     public void update(Long goodsNo, AdminGoodsSaveRequest request) {
         validateCategory(request.categoryCode());
@@ -155,13 +131,6 @@ public class AdminGoodsService {
 
         goods.updateInfo(request.categoryCode(), request.name(), request.summary(), request.thumbnailUrl(),
                 request.listPrice(), request.salePrice(), request.status());
-
-        if (cacheManager != null) {
-            Cache compat = cacheManager.getCache("compat");
-            if (compat != null) {
-                compat.clear();
-            }
-        }
     }
 
     // 물리 삭제하지 않는 이유:

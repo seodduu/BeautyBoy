@@ -59,6 +59,8 @@ class CompatCacheTest {
     @Autowired
     CompatQueryService compatQueryService;
     @Autowired
+    CompatVerdictsController compatVerdictsController;
+    @Autowired
     AdminGoodsService adminGoodsService;
     @Autowired
     GoodsIngredientQueryService goodsIngredientQueryService;
@@ -88,6 +90,14 @@ class CompatCacheTest {
 
         assertThat(first).isEqualTo("CONFLICT");
         assertThat(second).isEqualTo("CONFLICT");
+        verify(goodsIngredientQueryService, times(1)).findCategoriesByGoodsIds(any());
+    }
+
+    @Test
+    void verdicts_엔드포인트가_쌍_캐시를_쓴다() {
+        compatVerdictsController.verdicts(1L, List.of(2L));
+        compatVerdictsController.verdicts(1L, List.of(2L));
+
         verify(goodsIngredientQueryService, times(1)).findCategoriesByGoodsIds(any());
     }
 
@@ -132,6 +142,11 @@ class CompatCacheTest {
         CompatService compatService(GoodsIngredientQueryService goodsIngredientQueryService,
                                      IngredientRuleQueryService ingredientRuleQueryService) {
             return new CompatService(goodsIngredientQueryService, ingredientRuleQueryService);
+        }
+
+        @Bean
+        CompatVerdictsController compatVerdictsController(CompatQueryService compatQueryService) {
+            return new CompatVerdictsController(compatQueryService);
         }
 
         @Bean
@@ -186,11 +201,9 @@ class CompatCacheTest {
         @Bean
         AdminGoodsService adminGoodsService(GoodsRepository goodsRepository, GoodsQueryRepository goodsQueryRepository,
                                              CategoryRepository categoryRepository, BrandRepository brandRepository,
-                                             GoodsService goodsService, CacheManager cacheManager) {
-            AdminGoodsService service = new AdminGoodsService(goodsRepository, goodsQueryRepository,
+                                             GoodsService goodsService) {
+            return new AdminGoodsService(goodsRepository, goodsQueryRepository,
                     categoryRepository, brandRepository, goodsService);
-            service.setCacheManager(cacheManager);
-            return service;
         }
     }
 }

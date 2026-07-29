@@ -104,7 +104,7 @@ class GoodsListCacheTest {
 
         @Bean
         CacheManager cacheManager() {
-            return new ConcurrentMapCacheManager("goodsList");
+            return new ConcurrentMapCacheManager("goodsList", "compat");
         }
 
         @Bean

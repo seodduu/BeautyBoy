@@ -1,5 +1,6 @@
 package com.beautyboy.compat;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -13,7 +14,10 @@ import org.springframework.web.bind.annotation.RestController;
  * 궁합 게이트(설계 §3.3) — 기준상품 1개 대 후보 N개의 최악 판정을 한 번에 돌려준다.
  *
  * <p>메인 조합기가 단계 경계마다 1회 호출해 CONFLICT 후보를 풀에서 빼는 용도다. 판정 로직은
- * 전부 {@link CompatQueryService#worstVerdicts}에 있고 여기서는 상한만 걸어 위임한다 —
+ * {@link CompatQueryService#worstVerdict}에 있다 — 설계 §6이 궁합 캐시 키를
+ * {@code v1:compat:{idA}:{idB}}(쌍 단위)로 못박아, 배치 진입점(worstVerdicts) 대신 후보를
+ * 순회하며 쌍 단위 캐시 가능 메서드를 부른다. 트레이드오프: 콜드 캐시에서는 배치 1쿼리가
+ * 후보 N건 조회로 갈라지지만, 히트 시에는 DB를 전혀 안 때린다.
  * 존재하지 않는 base의 동작(200 + 전량 "OK")도 그 구현을 그대로 따른다(CompatVerdictsApiIT).
  */
 @RestController
@@ -34,6 +38,10 @@ public class CompatVerdictsController {
             @RequestParam List<Long> candidates) {
         List<Long> clamped = candidates.size() > MAX_CANDIDATES
                 ? candidates.subList(0, MAX_CANDIDATES) : candidates;
-        return ResponseEntity.ok(ApiResponse.ok(compatQueryService.worstVerdicts(base, clamped)));
+        Map<Long, String> verdicts = new LinkedHashMap<>();
+        for (Long candidate : clamped) {
+            verdicts.put(candidate, compatQueryService.worstVerdict(base, candidate));
+        }
+        return ResponseEntity.ok(ApiResponse.ok(verdicts));
     }
 }
