@@ -1,8 +1,0 @@
-# Cache hit/miss — browse.js @ 지점 ③ (HEAD 55b776c) 측정 직후
-수집 시각: 2026-07-29T19:29:54+0900
-
-## cache.gets, tag=result:hit
-{"name":"cache.gets","description":"The number of times cache lookup methods have returned a cached (hit) or uncached (newly loaded or null) value (miss).","measurements":[{"statistic":"COUNT","value":1931836.0}],"availableTags":[{"tag":"cache.manager","values":["cacheManager"]},{"tag":"cache","values":["goodsList","compat","ranking"]},{"tag":"name","values":["goodsList","compat","ranking"]}]}
-
-## cache.gets, tag=result:miss
-{"name":"cache.gets","description":"The number of times cache lookup methods have returned a cached (hit) or uncached (newly loaded or null) value (miss).","measurements":[{"statistic":"COUNT","value":3.0}],"availableTags":[{"tag":"cache.manager","values":["cacheManager"]},{"tag":"cache","values":["goodsList","compat","ranking"]},{"tag":"name","values":["goodsList","compat","ranking"]}]}
