@@ -23,6 +23,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-validation")
+    implementation("org.springframework.kafka:spring-kafka")
     implementation("org.flywaydb:flyway-core")
     implementation("org.flywaydb:flyway-mysql")
     implementation("io.jsonwebtoken:jjwt-api:0.12.6")
@@ -32,11 +33,13 @@ dependencies {
     testRuntimeOnly("com.h2database:h2")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.security:spring-security-test")
+    testImplementation("org.springframework.kafka:spring-kafka-test")
     // 실 MySQL에 Flyway DDL을 실제로 걸어보는 스모크용. @Tag("integration")만 쓴다.
     // 버전은 아래 extra["testcontainers.version"]에서 올린다(이유도 거기 적혀 있다).
     testImplementation("org.springframework.boot:spring-boot-testcontainers")
     testImplementation("org.testcontainers:junit-jupiter")
     testImplementation("org.testcontainers:mysql")
+    testImplementation("org.testcontainers:kafka")
 }
 
 // 유닛/슬라이스는 H2라 터미널 병렬이 안전하다. Docker가 필요한 통합 테스트는

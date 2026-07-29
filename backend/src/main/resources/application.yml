@@ -18,6 +18,12 @@ spring:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP:localhost:9092}
+    consumer:
+      group-id: beautyboy-post-order
+      auto-offset-reset: earliest
+      enable-auto-commit: false      # 커밋은 리스너 컨테이너가 처리 성공 후에 한다
   flyway:
     enabled: true
   # default 프로필(명시 프로필 없이 뜨는 운영 경로)에서만 mysql-search를 켠다.
@@ -31,6 +37,10 @@ beautyboy:
   view-count:
     # 기본은 DB 즉시 증가. Redis 컨테이너가 떠 있을 때만 true로 켠다.
     redis: ${VIEW_COUNT_REDIS:false}
+  events:
+    enabled: ${ORDER_EVENTS:false}   # 조회수 버퍼와 같은 철학 — Kafka 없이도 앱이 뜬다
+    relay-batch-size: 100
+    relay-delay-ms: 1000
 
 jwt:
   secret: ${JWT_SECRET:}
