@@ -142,10 +142,10 @@ public class StubPaymentGateway implements PaymentGateway {
 
 (`PaymentApproval` 생성자 시그니처는 실제 record 정의에 맞춘다 — 필드가 다르면 스텁을 맞추고 record는 불변.)
 
-- [ ] 테스트 작성: `loadtest_프로필에서는_스텁이_지연과_함께_요청금액을_그대로_승인한다`
+- [x] 테스트 작성: `loadtest_프로필에서는_스텁이_지연과_함께_요청금액을_그대로_승인한다`
       (단언: 반환 `approvedAmount == 입력 amount`, 소요시간 ≥ 100ms),
       `loadtest_프로필이_아니면_스텁_빈이_없다`(컨텍스트에 `StubPaymentGateway` 부재)
-- [ ] 실패 확인 → 구현 → 통과 확인 → 커밋
+- [x] 실패 확인 → 구현 → 통과 확인 → 커밋
 
 ### Task 0.2: k6 스크립트 2종
 
@@ -229,16 +229,16 @@ export default function () {
 - 실제 엔드포인트 경로·응답 필드명은 컨트롤러 실물에 맞춰 수정하되, **부하 모형 숫자와 비율은
   위 값 고정**(바꾸면 before/after 비교가 깨진다). `tools/loadtest/README.md`에 실행 커맨드
   (bootRun + `--spring.profiles.active=local,loadtest` + 13306 MySQL + Redis)와 env 주입 값 기록.
-- [ ] 스모크: VU 1로 30초 돌려 에러율 0 확인 → 커밋
+- [x] 스모크: VU 1로 30초 돌려 에러율 0 확인 → 커밋
 
 ### Task 0.3: baseline 측정
 
-- [ ] curl 스모크 레시피(메모리)대로 스택 기동(loadtest 프로필 추가), 시드에서 재고 1만 이상인
+- [x] curl 스모크 레시피(메모리)대로 스택 기동(loadtest 프로필 추가), 시드에서 재고 1만 이상인
       상품으로 env 구성 (없으면 admin API로 재고 올린다)
-- [ ] `confirm.js`·`browse.js` 각 1회 본 측정, k6 summary(JSON)를
+- [x] `confirm.js`·`browse.js` 각 1회 본 측정, k6 summary(JSON)를
       `docs/loadtest/2026-07-29-baseline/` 에 저장. 측정 조건(하드웨어·프로필·시드 상태)을 같은
       폴더 `conditions.md`에 기록 — after 측정은 이 조건을 그대로 재현해야 한다
-- [ ] 커밋
+- [x] 커밋
 
 **측정 결과 (완료 — 커밋 `2646df7`)**: confirm p95 15.3s / p99 17.5s / 18.0 RPS, browse p95 74.3ms /
 p99 79.3ms / 2484 RPS, 양쪽 에러율 0%. 조건은 `docs/loadtest/2026-07-29-baseline/conditions.md`.
@@ -267,35 +267,25 @@ p99 79.3ms / 2484 RPS, 양쪽 에러율 0%. 조건은 `docs/loadtest/2026-07-29-
 thresholds `http_req_failed: ['rate<0.01']`, 요청 순서(주문 생성 → 확정). 바뀌는 것은
 **어떤 상품을 사는가** 하나뿐이다.
 
-**분산 방식 (판단 — 전량):**
+**분산 방식 (완료 — 실제 구현은 아래와 같이 확정됐다):**
 
-```javascript
-// 환경변수 LOAD_MODEL=spread | single (기본 single — 기존 baseline을 그대로 재현할 수 있어야 한다)
-// spread일 때 OPTION_IDS(쉼표 구분 목록)에서 VU×반복마다 하나를 고른다.
-// __VU와 __ITER를 함께 쓰는 이유: __VU만 쓰면 같은 VU가 매 반복 같은 옵션을 사서
-// VU 수보다 적은 옵션에 다시 몰린다.
-const MODEL = __ENV.LOAD_MODEL || 'single';
-const OPTION_IDS = (__ENV.OPTION_IDS || '').split(',').filter(Boolean).map(Number);
-
-function pickOptionId() {
-  if (MODEL !== 'spread') return Number(__ENV.OPTION_ID);
-  return OPTION_IDS[(__VU + __ITER) % OPTION_IDS.length];
-}
-```
-
-- `OPTION_IDS`는 재고를 보충한 옵션 중 **최소 200개**를 넘긴다(피크 VU 수 이상이어야 같은 행에
-  두 트랜잭션이 겹치지 않는다). 목록은 README에 SQL로 뽑는 법을 적는다.
-- `goodsNo`도 옵션에 맞는 값이어야 하므로, 옵션 id와 상품 id를 쌍으로 넘기거나 옵션 id로
-  상품을 조회해 구성한다 — 실제 스키마에 맞는 방식을 구현자가 정하고 README에 근거를 남긴다.
+환경변수 `LOAD_MODEL=spread | single`(기본 `single` — 기존 baseline을 그대로 재현). 주문 생성
+API가 `items`에 `{goodsNo, optionNo}`를 쌍으로 요구하므로(`OrderCreateRequest`), 옵션 id만
+바꾸는 것으로는 부족해 goods/option **쌍**의 목록이 필요했다. 쉼표구분 환경변수(`OPTION_IDS`
+등)는 200쌍 이상을 넘기면 셸 인용·길이 제한에 걸려 비실용적이라 폐기하고, 대신 `PAIRS_FILE`
+(기본 `./pairs.json`)에 `[{goodsNo, optionNo}, ...]` JSON 배열을 담아 k6의 `open()`으로 읽는
+방식을 채택했다. 회전 선택은 `(__VU + __ITER) % PAIRS.length`로, 계획대로 `__VU`만으로는 같은
+VU가 매 반복 같은 쌍을 골라 몰리는 문제를 피한다. 쌍 목록을 만드는 SQL과 재고 보충 절차는
+`tools/loadtest/README.md` §3-1 참고.
 
 **스텝:**
-- [ ] `LOAD_MODEL=single`로 돌려 기존 수치가 재현되는지 확인 (하위 호환 회귀)
-- [ ] 옵션 200개 이상에 재고 보충, `LOAD_MODEL=spread`로 본 측정
+- [x] `LOAD_MODEL=single`로 돌려 기존 수치가 재현되는지 확인 (하위 호환 회귀)
+- [x] 옵션 200개 이상에 재고 보충, `LOAD_MODEL=spread`로 본 측정
       (`--summary-trend-stats="avg,min,med,max,p(90),p(95),p(99)"` 포함)
-- [ ] summary JSON을 커밋 전 `setup_data` 스크럽 후 `docs/loadtest/2026-07-29-baseline-spread/`에 저장
-- [ ] 같은 폴더 `conditions.md`: 집중 모형 조건 문서를 참조하되 **다른 점만** 적고(옵션 목록,
+- [x] summary JSON을 커밋 전 `setup_data` 스크럽 후 `docs/loadtest/2026-07-29-baseline-spread/`에 저장
+- [x] 같은 폴더 `conditions.md`: 집중 모형 조건 문서를 참조하되 **다른 점만** 적고(옵션 목록,
       LOAD_MODEL, 재고 보충 범위), 두 모형의 수치를 나란히 놓은 비교표와 그 해석을 담는다
-- [ ] 커밋 — **이 커밋이 터미널 A·B의 기점이다**
+- [x] 커밋 — **이 커밋이 터미널 A·B의 기점이다**
 
 ---
 
