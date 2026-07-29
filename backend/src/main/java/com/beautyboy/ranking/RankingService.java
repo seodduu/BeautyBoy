@@ -4,6 +4,7 @@ import com.beautyboy.catalog.GoodsRatingProvider;
 import com.beautyboy.catalog.WishedGoodsProvider;
 import com.beautyboy.ranking.dto.RankingItem;
 import jakarta.persistence.EntityManager;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,6 +41,18 @@ public class RankingService {
         this.wishedGoodsProvider = wishedGoodsProvider;
     }
 
+    /**
+     * B2 — 캐시 키는 카테고리와 viewerId를 함께 반영한다({@code categoryCode + ':' + viewerId}).
+     * 설계 §6은 키를 카테고리만으로 잡았지만(기간 파라미터는 이 메서드엔 없다), 실제 시그니처는
+     * viewerId로 찜 여부({@link RankingItem#wished()})가 갈리는 개인화 응답을 반환한다. 카테고리만
+     * 키로 쓰면 먼저 조회한 사용자의 찜 상태가 다른 사용자에게도 그대로 캐시돼 나가는 오답이 된다
+     * (서로 다른 조회가 같은 키로 뭉개짐). {@link RankingCacheRefresher}의 워밍은 viewerId=null
+     * (비로그인) 슬롯만 미리 채운다 — 로그인 사용자의 캐시는 첫 조회 때 자연히 채워진다.
+     */
+    @Cacheable(cacheNames = "ranking",
+            key = "(#categoryCode == null || #categoryCode.isBlank() "
+                    + "? T(com.beautyboy.ranking.RankingSnapshot).CATEGORY_ALL : #categoryCode) "
+                    + "+ ':' + #viewerId")
     @Transactional(readOnly = true)
     public List<RankingItem> rankings(String categoryCode, Long viewerId) {
         String category = (categoryCode == null || categoryCode.isBlank())
