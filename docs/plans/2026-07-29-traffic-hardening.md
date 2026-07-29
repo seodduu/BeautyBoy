@@ -43,7 +43,7 @@ Testcontainers(Kafka+MySQL), k6.
 ## 모델 배분
 
 CLAUDE.md 표 기준: 오케스트레이터 opus, 태스크 서브에이전트 기본 **sonnet**.
-이번 계획의 opus 예외(근거: 정합성·동시성 판단): **A3(아웃박스 INSERT 위치), A4(릴레이),
+이번 계획의 opus 예외(근거: 정합성·동시성 판단): **A3(아웃박스 INSERT 위치), A4(릴레이), A4b(동기 후처리),
 A5(컨슈머 멱등성 + 이중 계상 방지 전환)**.
 
 ---
@@ -77,9 +77,9 @@ Wave 2 (메인 세션, A·B 머지 후) : after 측정 + 리포트 + ADR + READM
   - docs/plans/2026-07-29-traffic-hardening.md 와 같은 폴더의 -design.md 가 존재하는지
   - git status가 깨끗한지
 [2단계 — 실행]
-docs/plans/2026-07-29-traffic-hardening.md 의 태스크 A1~A7을 순서대로 실행해라.
+docs/plans/2026-07-29-traffic-hardening.md 의 태스크 A1~A7(A4b 포함)을 순서대로 실행해라.
 너는 오케스트레이터다: 태스크마다 서브에이전트를 스폰해 실행하고(모델: A1·A2·A6·A7은 sonnet,
-A3·A4·A5는 opus), 태스크 사이마다 테스트 통과와 Files 목록 준수를 리뷰해라.
+A3·A4·A4b·A5는 opus), 태스크 사이마다 테스트 통과와 Files 목록 준수를 리뷰해라.
 Global Constraints 절이 모든 태스크에 적용된다. 완료 기준: ./gradlew test 와
 ./gradlew integrationTest 녹색. 끝나면 브랜치에 커밋만 하고 머지는 하지 마라 — 머지는 메인 세션의 몫이다.
 ```
@@ -443,7 +443,60 @@ public void relay() {
       `발행_실패시_마킹하지_않고_배치를_중단한다`, `PUBLISHED는_다시_발행하지_않는다`
 - [ ] 실패 확인 → 구현 → 통과 → 커밋
 
-### Task A5: 컨슈머 3종 + 폴링 집계 전환 [opus]
+### Task A4b: 후처리 3종을 **동기로** 먼저 구현 (비교 기준선) [opus]
+
+**왜 이 태스크가 있나 (Wave 0 최종 리뷰의 발견):** 현재 `PaymentService.confirm`에는 **비동기로
+옮길 후처리가 하나도 없다.** 장바구니 비우기는 주문 *생성* 경로에 있고(`OrderService:97`),
+판매량 집계는 랭킹 배치가 따로 풀 방식으로 돌며, 알림 도메인은 존재하지 않는다. 이 상태에서
+곧장 Kafka를 넣으면 after 측정은 개선이 아니라 **아웃박스 INSERT만큼의 소폭 악화**로 나온다.
+
+그래서 순서를 바꾼다: **후처리를 먼저 동기로 만들어 그 비용을 측정하고**, 그 다음 Kafka로 옮겨
+비용이 사라지는 것을 측정한다. 이러면 "왜 비동기여야 하는가"가 수치로 증명된다 —
+없는 개선을 주장하는 대신 실제 트레이드오프를 보여주는 쪽이 정직하고 설득력도 높다.
+
+**이 태스크의 커밋 SHA를 계획서 이 자리에 적어 둔다** — Wave 2(C2)가 그 지점을 체크아웃해
+"동기 버전" 수치를 잰다. 측정 지점: `동기 커밋 SHA: (A4b 완료 시 기입)`
+
+**Files:**
+- Create: `backend/src/main/java/com/beautyboy/notification/Notification.java`,
+  `NotificationRepository.java`,
+  `backend/src/main/java/com/beautyboy/order/PostOrderTasks.java`(후처리 3종을 한데 모은 진입점)
+- Modify: `backend/src/main/java/com/beautyboy/payment/PaymentService.java`(확정 직후 `PostOrderTasks` 호출),
+  `backend/src/main/java/com/beautyboy/order/OrderService.java`(97행 `cartService.clear` 제거),
+  `backend/src/main/java/com/beautyboy/cart/CartService.java`(상품 단위 삭제 메서드 추가),
+  `backend/src/main/java/com/beautyboy/ranking/GoodsDailyStatRepository.java`(증분 upsert 추가),
+  `backend/src/main/java/com/beautyboy/ranking/RankingBatchService.java`(판매 수집 제거)
+- Delete: `backend/src/main/java/com/beautyboy/order/OrderSalesStatProvider.java`
+- Test: `backend/src/test/java/com/beautyboy/order/PostOrderTasksTest.java`
+- (마이그레이션 `V9x__notification.sql`은 A2에서 이미 만들어져 있다)
+
+**설계 — `PostOrderTasks`가 존재하는 이유:** 후처리 3종을 한 인터페이스 뒤에 모아 두면 A5는
+**호출부를 그대로 두고 구현만 이벤트 발행으로 교체**하면 된다. 동기/비동기 두 버전의 diff가
+"어디서 실행되는가"로만 갈려 비교가 깨끗해지고, 측정 지점 두 개가 같은 기능을 가리킨다는 것이
+코드로 보장된다.
+
+```java
+// 후처리 3종. 지금은 confirm 트랜잭션 안에서 직접 실행된다(A4b) —
+// A5에서 같은 호출부를 유지한 채 구현이 아웃박스 발행으로 바뀐다.
+public interface PostOrderTasks {
+    void onOrderConfirmed(OrderConfirmedEvent event);
+}
+```
+
+- 동기 구현은 `event.lines()`로 장바구니에서 해당 상품 삭제 → `GoodsDailyStat` 판매 증분 →
+  `notification` INSERT를 순서대로 한다. **`PaymentService.confirm`의 트랜잭션 안에서** 호출하므로
+  실패하면 결제까지 롤백된다 — 이것이 동기 방식의 대가이며, A5가 없애려는 바로 그 성질이다.
+  이 사실을 코드 주석에 남긴다.
+- [ ] 테스트: `확정되면_주문_상품만_장바구니에서_지워진다`, `확정되면_판매집계가_수량만큼_는다`,
+      `확정되면_알림이_한건_생긴다`, `후처리가_실패하면_결제도_롤백된다`(동기 방식의 대가를 못 박는 테스트),
+      `주문_생성_시점에는_장바구니가_비워지지_않는다`(OrderService 회귀)
+- [ ] 실패 확인 → 구현 → 통과 → 커밋 → **커밋 SHA를 이 문서에 기입**
+
+### Task A5: 동기 후처리를 Kafka 이벤트로 이관 [opus]
+
+**A4b와의 관계:** `PaymentService`의 호출부(`postOrderTasks.onOrderConfirmed(...)`)는 그대로 두고
+구현을 **아웃박스 발행**으로 교체한다. 실제 작업은 컨슈머 3종이 맡는다. A4b의 동기 구현 로직은
+컨슈머로 옮겨 재사용한다 — 다시 쓰지 않는다.
 
 **Files:**
 - Create: `backend/src/main/java/com/beautyboy/cart/CartClearOnOrderConfirmed.java`,
@@ -451,14 +504,10 @@ public void relay() {
   `backend/src/main/java/com/beautyboy/notification/Notification.java`,
   `NotificationRepository.java`, `NotificationConsumer.java`,
   `backend/src/main/java/com/beautyboy/outbox/KafkaConsumerConfig.java`(에러 핸들러)
-- Modify: `backend/src/main/java/com/beautyboy/order/OrderService.java`(97행 `cartService.clear` 제거),
-  `backend/src/main/java/com/beautyboy/ranking/RankingBatchService.java`(판매 수집 제거 — 찜·조회 유지),
-  `backend/src/main/java/com/beautyboy/ranking/GoodsDailyStatRepository.java`(증분 upsert 추가),
-  `backend/src/main/java/com/beautyboy/cart/CartService.java`(상품 단위 삭제 메서드 추가)
-- Delete: `backend/src/main/java/com/beautyboy/order/OrderSalesStatProvider.java`
-  (삭제하면 `RankingStatFallbackAutoConfiguration`의 빈 맵 폴백이 자동 복귀 — 배치의 판매 수집이
-  0을 받아도 이제 증분 경로가 채우므로 무해. 단 배치의 판매 upsert 자체를 제거해 증분 값을 0으로
-  덮지 않게 한다 — **이것이 이중 계상/소실 방지의 핵심이며 같은 커밋으로 묶는다**)
+- Modify: `backend/src/main/java/com/beautyboy/order/PostOrderTasks.java`의 구현을 아웃박스 발행으로
+  교체(A4b가 만든 동기 구현체를 대체 — 로직은 컨슈머로 이동)
+  (장바구니·집계·알림의 실제 동작과 `OrderSalesStatProvider` 제거는 **A4b에서 이미 끝났다**.
+  A5는 그 로직이 **어디서 실행되는가**만 바꾼다)
 - Test: `backend/src/test/java/com/beautyboy/outbox/PostOrderConsumersTest.java`
 
 **판단 코드 — 집계 멱등성 (전량):**
@@ -721,11 +770,22 @@ C의 부하 리포트가 이 수치를 읽는다.
       결과를 `docs/loadtest/2026-07-29-after/`에 저장. 실행 시
       `--summary-trend-stats="avg,min,med,max,p(90),p(95),p(99)"`를 **반드시** 붙인다(빼면 p99가
       안 나와 재측정해야 한다). summary JSON은 커밋 전 `setup_data` 스크럽.
-      **집중 모형은 개선이 거의 없을 것으로 예측돼 있다**(Task 0.4 참고) — 그 예측이 맞는지가
-      리포트의 논점 하나이므로, 수치가 그대로여도 실패가 아니라 검증된 예측으로 적는다. 추가 수집: 컨슈머 랙 추이
-      (`kafka-consumer-groups.sh --describe`를 측정 중 5초 간격 폴링한 로그), 캐시 히트율
-      (`/actuator/metrics/cache.gets`)
-- [ ] `docs/loadtest/2026-07-29-report.md` 작성: before/after 표(p50/p95/p99·RPS·에러율),
+      추가 수집: 컨슈머 랙 추이(`kafka-consumer-groups.sh --describe`를 측정 중 5초 간격 폴링한 로그),
+      캐시 히트율(`/actuator/metrics/cache.gets`)
+- [ ] **confirm은 측정 지점이 세 개다** — 이것이 이 프로젝트의 핵심 비교다:
+
+      | 지점 | 무엇을 체크아웃해 재나 | 무엇을 보여주나 |
+      |---|---|---|
+      | ① baseline | Wave 0 완료 커밋 | 후처리가 없던 원래 상태 |
+      | ② 동기 후처리 | Task A4b 커밋(계획서 A4b 절에 SHA 기입돼 있다) | 후처리를 순진하게 넣었을 때의 대가 |
+      | ③ Kafka 비동기 | A·B 머지 후 HEAD | 같은 기능을 비동기로 옮겼을 때의 회복 |
+
+      각 지점을 **분산 모형으로** 잰다(집중 모형은 락 직렬화가 지배해 후처리 비용이 묻힌다).
+      기대 서사: ①→② 지연 증가, ②→③ 회복. **②→③이 ①보다 여전히 느리다면**(아웃박스 INSERT 비용)
+      그것도 사실대로 적는다 — 비동기화가 공짜가 아니라는 것 역시 결과다.
+- [ ] 집중 모형은 ①과 ③만 재고, **개선이 거의 없을 것으로 예측돼 있다**(Task 0.4 참고). 수치가
+      그대로여도 실패가 아니라 검증된 예측으로 적는다 — 원인(재고 차감 락)이 이번 스코프 밖임을 함께 적는다.
+- [ ] `docs/loadtest/2026-07-29-report.md` 작성: 세 지점 비교표(p50/p95/p99·RPS·에러율),
       랙이 쌓였다 풀리는 추이, 히트율, 측정 조건과 한계(토스 스텁 명시)
 
 ### Task C3: ADR 3편 + README
