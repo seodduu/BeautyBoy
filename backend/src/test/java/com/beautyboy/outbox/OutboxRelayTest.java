@@ -45,6 +45,9 @@ class OutboxRelayTest {
 
     private static final String TOPIC = "order-events";
 
+    /** 발행 재시도 임계치. 테스트에서는 3으로 낮춰 "임계치 직전"과 "임계치 도달" 두 경계를 짧게 재현한다. */
+    private static final int 최대_시도 = 3;
+
     @Autowired
     OutboxEventRepository repository;
 
@@ -62,7 +65,7 @@ class OutboxRelayTest {
     void setUp() {
         repository.deleteAll();
         kafkaTemplate = mock(KafkaTemplate.class);
-        relay = new OutboxRelay(repository, kafkaTemplate, transactionManager, 100);
+        relay = new OutboxRelay(repository, kafkaTemplate, transactionManager, 100, 최대_시도);
     }
 
     @Test
@@ -113,6 +116,58 @@ class OutboxRelayTest {
                     assertThat(event.getStatus()).isEqualTo(OutboxEvent.STATUS_PENDING);
                     assertThat(event.getPublishedAt()).isNull();
                 });
+    }
+
+    /**
+     * 독약 메시지가 뒤를 영원히 막지 않는다. 앞 건이 계속 실패해도 임계치에 도달하면 FAILED로
+     * 격리되고, <b>그 다음 주기부터 뒤 건이 흐른다.</b> 이것이 없으면 결제는 성공하는데
+     * 장바구니·집계·알림이 전부 멈춘 채 warn 로그만 흐르는 상태가 영구히 지속된다.
+     */
+    @Test
+    void 발행이_임계치까지_실패하면_FAILED로_격리하고_뒤_건이_흐른다() {
+        LocalDateTime base = LocalDateTime.of(2026, 7, 29, 12, 0);
+        OutboxEvent 독약 = 아웃박스(10L, base.plusSeconds(1));
+        아웃박스(20L, base.plusSeconds(2));
+        // 영구 실패(직렬화 불가·RecordTooLargeException 류)를 흉내 낸다 — 몇 번을 보내도 같은 결과다.
+        when(kafkaTemplate.send(eq(TOPIC), eq("10"), any()))
+                .thenReturn(CompletableFuture.failedFuture(new IllegalStateException("직렬화 불가")));
+        when(kafkaTemplate.send(eq(TOPIC), eq("20"), any()))
+                .thenReturn(CompletableFuture.completedFuture(null));
+
+        for (int i = 0; i < 최대_시도; i++) {
+            relay.relay();
+            // 임계치 도달 전까지는 여전히 앞 건에 막혀 있어야 한다.
+            if (i < 최대_시도 - 1) {
+                verify(kafkaTemplate, never()).send(eq(TOPIC), eq("20"), any());
+            }
+        }
+
+        OutboxEvent 격리됨 = repository.findById(독약.getId()).orElseThrow();
+        assertThat(격리됨.getStatus()).isEqualTo(OutboxEvent.STATUS_FAILED);
+        assertThat(격리됨.getAttemptCount()).isEqualTo(최대_시도);
+        assertThat(격리됨.getLastError()).contains("직렬화 불가");
+
+        // 다음 주기: FAILED는 폴링에서 빠지므로 뒤 건이 드디어 발행된다.
+        relay.relay();
+        verify(kafkaTemplate).send(eq(TOPIC), eq("20"), any());
+        assertThat(repository.findAll())
+                .filteredOn(e -> e.getAggregateId() == 20L)
+                .allSatisfy(e -> assertThat(e.getStatus()).isEqualTo(OutboxEvent.STATUS_PUBLISHED));
+    }
+
+    /** 일시적 실패(브로커 재기동 등)는 임계치 전까지 PENDING으로 남아 다음 주기에 그대로 재시도된다. */
+    @Test
+    void 임계치_전_실패는_시도횟수만_올리고_PENDING으로_남는다() {
+        LocalDateTime base = LocalDateTime.of(2026, 7, 29, 12, 0);
+        OutboxEvent 이벤트 = 아웃박스(10L, base.plusSeconds(1));
+        when(kafkaTemplate.send(eq(TOPIC), eq("10"), any()))
+                .thenReturn(CompletableFuture.failedFuture(new IllegalStateException("브로커 다운")));
+
+        relay.relay();
+
+        OutboxEvent 재조회 = repository.findById(이벤트.getId()).orElseThrow();
+        assertThat(재조회.getStatus()).isEqualTo(OutboxEvent.STATUS_PENDING);
+        assertThat(재조회.getAttemptCount()).isEqualTo(1);
     }
 
     @Test

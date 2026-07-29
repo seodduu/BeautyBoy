@@ -33,6 +33,17 @@ import java.util.concurrent.TimeUnit;
  *
  * <p>폴링 조회는 트랜잭션 밖에서 일어나므로 반환된 엔티티는 준영속이다. 마킹 후
  * {@code save}가 merge로 반영한다 — 발행과 마킹 사이에 DB 커넥션을 붙들지 않는 이점도 있다.
+ *
+ * <p><b>영구 실패 처리(독약 메시지)</b>: 발행 실패 시 {@code break}로 배치를 중단하는 것은
+ * 같은 주문 내 순서를 지키기 위해서고, 브로커 다운 같은 <b>일시적</b> 실패에는 옳다. 그런데
+ * 직렬화 불가·{@code RecordTooLargeException} 같은 <b>영구</b> 실패면 그 한 건이
+ * {@code created_at} 최선두에 영원히 남아 뒤의 모든 주문 이벤트가 영영 발행되지 않는다 —
+ * 결제는 성공하는데 장바구니가 안 비워지고 집계도 알림도 멈추며, 남는 신호는 초당 warn 로그
+ * 한 줄뿐이다. 컨슈머 실패에는 DLT가 있는데 발행 실패에만 대응 장치가 없던 비대칭이었다.
+ * 그래서 시도 횟수를 세어 {@code beautyboy.events.relay-max-attempts}(기본 10)에 도달하면
+ * {@link OutboxEvent#STATUS_FAILED}로 옮기고 로그를 {@code error}로 승격한다(V93).
+ * 발행 실패는 DLT로 보낼 수 없다 — 애초에 브로커에 넣지 못한 것이므로 DLT에 해당하는 자리는
+ * DB의 FAILED 상태다.
  */
 @Component
 @ConditionalOnProperty(name = "beautyboy.events.enabled", havingValue = "true")
@@ -49,16 +60,19 @@ public class OutboxRelay {
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final TransactionTemplate markTransaction;
     private final int batchSize;
+    private final int maxAttempts;
 
     public OutboxRelay(OutboxEventRepository repository,
                        KafkaTemplate<String, String> kafkaTemplate,
                        PlatformTransactionManager transactionManager,
-                       @Value("${beautyboy.events.relay-batch-size:100}") int batchSize) {
+                       @Value("${beautyboy.events.relay-batch-size:100}") int batchSize,
+                       @Value("${beautyboy.events.relay-max-attempts:10}") int maxAttempts) {
         this.repository = repository;
         this.kafkaTemplate = kafkaTemplate;
         this.markTransaction = new TransactionTemplate(transactionManager);
         this.markTransaction.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
         this.batchSize = batchSize;
+        this.maxAttempts = maxAttempts;
     }
 
     @Scheduled(fixedDelayString = "${beautyboy.events.relay-delay-ms:1000}")
@@ -76,12 +90,43 @@ public class OutboxRelay {
                 markTransaction.executeWithoutResult(status -> repository.save(event));
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
+                // 인터럽트는 이 행의 잘못이 아니라 스레드 종료 신호다 — 시도 횟수를 세지 않는다.
                 log.warn("outbox 발행 대기 중 인터럽트 — 다음 주기에 재시도. eventId={}", event.getId(), e);
                 break;
             } catch (Exception e) {
-                log.warn("outbox 발행 실패 — 다음 주기에 재시도. eventId={}", event.getId(), e);
+                발행_실패를_기록한다(event, e);
                 break;  // 순서 보존: 앞 건이 실패했는데 뒤 건을 발행하면 같은 주문 내 순서가 깨질 수 있다
             }
+        }
+    }
+
+    /**
+     * 실패 횟수를 올려 커밋하고, 임계치에 도달했으면 FAILED로 옮긴다.
+     *
+     * <p>마킹과 같은 {@code REQUIRES_NEW} 경계를 쓴다 — 이 커밋이 남지 않으면 카운터가 영원히
+     * 0이라 임계치에 도달하지 못하고, 결국 고치려던 무한 재시도로 되돌아간다.
+     *
+     * <p>기록 자체가 실패하는 경우(DB도 함께 죽은 상황)는 삼킨다. 여기서 예외를 던지면
+     * {@code @Scheduled} 메서드가 중단될 뿐 얻는 것이 없고, 원래의 발행 실패 로그는 이미 남았다.
+     */
+    private void 발행_실패를_기록한다(OutboxEvent event, Exception cause) {
+        String 사유 = cause.getClass().getSimpleName() + ": " + cause.getMessage();
+        try {
+            boolean 포기했다 = event.recordFailure(사유, maxAttempts);
+            markTransaction.executeWithoutResult(status -> repository.save(event));
+            if (포기했다) {
+                // 침묵을 깨는 자리. 이 행은 더 이상 발행되지 않으므로 사람이 반드시 봐야 한다.
+                log.error("outbox 발행을 {}회 실패해 FAILED로 격리한다 — 이 이벤트의 후처리(장바구니·집계·알림)는 "
+                                + "일어나지 않는다. 원인을 고친 뒤 status='PENDING', attempt_count=0으로 되돌려 재발행하라. "
+                                + "eventId={}, aggregateId={}",
+                        maxAttempts, event.getId(), event.getAggregateId(), cause);
+            } else {
+                log.warn("outbox 발행 실패({}/{}) — 다음 주기에 재시도. eventId={}",
+                        event.getAttemptCount(), maxAttempts, event.getId(), cause);
+            }
+        } catch (Exception 기록_실패) {
+            log.error("outbox 발행 실패를 기록하지도 못했다 — DB도 함께 문제일 수 있다. eventId={}",
+                    event.getId(), 기록_실패);
         }
     }
 }

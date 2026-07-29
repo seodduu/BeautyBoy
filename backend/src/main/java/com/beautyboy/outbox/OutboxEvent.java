@@ -26,6 +26,14 @@ public class OutboxEvent {
 
     public static final String STATUS_PENDING = "PENDING";
     public static final String STATUS_PUBLISHED = "PUBLISHED";
+    /**
+     * 발행 재시도 임계치를 넘겨 릴레이가 포기한 행(V93). 폴링 쿼리(status='PENDING')에서 빠지므로
+     * 뒤 건이 흐른다. 되살리려면 {@code status='PENDING', attempt_count=0}으로 되돌린다.
+     */
+    public static final String STATUS_FAILED = "FAILED";
+
+    /** {@code last_error} 컬럼 길이(V93). 넘치면 잘라 넣는다 — 진단용 한 줄이지 로그 대체물이 아니다. */
+    private static final int 오류_메시지_최대길이 = 500;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -53,6 +61,14 @@ public class OutboxEvent {
     @Column(name = "published_at")
     private LocalDateTime publishedAt;
 
+    /** 발행 시도 횟수(V93). 임계치를 넘으면 {@link #STATUS_FAILED}로 옮겨 릴레이가 건너뛴다. */
+    @Column(name = "attempt_count", nullable = false)
+    private int attemptCount;
+
+    /** 마지막 발행 실패 사유(V93). 사람이 FAILED 행을 판단할 때 보는 유일한 단서다. */
+    @Column(name = "last_error", length = 오류_메시지_최대길이)
+    private String lastError;
+
     protected OutboxEvent() {
     }
 
@@ -71,8 +87,39 @@ public class OutboxEvent {
         this.publishedAt = publishedAt;
     }
 
+    /**
+     * 발행 실패를 한 번 기록한다. 시도 횟수가 {@code maxAttempts}에 도달하면 {@link #STATUS_FAILED}로
+     * 옮겨 다음 폴링에서 빠진다 — 이 한 건이 뒤의 모든 이벤트를 막는 것을 여기서 끊는다.
+     *
+     * @return 이 호출로 포기(FAILED) 처리됐으면 {@code true}. 호출자가 로그 수준을 error로 올릴 신호다.
+     */
+    public boolean recordFailure(String error, int maxAttempts) {
+        this.attemptCount++;
+        this.lastError = 자른다(error);
+        if (this.attemptCount >= maxAttempts) {
+            this.status = STATUS_FAILED;
+            return true;
+        }
+        return false;
+    }
+
+    private static String 자른다(String error) {
+        if (error == null) {
+            return null;
+        }
+        return error.length() <= 오류_메시지_최대길이 ? error : error.substring(0, 오류_메시지_최대길이);
+    }
+
     public void setPayload(String payload) {
         this.payload = payload;
+    }
+
+    public int getAttemptCount() {
+        return attemptCount;
+    }
+
+    public String getLastError() {
+        return lastError;
     }
 
     public Long getId() {
