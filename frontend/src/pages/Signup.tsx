@@ -18,7 +18,9 @@ interface AccountFields {
 /**
  * 회원가입 페이지 — 2스텝.
  * ① 계정(이메일/비밀번호/닉네임) → ② 피부 프로필(선택, 건너뛰기 가능).
- * 가입 성공 후 자동 로그인 + `/members/me` 조회로 스토어를 채우고 홈으로 이동한다.
+ * 가입 성공 후 자동 로그인 + `/members/me` 조회로 스토어를 채우고 `/main`으로 이동한다.
+ * 랜딩(`/`)이 아니라 로그인 직후와 같은 목적지다 — 방금 계정을 만든 손님에게
+ * "가입하세요" 히어로를 다시 보여주는 것은 되돌아간 것처럼 읽힌다.
  */
 export function Signup() {
   const navigate = useNavigate();
@@ -67,7 +69,7 @@ export function Signup() {
       const me = await fetchMe();
       setAuth(accessToken, me);
 
-      navigate('/');
+      navigate('/main');
     } catch (err) {
       if (isAxiosError(err) && err.response?.data?.message) {
         setError(err.response.data.message as string);

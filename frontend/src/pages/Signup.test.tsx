@@ -11,7 +11,7 @@ function renderSignup() {
     <MemoryRouter initialEntries={['/signup']}>
       <Routes>
         <Route path="/signup" element={<Signup />} />
-        <Route path="/" element={<div>HOME_MARKER</div>} />
+        <Route path="/main" element={<div>MAIN_MARKER</div>} />
       </Routes>
     </MemoryRouter>,
   );
@@ -68,8 +68,8 @@ describe('Signup — 2스텝 가입 흐름', () => {
       nickname: '민수',
     });
 
-    // 가입 후 자동 로그인 + 홈 이동까지 확인
-    await screen.findByText('HOME_MARKER');
+    // 가입 후 자동 로그인 + 메인 이동까지 확인
+    await screen.findByText('MAIN_MARKER');
     expect(useAuthStore.getState().accessToken).toBe('token-abc');
     expect(useAuthStore.getState().member?.nickname).toBe('민수');
   });
