@@ -69,6 +69,9 @@ services:
       # 컨테이너끼리는 kafka:9092로 붙는다. compose 스택 안이므로 아웃박스 릴레이/컨슈머를 켠다.
       KAFKA_BOOTSTRAP: kafka:9092
       ORDER_EVENTS: "true"
+      # 랭킹/목록/궁합 읽기 캐시. Redis가 죽어도 CacheErrorHandler가 예외를 삼키고
+      # DB 직행으로 폴백한다(설계상 감수).
+      CACHE_REDIS: "true"
     ports: ["8080:8080"]
     depends_on:
       mysql:

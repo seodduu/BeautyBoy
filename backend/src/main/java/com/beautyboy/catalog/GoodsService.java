@@ -7,14 +7,17 @@ import com.beautyboy.catalog.dto.GoodsOptionResponse;
 import com.beautyboy.catalog.dto.GoodsSearchCondition;
 import com.beautyboy.catalog.dto.TagView;
 import com.beautyboy.common.BusinessException;
+import com.beautyboy.common.CacheKeys;
 import com.beautyboy.common.ErrorCode;
 import com.beautyboy.common.PageResponse;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -46,6 +49,18 @@ public class GoodsService implements GoodsQueryService {
         this.goodsTagRepository = goodsTagRepository;
     }
 
+    /**
+     * B3 — 목록 조회 캐시. {@link GoodsListItem#wished()}가 {@code viewerId}에 따라 갈리는
+     * 개인화 응답이라({@link RankingService}의 B2와 같은 함정), 키에 카테고리/정렬/페이지/필터
+     * 뿐 아니라 {@code viewerId}까지 반영한다 — 그렇지 않으면 먼저 조회한 사용자의 찜 상태가
+     * 다른 사용자에게 그대로 캐시돼 나간다. {@link #filtersOf}가 필터를 {@code Map<String,String>}으로
+     * 눌러 {@link CacheKeys#goodsList}에 넘긴다.
+     */
+    @Cacheable(cacheNames = "goodsList",
+            key = "T(com.beautyboy.common.CacheKeys).goodsList("
+                    + "(#condition.categoryCode() == null || #condition.categoryCode().isBlank()) ? 'ALL' : #condition.categoryCode(), "
+                    + "#condition.sort().name(), #condition.page(), "
+                    + "T(com.beautyboy.catalog.GoodsService).filtersOf(#condition)) + ':' + #viewerId")
     @Transactional(readOnly = true)
     public PageResponse<GoodsListItem> list(GoodsSearchCondition condition, Long viewerId) {
         List<GoodsQueryRepository.GoodsRow> rows = goodsQueryRepository.findList(condition);
@@ -54,6 +69,28 @@ public class GoodsService implements GoodsQueryService {
         List<GoodsListItem> items = toItems(rows, viewerId);
 
         return PageResponse.of(items, condition.page(), condition.size(), totalElements);
+    }
+
+    /** {@link #list}의 캐시 키에 쓸 필터 맵. brandId는 정렬해 연접해야 순서에 무관한 키가 된다. */
+    public static Map<String, String> filtersOf(GoodsSearchCondition condition) {
+        Map<String, String> filters = new LinkedHashMap<>();
+        if (condition.brandId() != null && !condition.brandId().isEmpty()) {
+            filters.put("brandId", condition.brandId().stream()
+                    .sorted()
+                    .map(String::valueOf)
+                    .reduce((a, b) -> a + "," + b)
+                    .orElse(""));
+        }
+        if (condition.minPrice() != null) {
+            filters.put("minPrice", String.valueOf(condition.minPrice()));
+        }
+        if (condition.maxPrice() != null) {
+            filters.put("maxPrice", String.valueOf(condition.maxPrice()));
+        }
+        if (condition.tagSlug() != null && !condition.tagSlug().isBlank()) {
+            filters.put("tag", condition.tagSlug());
+        }
+        return filters;
     }
 
     /**

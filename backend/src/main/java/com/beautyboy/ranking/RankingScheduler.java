@@ -26,17 +26,26 @@ public class RankingScheduler {
 
     private final RankingBatchService rankingBatchService;
     private final PopularKeywordHolder popularKeywordHolder;
+    private final RankingCacheRefresher rankingCacheRefresher;
 
     public RankingScheduler(RankingBatchService rankingBatchService,
-                            PopularKeywordHolder popularKeywordHolder) {
+                            PopularKeywordHolder popularKeywordHolder,
+                            RankingCacheRefresher rankingCacheRefresher) {
         this.rankingBatchService = rankingBatchService;
         this.popularKeywordHolder = popularKeywordHolder;
+        this.rankingCacheRefresher = rankingCacheRefresher;
     }
 
-    /** 매시 정각. 초기 지연 없이 부팅 직후 한 번 돌리지 않는 이유: 부팅 시점에 통계가 비어 있어도 정상이다. */
+    /**
+     * 매시 정각. 초기 지연 없이 부팅 직후 한 번 돌리지 않는 이유: 부팅 시점에 통계가 비어 있어도 정상이다.
+     *
+     * <p>{@code rebuild()}가 예외를 던지면 그 아래 워밍 호출은 실행되지 않는다(별도 try/catch 불필요 —
+     * 자바의 순차 실행이 곧 "배치 실패 시 워밍 스킵"이다). 이전 캐시가 그대로 남으므로 빈 캐시보다 낫다.
+     */
     @Scheduled(cron = "0 0 * * * *")
     public void 랭킹_재생성() {
         rankingBatchService.rebuild();
+        rankingCacheRefresher.refreshAfterRebuild();
     }
 
     /** 인기검색어도 매시 갱신한다(설계 8장). 랭킹과 5분 어긋나게 둬 DB 부하가 겹치지 않게 한다. */

@@ -46,7 +46,11 @@ public class SecurityConfig {
                         // forward하는 경로. 여기를 permitAll하지 않으면 anyRequest().authenticated()에
                         // 걸려 진짜 상태(500/404) 대신 401이 나가버린다(무토큰 보호 경로 접근은
                         // 컨트롤러에 도달하기 전 authenticationEntryPoint에서 걸리므로 영향 없음).
-                        .requestMatchers("/api/v1/auth/**", "/api/v1/health", "/error").permitAll()
+                        // B5 — /actuator/**(health, metrics만 노출되도록 application.yml에서 제한됨).
+                        // 부하 리포트(C2)가 compose에서 /actuator/metrics/cache.gets를 인증 없이
+                        // curl로 읽는다. env/beans 같은 민감 엔드포인트는 애초에 노출 목록에 없어
+                        // 여기를 열어도 새어나가는 것이 없다 — 나머지 API의 인증 규칙은 그대로다.
+                        .requestMatchers("/api/v1/auth/**", "/api/v1/health", "/actuator/**", "/error").permitAll()
                         // 설계 문서 7장 "공개" 목록을 선반영한다. 공개 경로는 이미 전부 확정돼 있으므로
                         // 지금 한 번에 등록해두면 이후 웨이브가 이 파일을 건드릴 일이 없다 —
                         // Wave 2는 터미널 3개가 병렬로 도는데, 그때 각자 여기를 고치면 하필

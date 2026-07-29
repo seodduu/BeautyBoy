@@ -45,6 +45,20 @@ beautyboy:
     enabled: ${ORDER_EVENTS:false}   # 조회수 버퍼와 같은 철학 — Kafka 없이도 앱이 뜬다
     relay-batch-size: 100
     relay-delay-ms: 1000
+  cache:
+    # 기본은 캐시 없음(DB 직행). Redis 컨테이너가 떠 있을 때만 true로 켠다.
+    redis: ${CACHE_REDIS:false}
+
+# B5 — 캐시 히트율 관측. 아직 actuator 노출 목록이 없던 상태라 여기서 새로 만든다
+# (계획서는 "기존 목록에 병기"를 전제했지만 그런 목록이 존재하지 않았다 — 보고 사항).
+# actuator가 이제 클래스패스에 있다(backend/build.gradle.kts). exposure.include를 지정하면
+# Spring Boot 기본값(health만 노출)을 완전히 덮어써버리므로 health를 반드시 같이 적는다 —
+# 안 그러면 compose 등에서 상태 확인용으로 health를 쓰려 할 때 막힌다.
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics
 
 jwt:
   secret: ${JWT_SECRET:}
