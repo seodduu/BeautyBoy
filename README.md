@@ -1,7 +1,7 @@
 # BeautyBoy
 
 <p align="center">
-  <img src="docs/demo/logo.svg" width="440" alt="BEAUTY BOY. 로고" />
+  <img src="docs/demo/logo.svg" width="100%" alt="BEAUTY BOY. 로고" />
 </p>
 
 <p align="center">
