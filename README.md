@@ -294,6 +294,12 @@ docker rm -f bb-e2e-mysql
 | 결제 확정 p95(다품목) | 1,150.63 ms (동기 후처리) | 1,145.44 ms (비동기) | −0.45% |
 | 결제 확정 p95(단일 SKU 폭주) | 15,305.93 ms | 16,419.78 ms | +7.3% |
 
+> **기준점 각주**: "개선 전" 열은 기본적으로 지점 ①(baseline, 개선 전)이다. **"결제 확정
+> p95(다품목)" 행만 예외로 지점 ②(sync, 동기 후처리)를 기준으로 삼았다** — 이 행이 재려는 것은
+> "후처리를 비동기로 뺐을 때 확정 지연이 줄어드는가"이고, 그 질문의 대조군은 후처리를 동기로
+> 하던 ②이기 때문이다(①과 비교하면 후처리 추가분과 비동기화 효과가 섞인다). 참고로 같은
+> 시나리오의 ① 수치는 p95 1,101.2 ms다(`docs/loadtest/2026-07-29-after/conditions.md` §8).
+
 **정직하게 적어 두는 것 셋** — 이 프로젝트가 수치에서 배운 것은 오히려 이쪽이다.
 
 1. **비동기화는 지연을 사지 못했다.** 후처리 3종이 전부 가벼운 로컬 DB 작업이라 애초에
@@ -343,7 +349,7 @@ backend/
     admin/         # 관리자 CRUD(상품·루틴·문의)
   src/main/resources/
     application.yml, application-local.yml.example
-    db/migration/  # Flyway (V1~V66)
+    db/migration/  # Flyway (V1~V93, 번호에 빈 구간이 있다 — 병렬 웨이브별로 대역을 나눠 썼다)
 frontend/
   Dockerfile         # vite build -> nginx
   nginx.conf         # SPA fallback + /api -> backend 프록시
