@@ -188,6 +188,37 @@ class SecurityErrorHandlingTest {
                 .andExpect(status().isForbidden());
     }
 
+    /**
+     * actuator 인가. 원래 {@code /actuator/**}가 통째로 permitAll이었다 — 부하 측정이
+     * {@code cache.gets}를 curl로 읽으려던 편의였는데, compose backend가 8080을 호스트로
+     * 노출하므로 배포 구성에서도 열린다. {@code /actuator/metrics} 하나로 JVM/OS/커넥션풀 상태와
+     * {@code http.server.requests}의 URI 템플릿 전량(= API 표면 전체)이 익명에게 나간다.
+     *
+     * <p>상태 코드만 보는 이유: 이 테스트 컨텍스트에서 actuator 엔드포인트가 실제로 매핑되는지는
+     * 관심사가 아니다. 여기서 붙들 것은 <b>인가 필터가 익명을 통과시키지 않는다</b> 하나다.
+     */
+    @Test
+    void actuator_metrics는_무토큰이면_401이고_health는_열려_있다() throws Exception {
+        mockMvc.perform(get("/actuator/metrics"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value("UNAUTHORIZED"));
+        mockMvc.perform(get("/actuator/metrics/cache.gets"))
+                .andExpect(status().isUnauthorized());
+
+        // health는 compose healthcheck·프로브가 토큰 없이 찔러야 하므로 그대로 공개다
+        // (401만 아니면 된다 — 인가를 통과했다는 뜻이고, 매핑 유무는 이 테스트의 관심사가 아니다).
+        mockMvc.perform(get("/actuator/health"))
+                .andExpect(result -> org.assertj.core.api.Assertions
+                        .assertThat(result.getResponse().getStatus()).isNotEqualTo(401));
+    }
+
+    /** ADMIN이 아닌 일반 회원 토큰으로도 metrics는 못 본다 — permitAll을 hasRole로 바꾼 것의 핵심. */
+    @Test
+    void actuator_metrics는_일반_회원_토큰으로도_403이다() throws Exception {
+        mockMvc.perform(get("/actuator/metrics").header("Authorization", "Bearer " + validToken))
+                .andExpect(status().isForbidden());
+    }
+
     private String login(String email, String password) throws Exception {
         String body = objectMapper.writeValueAsString(new LoginRequestFixture(email, password));
         MvcResult result = mockMvc.perform(post("/api/v1/auth/login")

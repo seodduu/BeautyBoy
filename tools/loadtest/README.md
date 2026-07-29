@@ -272,3 +272,35 @@ Kafka/Redis 개선 이후 재측정할 때는 같은 규약으로 `docs/loadtest
 집중/분산 두 부하 모형의 결과는 폴더로 분리해 나란히 둔다 — `docs/loadtest/2026-07-29-baseline/`
 (집중, `LOAD_MODEL=single`)과 `docs/loadtest/2026-07-29-baseline-spread/`(분산,
 `LOAD_MODEL=spread`). 두 모형의 조건 차이와 수치 비교는 후자 폴더의 `conditions.md`에 있다.
+
+## 6. 캐시 히트율 등 actuator 지표 읽기 (ADMIN 토큰 필요)
+
+캐시 히트율은 Micrometer의 `cache.gets`를 `/actuator/metrics`에서 읽는다. **이 엔드포인트는
+인증이 필요하다** — `/actuator/health`만 공개이고 나머지 actuator는 `ROLE_ADMIN` 뒤에 있다
+(`SecurityConfig`). 예전에는 `/actuator/**`가 통째로 열려 있었는데, compose backend가 8080을
+호스트로 노출하므로 배포 구성에서도 열리는 것이 문제였다(`/actuator/metrics` 하나로 JVM/OS/
+커넥션풀 상태와 `http.server.requests`의 URI 템플릿 전량 = API 표면 전체가 익명에게 나간다).
+
+측정 절차는 **토큰 발급 한 줄이 늘어난 것뿐**이다. 시드 관리자 계정(`V80__seed_admin_account.sql`,
+`admin@naver.com` / `admin`)으로 로그인해 액세스 토큰을 받아 `Authorization` 헤더에 붙인다:
+
+```bash
+ADMIN_TOKEN=$(curl -s -X POST http://localhost:8080/api/v1/auth/login \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"admin@naver.com","password":"admin"}' \
+  | python3 -c 'import sys,json; print(json.load(sys.stdin)["data"]["accessToken"])')
+
+# 캐시 히트/미스 (browse.js 측정 종료 직후 수집한다)
+curl -s -H "Authorization: Bearer $ADMIN_TOKEN" \
+  'http://localhost:8080/actuator/metrics/cache.gets?tag=result:hit'
+curl -s -H "Authorization: Bearer $ADMIN_TOKEN" \
+  'http://localhost:8080/actuator/metrics/cache.gets?tag=result:miss'
+```
+
+- 토큰 없이 부르면 401이다 — 200이 나오면 인가 설정이 되돌아간 것이니 `SecurityConfig`를 확인한다.
+- 액세스 토큰 만료는 30분(`jwt.access-exp-minutes`)이라 한 번의 측정 세션에는 충분하다.
+  길어지면 위 한 줄을 다시 실행한다.
+- `/actuator/health`는 그대로 토큰 없이 열려 있다(compose healthcheck가 쓴다).
+- 이 절차로 수집한 원본은 `docs/loadtest/<날짜>-after/cache-hits.txt` 규약으로 저장한다.
+  단, `docs/loadtest/2026-07-29-after/`에 이미 저장된 값은 **인가를 걸기 전에** 수집한 것이라
+  당시 커맨드에는 이 헤더가 없다(수치 자체는 영향받지 않는다).

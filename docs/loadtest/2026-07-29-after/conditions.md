@@ -60,10 +60,15 @@ KAFKA_BOOTSTRAP=localhost:29092 ORDER_EVENTS=true CACHE_REDIS=true \
 
 ## 6. 컨슈머 랙 수집
 
-측정 중(confirm-spread → confirm-single → browse 구간에 걸쳐, 19:21:46 ~ 19:29:51) 5초
-간격으로 3개 그룹 각각에 대해 `kafka-consumer-groups.sh --describe`를 실행해
+측정 중(confirm-spread → confirm-single → browse 구간에 걸쳐, 19:21:46 ~ 19:29:51 = **485초**)
+**60회 라운드**에 걸쳐 3개 그룹 각각에 대해 `kafka-consumer-groups.sh --describe`를 실행해
 `docs/loadtest/2026-07-29-after/consumer-lag.log`에 타임스탬프와 함께 남겼다.
 
+- **라운드 간격 정정**: 수집 루프는 `sleep 5`를 썼지만 원본 로그의 타임스탬프로 실측한
+  라운드 간격은 **평균 8.22초(최소 7초, 최대 10초)**다 — 라운드마다 그룹 3개에 대해 CLI를
+  부르는 JVM 기동 시간이 sleep에 더해졌다. 이 문서가 처음에 "5초 간격, 60회"라고 적은 것은
+  스크립트의 의도이지 실측이 아니었다(5초 × 60 = 300초는 관측 구간 485초와 모순된다).
+  아래 분포와 결론은 그대로다.
 - 관측된 LAG 값(파티션별)은 대부분 **0**, 드물게 1~3까지 순간 상승 후 곧 0으로 복귀 —
   382건 중 0, 138건 1, 17건 2, 3건 3(파티션 3개 × 3그룹 × 샘플 수 기준 집계).
 - 릴레이 배치 크기(`relay-batch-size: 100`)와 지연(`relay-delay-ms: 1000`)이 이 측정의
@@ -73,7 +78,14 @@ KAFKA_BOOTSTRAP=localhost:29092 ORDER_EVENTS=true CACHE_REDIS=true \
 
 ## 7. 캐시 히트율
 
-browse.js 측정(1,909,313 iteration, constant-vus 100, 2분) 종료 직후 수집:
+browse.js 측정(1,909,313 iteration, constant-vus 100, 2분) 종료 직후 `/actuator/metrics/cache.gets`를
+curl로 읽어 수집:
+
+> **접근 방법이 그 뒤에 바뀌었다.** 이 측정 시점에는 `/actuator/**`가 인증 없이 열려 있어
+> curl 한 줄로 읽었는데, compose backend가 8080을 호스트로 노출하는 이상 배포 구성에서도
+> 열린다는 문제가 있어 지금은 `/actuator/health`만 공개이고 나머지는 `ROLE_ADMIN` 뒤에 있다.
+> **재현할 때는 admin 토큰을 붙여야 한다** — 절차는 `tools/loadtest/README.md` §6.
+> 아래 수치 자체는 인가와 무관하므로 그대로다.
 
 ```
 cache.gets{result=hit}  = 1,931,836

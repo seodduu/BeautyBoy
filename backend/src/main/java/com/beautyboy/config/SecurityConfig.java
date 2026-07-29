@@ -46,11 +46,16 @@ public class SecurityConfig {
                         // forward하는 경로. 여기를 permitAll하지 않으면 anyRequest().authenticated()에
                         // 걸려 진짜 상태(500/404) 대신 401이 나가버린다(무토큰 보호 경로 접근은
                         // 컨트롤러에 도달하기 전 authenticationEntryPoint에서 걸리므로 영향 없음).
-                        // B5 — /actuator/**(health, metrics만 노출되도록 application.yml에서 제한됨).
-                        // 부하 리포트(C2)가 compose에서 /actuator/metrics/cache.gets를 인증 없이
-                        // curl로 읽는다. env/beans 같은 민감 엔드포인트는 애초에 노출 목록에 없어
-                        // 여기를 열어도 새어나가는 것이 없다 — 나머지 API의 인증 규칙은 그대로다.
-                        .requestMatchers("/api/v1/auth/**", "/api/v1/health", "/actuator/**", "/error").permitAll()
+                        // /actuator/health만 공개다 — compose healthcheck와 프로브가 토큰 없이
+                        // 찔러야 하는 유일한 엔드포인트이고 응답에 담기는 것은 UP/DOWN뿐이다.
+                        .requestMatchers("/api/v1/auth/**", "/api/v1/health", "/actuator/health", "/error").permitAll()
+                        // 나머지 actuator(metrics)는 ADMIN 뒤로 보낸다. 원래 /actuator/**가 통째로
+                        // permitAll이었는데, 그건 부하 측정이 cache.gets를 curl로 읽으려던 편의였다.
+                        // compose backend가 8080을 호스트로 노출하므로 배포 구성에서도 열린다는 것이
+                        // 문제다 — /actuator/metrics 하나로 JVM/OS/커넥션풀 상태와
+                        // http.server.requests의 URI 템플릿 전량(= API 표면 전체)이 익명에게 나간다.
+                        // 부하 측정은 admin 토큰을 붙여 읽는다(tools/loadtest/README.md §6).
+                        .requestMatchers("/actuator/**").hasRole("ADMIN")
                         // 설계 문서 7장 "공개" 목록을 선반영한다. 공개 경로는 이미 전부 확정돼 있으므로
                         // 지금 한 번에 등록해두면 이후 웨이브가 이 파일을 건드릴 일이 없다 —
                         // Wave 2는 터미널 3개가 병렬로 도는데, 그때 각자 여기를 고치면 하필
