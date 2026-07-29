@@ -9,6 +9,8 @@ import com.beautyboy.outbox.OrderConfirmedEvent;
 import com.beautyboy.payment.dto.PaymentApproval;
 import com.beautyboy.payment.dto.PaymentConfirmRequest;
 import com.beautyboy.payment.dto.PaymentConfirmResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,6 +39,8 @@ import java.time.LocalDateTime;
 @Service
 public class PaymentService {
 
+    private static final Logger log = LoggerFactory.getLogger(PaymentService.class);
+
     /** 확정 이벤트 스키마 버전(설계 §4.3). 필드가 늘거나 의미가 바뀌면 올린다. */
     private static final int ORDER_CONFIRMED_VERSION = 1;
     private static final String ORDER_CONFIRMED = "ORDER_CONFIRMED";
@@ -46,17 +50,20 @@ public class PaymentService {
     private final PaymentGateway paymentGateway;
     private final StockCommandService stockCommandService;
     private final PostOrderTasks postOrderTasks;
+    private final CompensationRecorder compensationRecorder;
 
     public PaymentService(OrderConfirmPort orderConfirmPort,
                           PaymentRepository paymentRepository,
                           PaymentGateway paymentGateway,
                           StockCommandService stockCommandService,
-                          PostOrderTasks postOrderTasks) {
+                          PostOrderTasks postOrderTasks,
+                          CompensationRecorder compensationRecorder) {
         this.orderConfirmPort = orderConfirmPort;
         this.paymentRepository = paymentRepository;
         this.paymentGateway = paymentGateway;
         this.stockCommandService = stockCommandService;
         this.postOrderTasks = postOrderTasks;
+        this.compensationRecorder = compensationRecorder;
     }
 
     @Transactional
@@ -77,13 +84,46 @@ public class PaymentService {
         PaymentApproval approval =
                 paymentGateway.confirm(request.paymentKey(), request.orderNo(), request.amount());
 
-        // (5) 금액 대조. 우리가 계산한 payableAmount가 유일한 진실이다.
-        //     토스가 알려준 승인액이 그와 다르면 조작이므로 승인을 취소한다 — 롤백이 (3)의 차감도 되돌린다.
-        if (approval.approvedAmount() != target.payableAmount()) {
-            paymentGateway.cancel(request.paymentKey(), "주문 금액과 승인 금액 불일치");
-            throw new BusinessException(ErrorCode.PAYMENT_AMOUNT_MISMATCH);
+        // 여기서부터가 "돈이 이미 움직인" 구간이다. 어떤 이유로든 실패하면 승인을 되돌려야
+        // 하므로 통째로 감싼다 — 예전에는 금액 불일치 한 경로만 취소했고, markPaid 실패 같은
+        // 다른 실패는 미취소 승인으로 조용히 남았다(설계 §5-1).
+        try {
+            // (5) 금액 대조. 우리가 계산한 payableAmount가 유일한 진실이다.
+            //     토스가 알려준 승인액이 그와 다르면 조작이다 — 취소는 아래 catch가 맡는다.
+            if (approval.approvedAmount() != target.payableAmount()) {
+                throw new BusinessException(ErrorCode.PAYMENT_AMOUNT_MISMATCH);
+            }
+            return 확정한다(target, approval);
+        } catch (RuntimeException original) {
+            승인을_되돌린다(request.paymentKey(), target, original);
+            throw original;     // 원래 실패 원인이 응답을 결정한다. 보상 실패가 그것을 덮지 않는다.
         }
+    }
 
+    /**
+     * 승인 후 로컬 실패 보상(설계 §5-1). 즉시 전액 취소를 시도하고, 그마저 실패하면
+     * PENDING_RETRY 행을 남긴다 — 그 행이 "미취소 승인"의 유일한 흔적이다.
+     *
+     * <p>기록이 REQUIRES_NEW인 것이 핵심이다. 지금 이 트랜잭션은 곧 롤백되므로 참여형으로
+     * 기록하면 흔적까지 함께 사라진다.
+     */
+    private void 승인을_되돌린다(String paymentKey, OrderConfirmPort.ConfirmTarget target,
+                          RuntimeException original) {
+        try {
+            paymentGateway.cancel(paymentKey, "승인 후 처리 실패: " + original.getMessage());
+            log.warn("승인 즉시 취소 성공 orderNo={} paymentKey={} amount={} 원인={}",
+                    target.orderNo(), paymentKey, target.payableAmount(), original.toString());
+        } catch (PaymentGatewayException cancelFailure) {
+            compensationRecorder.recordPendingRetry(target.orderNo(), paymentKey,
+                    target.payableAmount(), "승인 후 처리 실패", cancelFailure.getMessage());
+            log.error("미취소 승인 발생 orderNo={} paymentKey={} amount={} — 보상 행 기록",
+                    target.orderNo(), paymentKey, target.payableAmount(), cancelFailure);
+        }
+    }
+
+    /** 승인이 검증을 통과한 뒤의 확정 경로. 원래 (6)(7)(8)을 그대로 옮겼다. */
+    private PaymentConfirmResponse 확정한다(OrderConfirmPort.ConfirmTarget target,
+                                       PaymentApproval approval) {
         // (6) 확정. 주문 전이 → payment 저장 순서로.
         //     한 시각을 세 곳(전이·payment·이벤트)에 함께 쓴다 — 이벤트의 confirmedAt이
         //     주문의 paidAt과 어긋나면 소비 측 집계가 날짜 경계에서 갈린다.
