@@ -27,6 +27,18 @@ Testcontainers(Kafka+MySQL), k6.
 - 프론트 검증은 `npm test`(vitest 단독 실행 금지 — e2e 스펙 오수집), 타입은 `npx tsc -p tsconfig.app.json --noEmit`.
 - 자기 태스크 Files 목록 밖 파일 수정 금지. Flyway·공통 타입·루트 빌드 설정은 공유 계약 —
   안 맞으면 보고.
+- **테스트는 인프라 없이 돌아야 한다 (Wave 0에서 얻은 교훈의 일반화).** 이 저장소의 `test` 태스크는
+  Docker 없이 녹색이어야 하고, 컨테이너가 필요한 것은 `@Tag("integration")`으로 갈라 `integrationTest`로
+  간다. 따라서:
+  - Kafka가 필요한 검증(A5의 컨슈머 동작, A6의 DLT 재발행)은 **컨슈머 메서드를 직접 호출**하거나
+    `KafkaTemplate`을 목으로 두어 `test`에서 돌리고, 실제 브로커를 거치는 종단 검증은 A7의
+    `@Tag("integration")` 하나에 모은다. `@EmbeddedKafka`는 쓰지 않는다 — 기동이 느리고 `test`를
+    무겁게 만든다.
+  - Redis가 필요한 검증(B2·B3·B4의 캐시 히트)은 `beautyboy.cache.redis=true`인 채로
+    **`ConcurrentMapCacheManager`를 주입한 슬라이스 테스트**로 한다. 검증 대상은 "두 번째 호출이
+    원본을 안 때린다"는 캐싱 동작이지 Redis 자체가 아니다. Redis 직렬화·TTL이 실제로 먹는지는
+    compose 실기동 확인(C1)에서 본다.
+  - 이 규칙과 태스크의 테스트 지시가 충돌하면 **이 규칙이 이긴다.** 충돌 사실을 보고에 적어라.
 
 ## 모델 배분
 
@@ -706,7 +718,9 @@ C의 부하 리포트가 이 수치를 읽는다.
 - [ ] baseline과 **동일 조건**으로 재측정 — **세 벌**이다: confirm 분산 모형
       (`LOAD_MODEL=spread`, 조건은 `2026-07-29-baseline-spread/conditions.md`), confirm 집중 모형
       (`LOAD_MODEL=single`, 조건은 `2026-07-29-baseline/conditions.md`), browse.
-      결과를 `docs/loadtest/2026-07-29-after/`에 저장.
+      결과를 `docs/loadtest/2026-07-29-after/`에 저장. 실행 시
+      `--summary-trend-stats="avg,min,med,max,p(90),p(95),p(99)"`를 **반드시** 붙인다(빼면 p99가
+      안 나와 재측정해야 한다). summary JSON은 커밋 전 `setup_data` 스크럽.
       **집중 모형은 개선이 거의 없을 것으로 예측돼 있다**(Task 0.4 참고) — 그 예측이 맞는지가
       리포트의 논점 하나이므로, 수치가 그대로여도 실패가 아니라 검증된 예측으로 적는다. 추가 수집: 컨슈머 랙 추이
       (`kafka-consumer-groups.sh --describe`를 측정 중 5초 간격 폴링한 로그), 캐시 히트율
