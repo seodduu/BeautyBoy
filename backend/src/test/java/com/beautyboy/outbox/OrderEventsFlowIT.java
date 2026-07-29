@@ -171,6 +171,10 @@ class OrderEventsFlowIT {
                 @Override
                 public void cancel(String paymentKey, String reason) {
                 }
+
+                @Override
+                public void cancelPartial(String paymentKey, String reason, int cancelAmount) {
+                }
             };
         }
     }

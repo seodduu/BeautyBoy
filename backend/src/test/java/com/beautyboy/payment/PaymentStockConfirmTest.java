@@ -85,7 +85,7 @@ class PaymentStockConfirmTest {
                 public PaymentApproval confirm(String paymentKey, String orderNo, int amount) {
                     confirm호출.add(paymentKey);
                     if (confirm이_터진다) {
-                        throw new PaymentGatewayException("토스 통신 실패(주입)");
+                        throw new PaymentGatewayException("토스 통신 실패(주입)", null);
                     }
                     return new PaymentApproval(paymentKey, approvedAmount, "DONE", "{\"raw\":true}");
                 }
@@ -93,6 +93,10 @@ class PaymentStockConfirmTest {
                 @Override
                 public void cancel(String paymentKey, String reason) {
                     cancel호출.add(paymentKey);
+                }
+
+                @Override
+                public void cancelPartial(String paymentKey, String reason, int cancelAmount) {
                 }
             };
         }

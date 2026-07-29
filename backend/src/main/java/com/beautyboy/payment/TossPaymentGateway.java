@@ -89,16 +89,39 @@ public class TossPaymentGateway implements PaymentGateway {
     }
 
     @Override
+    public void cancelPartial(String paymentKey, String reason, int cancelAmount) {
+        취소_호출(paymentKey, Map.of("cancelReason", reason, "cancelAmount", cancelAmount));
+    }
+
+    @Override
     public void cancel(String paymentKey, String reason) {
+        취소_호출(paymentKey, Map.of("cancelReason", reason));
+    }
+
+    private void 취소_호출(String paymentKey, Map<String, Object> body) {
         try {
             restClient.post()
                     .uri("/v1/payments/{paymentKey}/cancel", paymentKey)
-                    .body(Map.of("cancelReason", reason))
+                    .body(body)
                     .retrieve()
                     .toBodilessEntity();
+        } catch (RestClientResponseException e) {
+            // 응답을 받았다 = 환불이 일어나지 않았음이 확실(4xx) 또는 토스가 명시 거부(5xx 응답).
+            throw new PaymentGatewayException(
+                    "토스 취소 실패: paymentKey=" + paymentKey + " " + e.getStatusCode(),
+                    e, true, 토스_에러코드(e.getResponseBodyAsString()));
         } catch (Exception e) {
-            // 취소 실패는 심각하다(승인은 됐는데 되돌리지 못함). 예외를 삼키지 않고 올려 로그·후속 처리로 남긴다.
-            throw new PaymentGatewayException("토스 승인 취소 실패: paymentKey=" + paymentKey, e);
+            // 응답이 없다(타임아웃 등) = 환불됐는지 모른다. 호출자가 UNVERIFIED로 다룬다.
+            throw new PaymentGatewayException("토스 취소 응답 없음: paymentKey=" + paymentKey,
+                    e, false, null);
+        }
+    }
+
+    private String 토스_에러코드(String body) {
+        try {
+            return objectMapper.readTree(body).path("code").asText(null);
+        } catch (Exception e) {
+            return null;    // 판정 재료가 없을 뿐, 실패 처리는 계속된다.
         }
     }
 }

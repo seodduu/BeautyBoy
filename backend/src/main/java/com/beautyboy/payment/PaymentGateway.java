@@ -28,4 +28,11 @@ public interface PaymentGateway {
      * 취소마저 실패하면 예외가 오르지만, 그때는 이미 승인 취소가 필요하다는 사실이 로그에 남아야 한다.
      */
     void cancel(String paymentKey, String reason);
+
+    /**
+     * 부분 취소. cancelAmount만큼만 환불한다. 잔액 초과·중복 취소는 토스가 거부한다.
+     * 호출자는 PaymentGatewayException.isDefiniteFailure()로 "확실히 안 됨"과
+     * "됐는지 모름"을 구분해야 한다(설계 §5-2).
+     */
+    void cancelPartial(String paymentKey, String reason, int cancelAmount);
 }

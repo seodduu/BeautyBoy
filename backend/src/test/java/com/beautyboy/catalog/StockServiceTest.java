@@ -4,6 +4,7 @@ import com.beautyboy.common.BusinessException;
 import com.beautyboy.common.ErrorCode;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
+import org.mockito.InOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
@@ -16,6 +17,12 @@ import java.util.List;
 import static com.beautyboy.support.TestPersistence.DB_왕복_강제;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 /**
  * 재고 차감 커맨드(catalog 소유)의 계약 검증.
@@ -97,6 +104,42 @@ class StockServiceTest {
         assertThatThrownBy(() -> stockCommandService.deductAll(
                 List.of(new StockCommandService.DeductionLine(1L, 1))))
                 .isInstanceOf(IllegalTransactionStateException.class);
+    }
+
+    @Test
+    void 복원은_합산되고_오름차순으로_실행된다() {
+        // 줄 단위로 복원해도 재고 합계는 같다 — 그래서 결과값이 아니라 호출 자체를 본다.
+        // 합산이 깨지면 UPDATE 횟수가 늘고, 정렬이 깨지면 차감과 락 순서가 어긋나 교차 데드락이 산다.
+        GoodsOptionRepository repository = mock(GoodsOptionRepository.class);
+        given(repository.restore(anyLong(), anyInt())).willReturn(1);
+
+        new StockService(repository).restoreAll(List.of(
+                new StockCommandService.RestoreLine(2L, 1),
+                new StockCommandService.RestoreLine(1L, 1),
+                new StockCommandService.RestoreLine(2L, 2)));
+
+        InOrder 순서 = inOrder(repository);
+        순서.verify(repository).restore(1L, 1);
+        순서.verify(repository).restore(2L, 3);
+        verifyNoMoreInteractions(repository);
+    }
+
+    @Test
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    void 복원도_트랜잭션_없이_부르면_예외다() {
+        // 복원이 자기 혼자 커밋되면 "토스 실패 = 롤백 = 재고 원복"이라는 취소 계약이 깨진다.
+        assertThatThrownBy(() -> stockCommandService.restoreAll(
+                List.of(new StockCommandService.RestoreLine(1L, 1))))
+                .isInstanceOf(IllegalTransactionStateException.class);
+    }
+
+    @Test
+    void 존재하지_않는_옵션_복원은_IllegalStateException() {
+        // 취소 검증을 통과한 옵션이 사라졌다는 뜻 — 재고 문제가 아니라 버그다. 조용히 넘기지 않는다.
+        assertThatThrownBy(() -> stockCommandService.restoreAll(
+                List.of(new StockCommandService.RestoreLine(-1L, 1))))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("존재하지 않는 옵션 복원 시도");
     }
 
     // 수량 0 이하 줄은 들어오지 않는 것이 계약이다 — 주문 생성이 이미 CART_QUANTITY_INVALID로

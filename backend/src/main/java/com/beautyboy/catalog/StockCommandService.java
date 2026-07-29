@@ -20,4 +20,14 @@ public interface StockCommandService {
     }
 
     void deductAll(List<DeductionLine> lines);
+
+    /** 한 옵션에 되돌릴 수량. quantity는 양수여야 한다(취소 검증이 이미 보장했다). */
+    record RestoreLine(Long optionId, int quantity) {
+    }
+
+    /**
+     * 재고 복원 — deductAll의 거울상. 호출자의 트랜잭션 안에서만 부른다(MANDATORY).
+     * 조건 없는 원자 UPDATE라 실패 경로가 없다. optionId null은 호출자가 거른다.
+     */
+    void restoreAll(List<RestoreLine> lines);
 }

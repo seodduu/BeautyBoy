@@ -42,4 +42,25 @@ public class StockService implements StockCommandService {
             }
         }
     }
+
+    /**
+     * 차감과 같은 이유로 MANDATORY·TreeMap이다 — 계약(트랜잭션 소속)과 락 순서(optionId
+     * 오름차순)를 차감과 어긋나게 두면 취소와 주문이 교차 데드락을 만든다.
+     *
+     * <p>조건 없는 증가라 "재고 부족" 같은 실패 경로가 없다. 영향 행 0은 재고 문제가 아니라
+     * 취소 검증을 통과한 옵션이 사라졌다는 뜻 — 버그이므로 조용히 넘기지 않는다.
+     */
+    @Override
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void restoreAll(List<RestoreLine> lines) {
+        Map<Long, Integer> merged = new TreeMap<>();
+        for (RestoreLine line : lines) {
+            merged.merge(line.optionId(), line.quantity(), Integer::sum);
+        }
+        for (Map.Entry<Long, Integer> entry : merged.entrySet()) {
+            if (goodsOptionRepository.restore(entry.getKey(), entry.getValue()) == 0) {
+                throw new IllegalStateException("존재하지 않는 옵션 복원 시도: " + entry.getKey());
+            }
+        }
+    }
 }

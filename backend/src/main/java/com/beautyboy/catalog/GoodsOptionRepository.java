@@ -22,4 +22,9 @@ public interface GoodsOptionRepository extends JpaRepository<GoodsOption, Long> 
     @Query("update GoodsOption o set o.stock = o.stock - :qty "
             + "where o.id = :optionId and o.stock >= :qty")
     int deduct(@Param("optionId") Long optionId, @Param("qty") int qty);
+
+    /** 조건 없는 원자 증가. deduct와 같은 flushAutomatically 근거(락 조회 엔티티 detach 방지). */
+    @Modifying(flushAutomatically = true)
+    @Query("update GoodsOption o set o.stock = o.stock + :qty where o.id = :optionId")
+    int restore(@Param("optionId") Long optionId, @Param("qty") int qty);
 }

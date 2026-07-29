@@ -34,4 +34,9 @@ public class StubPaymentGateway implements PaymentGateway {
     public void cancel(String paymentKey, String reason) {
         /* no-op */
     }
+
+    @Override
+    public void cancelPartial(String paymentKey, String reason, int cancelAmount) {
+        /* no-op */
+    }
 }

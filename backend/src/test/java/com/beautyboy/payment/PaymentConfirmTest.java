@@ -62,6 +62,10 @@ class PaymentConfirmTest {
                 public void cancel(String paymentKey, String reason) {
                     canceledKeys.add(paymentKey);
                 }
+
+                @Override
+                public void cancelPartial(String paymentKey, String reason, int cancelAmount) {
+                }
             };
         }
     }
