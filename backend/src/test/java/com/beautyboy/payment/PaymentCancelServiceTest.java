@@ -23,6 +23,7 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.time.LocalDateTime;
@@ -41,6 +42,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  */
 @SpringBootTest
 @ActiveProfiles("test")
+// 전용 H2 데이터베이스를 쓴다 — 이 클래스는 트랜잭션 없이 실제로 커밋하기 때문이다. 공용
+// jdbc:h2:mem:beautyboy를 쓰면 (1) 커밋된 픽스처가 다른 테스트로 새고, (2) create-drop이라
+// 이 컨텍스트가 닫힐 때 아직 살아 있는 다른 컨텍스트의 테이블까지 지워 "Table not found"가 난다.
+@TestPropertySource(properties = "spring.datasource.url=jdbc:h2:mem:cancelsvc;MODE=MySQL;DATABASE_TO_LOWER=TRUE")
 class PaymentCancelServiceTest {
 
     private static final Long 회원 = 1L;

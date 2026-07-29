@@ -25,7 +25,12 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @SpringBootTest
 @ActiveProfiles("test")
-@TestPropertySource(properties = "beautyboy.compensation.initial-delay-ms=3600000")
+// 전용 H2 데이터베이스를 쓴다 — 이 클래스는 트랜잭션 없이 실제로 커밋하기 때문이다. 공용
+// jdbc:h2:mem:beautyboy를 쓰면 (1) 커밋된 픽스처가 다른 테스트로 새고, (2) create-drop이라
+// 이 컨텍스트가 닫힐 때 아직 살아 있는 다른 컨텍스트의 테이블까지 지워 "Table not found"가 난다.
+@TestPropertySource(properties = {
+        "beautyboy.compensation.initial-delay-ms=3600000",
+        "spring.datasource.url=jdbc:h2:mem:compretry;MODE=MySQL;DATABASE_TO_LOWER=TRUE"})
 class CompensationRetrySchedulerTest {
 
     private static final String 결제키 = "pk_retry";

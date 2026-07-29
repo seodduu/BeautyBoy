@@ -36,12 +36,15 @@ public class OrderService implements OrderQueryService {
     private static final int DEFAULT_PAGE_SIZE = 10;
 
     private final OrderRepository orderRepository;
+    private final OrderCancelRepository orderCancelRepository;
     private final GoodsQueryService goodsQueryService;
     private final SecureRandom random = new SecureRandom();
 
     public OrderService(OrderRepository orderRepository,
+                        OrderCancelRepository orderCancelRepository,
                         GoodsQueryService goodsQueryService) {
         this.orderRepository = orderRepository;
+        this.orderCancelRepository = orderCancelRepository;
         this.goodsQueryService = goodsQueryService;
     }
 
@@ -141,12 +144,23 @@ public class OrderService implements OrderQueryService {
     private OrderDetailResponse toDetail(Order order) {
         List<OrderDetailResponse.OrderItemResponse> items = order.getItems().stream()
                 .map(item -> new OrderDetailResponse.OrderItemResponse(
+                        item.getId(),
                         item.getGoodsName(),
                         item.getOptionName(),
                         item.getUnitPrice(),
                         item.getQuantity(),
+                        item.getCanceledQuantity(),
                         item.getLineAmount()))
                 .toList();
+
+        // 취소 이력은 회차 단위로 쌓인다(order_cancel). 합계를 따로 저장하지 않고 매번 더하는
+        // 이유는 두 수가 갈라질 여지를 없애기 위해서다 — 회차 행이 유일한 진실이다.
+        List<OrderCancel> 취소_회차들 = orderCancelRepository.findByOrderIdOrderByIdAsc(order.getId());
+        List<OrderDetailResponse.OrderCancelHistoryResponse> cancels = 취소_회차들.stream()
+                .map(c -> new OrderDetailResponse.OrderCancelHistoryResponse(
+                        c.getRefundAmount(), c.getReason(), c.getCanceledAt()))
+                .toList();
+        int refundedAmount = 취소_회차들.stream().mapToInt(OrderCancel::getRefundAmount).sum();
 
         return new OrderDetailResponse(
                 order.getOrderNo(),
@@ -154,6 +168,7 @@ public class OrderService implements OrderQueryService {
                 order.getTotalAmount(),
                 order.getDiscountAmount(),
                 order.getPayableAmount(),
+                refundedAmount,
                 order.getReceiverName(),
                 order.getReceiverPhone(),
                 order.getZipcode(),
@@ -162,7 +177,8 @@ public class OrderService implements OrderQueryService {
                 order.getDeliveryType(),
                 order.getOrderedAt(),
                 order.getPaidAt(),
-                items);
+                items,
+                cancels);
     }
 
     /**
