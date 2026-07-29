@@ -27,6 +27,8 @@ import java.util.List;
 @Component
 public class CartClearOnOrderConfirmed {
 
+    private static final String ORDER_CONFIRMED = "ORDER_CONFIRMED";
+
     private final CartService cartService;
     private final ObjectMapper objectMapper;
 
@@ -39,6 +41,11 @@ public class CartClearOnOrderConfirmed {
             groupId = KafkaConsumerConfig.GROUP_CART_CLEAR,
             autoStartup = KafkaConsumerConfig.AUTO_STARTUP)
     public void on(ConsumerRecord<String, String> record) {
+        // 같은 토픽에 ORDER_CANCELED도 함께 실린다(설계 §8). 취소로 장바구니를 비우면 안 된다.
+        if (!ORDER_CONFIRMED.equals(이벤트타입(record.value()))) {
+            return;
+        }
+
         OrderConfirmedEvent event = 역직렬화(record.value());
 
         // 상품 단위로 지운다(옵션 단위가 아니다). 같은 상품을 여러 줄로 주문했으면 한 번만 부른다.
@@ -47,6 +54,16 @@ public class CartClearOnOrderConfirmed {
                 .distinct()
                 .toList();
         cartService.removeByGoods(event.memberId(), goodsIds);
+    }
+
+
+    /** 타입 판독은 역직렬화보다 먼저다 — 남의 타입 페이로드를 우리 record로 읽으려 들지 않는다. */
+    private String 이벤트타입(String payload) {
+        try {
+            return objectMapper.readTree(payload).path("eventType").asText();
+        } catch (Exception e) {
+            throw new IllegalStateException("이벤트 타입 판독 실패: " + payload, e);
+        }
     }
 
     /**

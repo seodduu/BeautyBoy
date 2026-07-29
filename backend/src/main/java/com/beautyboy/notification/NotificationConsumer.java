@@ -43,6 +43,11 @@ public class NotificationConsumer {
             autoStartup = KafkaConsumerConfig.AUTO_STARTUP)
     @Transactional
     public void on(ConsumerRecord<String, String> record) {
+        // 같은 토픽에 ORDER_CANCELED도 함께 실린다(설계 §8). 취소에 "결제 완료" 알림을 보내면 안 된다.
+        if (!TYPE_ORDER_CONFIRMED.equals(이벤트타입(record.value()))) {
+            return;
+        }
+
         OrderConfirmedEvent event = 역직렬화(record.value());
 
         notificationRepository.insertIfAbsent(
@@ -51,6 +56,16 @@ public class NotificationConsumer {
                 TYPE_ORDER_CONFIRMED,
                 "주문 " + event.orderNo() + " 결제가 완료됐어요.",
                 LocalDateTime.now());
+    }
+
+
+    /** 타입 판독은 역직렬화보다 먼저다 — 남의 타입 페이로드를 우리 record로 읽으려 들지 않는다. */
+    private String 이벤트타입(String payload) {
+        try {
+            return objectMapper.readTree(payload).path("eventType").asText();
+        } catch (Exception e) {
+            throw new IllegalStateException("이벤트 타입 판독 실패: " + payload, e);
+        }
     }
 
     /** Spring Boot가 구성한 ObjectMapper를 쓴다 — 직접 만들면 LocalDateTime 파싱이 깨진다. */

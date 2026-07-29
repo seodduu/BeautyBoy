@@ -35,6 +35,12 @@ public interface GoodsDailyStatRepository extends JpaRepository<GoodsDailyStat, 
      * 설계 §2-3의 "한 시점에 한 경로만"이 가리키는 지점이 정확히 여기라서, 대입 메서드를
      * 남겨두지 않고 아래 {@link #upsertWishCount}(찜 전용)로 좁혔다 — 판매를 덮어쓸 수 있는
      * 메서드가 아예 없으면 실수로 되살릴 수도 없다.
+     *
+     * <p><b>{@code quantity}는 음수일 수 있다.</b> 취소가 이 메서드를 음수로 부른다(설계 §8,
+     * 계획서 §2 결정 6) — 감소 전용 메서드를 따로 두지 않는 이유는 증분과 감소가 같은 연산이고,
+     * 나누면 두 경로가 갈라질 여지가 생기기 때문이다. 그래서 {@code sales_count}는 음수가 될 수
+     * 있다: 취소일에 판매가 없고 취소만 있으면 그 날 행은 음수로 남는다. 랭킹이 최근 구간의
+     * <b>합</b>을 보므로 그것이 의도한 결과다(그 날 하루만 떼어 보면 이상해 보이지만 합은 맞다).
      */
     @Modifying
     @Query(value = "insert into goods_daily_stat (goods_id, stat_date, view_count, sales_count, wish_count) "

@@ -2,6 +2,7 @@ package com.beautyboy.ranking;
 
 import com.beautyboy.outbox.IdempotencyGate;
 import com.beautyboy.outbox.KafkaConsumerConfig;
+import com.beautyboy.outbox.OrderCanceledEvent;
 import com.beautyboy.outbox.OrderConfirmedEvent;
 import com.beautyboy.outbox.OutboxRelay;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -30,6 +31,9 @@ import org.springframework.transaction.annotation.Transactional;
 @Component
 public class SalesAggregationConsumer {
 
+    private static final String ORDER_CONFIRMED = "ORDER_CONFIRMED";
+    private static final String ORDER_CANCELED = "ORDER_CANCELED";
+
     private final IdempotencyGate idempotencyGate;
     private final GoodsDailyStatRepository goodsDailyStatRepository;
     private final ObjectMapper objectMapper;
@@ -55,6 +59,17 @@ public class SalesAggregationConsumer {
             autoStartup = KafkaConsumerConfig.AUTO_STARTUP)
     @Transactional
     public void on(ConsumerRecord<String, String> record) {
+        // 같은 토픽에 ORDER_CONFIRMED와 ORDER_CANCELED가 함께 실린다(설계 §8).
+        // 이 컨슈머만 둘 다 소비한다 — 판매는 확정에 늘고 취소에 줄어야 하기 때문이다.
+        String eventType = 이벤트타입(record.value());
+        if (ORDER_CANCELED.equals(eventType)) {
+            취소를_반영한다(record.value());
+            return;
+        }
+        if (!ORDER_CONFIRMED.equals(eventType)) {
+            return;     // 모르는 타입은 이 컨슈머 소관이 아니다.
+        }
+
         OrderConfirmedEvent event = 역직렬화(record.value());
 
         boolean 처음_보는_이벤트 = idempotencyGate.markProcessed(
@@ -67,6 +82,44 @@ public class SalesAggregationConsumer {
         for (OrderConfirmedEvent.Line line : event.lines()) {
             goodsDailyStatRepository.upsertSalesIncrement(
                     line.goodsId(), event.confirmedAt().toLocalDate(), line.quantity());
+        }
+    }
+
+    /**
+     * 취소는 <b>취소일 기준 음수 upsert</b>다(§2 결정 6). 원 판매일을 역추적해 그 날짜를 깎지
+     * 않는 이유: 랭킹은 최근 구간 가중합이라 취소를 최신 신호로 반영하는 것이 의도에 맞고,
+     * 원 판매일을 찾으려면 주문을 되짚어야 해서 이벤트만으로 처리할 수 없게 된다.
+     *
+     * <p>멱등 게이트는 확정과 같은 상수를 쓴다 — eventId가 다르므로 서로 충돌하지 않는다.
+     */
+    private void 취소를_반영한다(String payload) {
+        OrderCanceledEvent event = 취소_역직렬화(payload);
+
+        boolean 처음_보는_이벤트 = idempotencyGate.markProcessed(
+                event.eventId(), IdempotencyGate.CONSUMER_SALES_AGGREGATION);
+        if (!처음_보는_이벤트) {
+            return;
+        }
+
+        for (OrderCanceledEvent.Line line : event.lines()) {
+            goodsDailyStatRepository.upsertSalesIncrement(
+                    line.goodsId(), event.canceledAt().toLocalDate(), -line.quantity());
+        }
+    }
+
+    private String 이벤트타입(String payload) {
+        try {
+            return objectMapper.readTree(payload).path("eventType").asText();
+        } catch (Exception e) {
+            throw new IllegalStateException("이벤트 타입 판독 실패: " + payload, e);
+        }
+    }
+
+    private OrderCanceledEvent 취소_역직렬화(String payload) {
+        try {
+            return objectMapper.readValue(payload, OrderCanceledEvent.class);
+        } catch (Exception e) {
+            throw new IllegalStateException("취소 이벤트 역직렬화 실패: " + payload, e);
         }
     }
 
