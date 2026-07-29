@@ -44,3 +44,8 @@ docs/상품상세페이지_성분패널_UI_리뷰.md
 
 # 데모 영상 원본(mov) — README용 GIF는 docs/demo에 커밋됨
 BeautyBoy Video/
+
+# Claude Code 개발 워크플로 문서 — 로컬 전용
+CLAUDE.md
+DESIGN.md
+.claude/
