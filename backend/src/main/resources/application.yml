@@ -35,6 +35,16 @@ beautyboy:
     # 기본은 캐시 없음(DB 직행). Redis 컨테이너가 떠 있을 때만 true로 켠다.
     redis: ${CACHE_REDIS:false}
 
+# B5 — 캐시 히트율 관측. 아직 actuator 노출 목록이 없던 상태라 여기서 새로 만든다
+# (계획서는 "기존 목록에 병기"를 전제했지만 그런 목록이 존재하지 않았다 — 보고 사항).
+# spring-boot-starter-actuator 의존성이 backend/build.gradle.kts에 없어 이 설정 자체는
+# 지금 당장은 아무 엔드포인트도 열지 않는다(actuator가 클래스패스에 있어야 관리 대상이 된다).
+management:
+  endpoints:
+    web:
+      exposure:
+        include: metrics
+
 jwt:
   secret: ${JWT_SECRET:}
   access-exp-minutes: 30

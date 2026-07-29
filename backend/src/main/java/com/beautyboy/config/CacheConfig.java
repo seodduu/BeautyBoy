@@ -55,7 +55,14 @@ public class CacheConfig implements CachingConfigurer {
                         .fromSerializer(new GenericJackson2JsonRedisSerializer()));
         Map<String, RedisCacheConfiguration> perCache = new HashMap<>();
         TTL.forEach((name, ttl) -> perCache.put(name, base.entryTtl(ttl)));
-        return RedisCacheManager.builder(factory).withInitialCacheConfigurations(perCache).build();
+        // B5 — 캐시 통계(hit/miss/get 카운터)를 켠다. Micrometer의 캐시 메트릭(cache.gets)이
+        // 읽는 원천이 RedisCache#getStatistics()다. withInitialCacheConfigurations로 세 캐시를
+        // 부팅 시점에 즉시 등록해두는 것(위)도 같은 이유 — 지연 생성되면 CacheMetricsRegistrar가
+        // 부팅 때 바인딩할 캐시가 없어 놓친다.
+        return RedisCacheManager.builder(factory)
+                .withInitialCacheConfigurations(perCache)
+                .enableStatistics()
+                .build();
     }
 
     // Redis 다운 시 @Cacheable이 예외를 삼키고 원본 메서드로 직행하게 한다.
