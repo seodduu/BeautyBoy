@@ -32,10 +32,14 @@ public class KafkaTopicConfig {
                 .build();
     }
 
-    /** 컨슈머가 재시도를 소진하면 {@code DefaultErrorHandler}가 여기로 보낸다(기본 명명 규칙). */
+    /**
+     * 컨슈머가 재시도를 소진하면 {@code DefaultErrorHandler}의 리커버러가 여기로 보낸다.
+     * 접미사를 {@link KafkaConsumerConfig#DLT_접미사}에서 가져오는 이유: 이 이름과 리커버러의
+     * 목적지가 어긋나면 DLQ 재처리 기능이 통째로 죽는다(실제로 한 번 그랬다).
+     */
     @Bean
     public NewTopic orderEventsDltTopic() {
-        return TopicBuilder.name(OutboxRelay.TOPIC + ".DLT")
+        return TopicBuilder.name(OutboxRelay.TOPIC + KafkaConsumerConfig.DLT_접미사)
                 .partitions(PARTITIONS)
                 .replicas(REPLICAS)
                 .build();

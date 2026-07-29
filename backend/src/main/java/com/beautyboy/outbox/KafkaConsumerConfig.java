@@ -76,10 +76,29 @@ public class KafkaConsumerConfig {
      */
     @Bean
     public DefaultErrorHandler kafkaErrorHandler(KafkaTemplate<Object, Object> kafkaTemplate) {
-        DeadLetterPublishingRecoverer recoverer = new DeadLetterPublishingRecoverer(kafkaTemplate,
-                (record, exception) -> new TopicPartition(
-                        record.topic() + ".DLT", record.partition()));
-        return new DefaultErrorHandler(recoverer, 재시도_백오프());
+        return new DefaultErrorHandler(
+                new DeadLetterPublishingRecoverer(kafkaTemplate, DLT_목적지_리졸버()), 재시도_백오프());
+    }
+
+    /** {@link KafkaTopicConfig}가 실제로 만드는 DLT 토픽의 접미사. 이것과 어긋나면 DLQ가 통째로 죽는다. */
+    static final String DLT_접미사 = ".DLT";
+
+    /**
+     * DLT 목적지 결정 규칙: 원본 토픽 + {@code .DLT}, <b>파티션은 원본 그대로</b>.
+     *
+     * <p><b>왜 람다를 인라인으로 두지 않고 꺼내는가</b>: 이 규칙이 바로 실제로 조용히 깨져 있던
+     * 자리다(위 문단 참고). 그런데 그것을 잡아낸 것은 Docker가 필요한 {@code integrationTest}뿐이었고,
+     * 흔한 개발 루프인 {@code ./gradlew test}는 이 자리를 전혀 검증하지 못했다 — 그쪽 테스트는
+     * "핸들러가 null이 아니다" 수준이라 이름이 약속한 것을 지키지 못했다. 규칙을 여기로 꺼내면
+     * 브로커 없이 {@code resolve(record, ex).topic()}만 불러 회귀를 잡을 수 있다.
+     *
+     * <p>파티션을 보존하는 이유: 원본 파티션을 유지해야 DLT에서도 같은 주문(키=orderId)의 실패
+     * 레코드가 한 파티션에 순서대로 모이고, {@link DlqReplayService}의 재처리도 원본과 같은
+     * 분포를 따른다.
+     */
+    static java.util.function.BiFunction<org.apache.kafka.clients.consumer.ConsumerRecord<?, ?>,
+            Exception, TopicPartition> DLT_목적지_리졸버() {
+        return (record, exception) -> new TopicPartition(record.topic() + DLT_접미사, record.partition());
     }
 
     /**

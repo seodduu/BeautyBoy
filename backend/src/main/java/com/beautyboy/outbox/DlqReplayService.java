@@ -82,7 +82,7 @@ public class DlqReplayService {
     public int replay() {
         int replayed = 0;
         try (Consumer<String, String> consumer = consumerFactory.get()) {
-            consumer.subscribe(List.of(OutboxRelay.TOPIC + ".DLT"));
+            consumer.subscribe(List.of(OutboxRelay.TOPIC + KafkaConsumerConfig.DLT_접미사));
             while (true) {
                 ConsumerRecords<String, String> records = consumer.poll(POLL_TIMEOUT);
                 if (records.isEmpty()) {

@@ -300,10 +300,34 @@ class PostOrderConsumersTest {
                     .kafkaErrorHandler(new org.springframework.kafka.core.KafkaTemplate<>(
                             new org.springframework.kafka.core.DefaultKafkaProducerFactory<>(Map.of())));
 
-            // 핸들러가 서 있다는 것과, 그것이 재시도 소진 후 레코드를 버리지 않고
-            // 리커버러로 넘기는 DefaultErrorHandler라는 것까지가 여기서 볼 수 있는 전부다.
-            assertThat(handler).isNotNull();
+            // 재시도를 소진한 레코드를 버리지 않고 리커버러로 넘기는 DefaultErrorHandler다.
             assertThat(handler.isAckAfterHandle()).isTrue();
+        }
+
+        /**
+         * <b>이 단언이 없어서 실제로 조용히 깨져 있던 자리다.</b> Spring Kafka의 기본 목적지 리졸버는
+         * 원본 토픽 + {@code -dlt}(소문자·하이픈)를 쓰는데 {@link KafkaTopicConfig}가 만든 토픽은
+         * {@code .DLT}였다 — 재시도를 소진한 레코드가 존재하지 않는 토픽으로 가고
+         * {@link DlqReplayService}는 처음부터 아무것도 못 읽는, DLQ 기능 전체가 죽은 상태였다.
+         *
+         * <p>그 결함을 잡은 것은 Docker가 필요한 {@code integrationTest}(A7)뿐이라 흔한 개발 루프인
+         * {@code ./gradlew test}에서는 회귀가 잡히지 않았다. 이 테스트의 원래 자리는
+         * {@code assertThat(handler).isNotNull()}이라 이름이 약속한 "리커버러가 DLT로 보낸다"를
+         * 전혀 검증하지 않았다. 그래서 목적지 규칙을 {@link KafkaConsumerConfig#DLT_목적지_리졸버()}로
+         * 꺼내 <b>브로커 없이</b> 직접 호출한다.
+         */
+        @Test
+        void DLT_목적지는_원본토픽에_점DLT를_붙이고_파티션을_보존한다() {
+            var 리졸버 = KafkaConsumerConfig.DLT_목적지_리졸버();
+            var 실패한_레코드 = new ConsumerRecord<>(OutboxRelay.TOPIC, 2, 41L, "777", "{}");
+
+            var 목적지 = 리졸버.apply(실패한_레코드, new IllegalStateException("컨슈머 실패"));
+
+            // KafkaTopicConfig가 실제로 만드는 토픽 이름과 정확히 같아야 한다(리터럴로 못 박는다 —
+            // 양쪽이 같은 상수를 쓰더라도 그 상수가 잘못 바뀌면 브로커에 없는 토픽으로 간다).
+            assertThat(목적지.topic()).isEqualTo("order-events.DLT");
+            // 파티션 보존 — 같은 주문(키=orderId)의 실패 레코드가 DLT에서도 한 파티션에 모인다.
+            assertThat(목적지.partition()).isEqualTo(2);
         }
     }
 
