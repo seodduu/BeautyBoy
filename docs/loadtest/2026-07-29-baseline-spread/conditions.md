@@ -105,18 +105,39 @@ PAIRS_FILE=./pairs.json confirm.js` (ramping-vus 10→50→200→0, 총 2분, �
 | 에러율 (`http_req_failed`) | 0.00% |
 | threshold `rate<0.01` | **PASS** (CLI: `✓ 'rate<0.01' rate=0.00%`) |
 
-### 4-1. 관측된 이상 — `--summary-export` JSON의 `thresholds` 필드
+### 4-1. `--summary-export` JSON의 `thresholds` 필드 — 정정: 버그가 아니라 정상 표기
+
+(최초 작성 시 이 필드를 "k6 v2.1.0의 직렬화 버그"로 잘못 결론지었다. 아래는 사실 확인 후
+정정한 내용이다.)
 
 k6 CLI 실행 화면은 `THRESHOLDS` 섹션에 `✓ 'rate<0.01' rate=0.00%`로 명확히 PASS를 표시했고
-`checks_succeeded`도 100%였다. 그런데 같은 실행에서 `--summary-export`로 저장한 JSON의
-`metrics.http_req_failed.thresholds`는 `{"rate<0.01": false}`로 찍혀 있었다(값 자체는
-`"value": 0`으로 정상). 재현을 위해 이번 실행 직전 남아 있던 이전 시도의 요약 JSON에서도
-동일한 불일치가 있었다(같은 `passes:0/fails:N/value:0`인데 `thresholds` 필드만 false). 즉
-**이 k6 버전(v2.1.0, darwin/arm64)의 `--summary-export` JSON에서 `http_req_failed`처럼 "낮을수록
-좋은" rate threshold의 `thresholds` 필드가 실제 판정과 반대로 직렬화되는 것으로 보인다** —
-CLI의 실시간 THRESHOLDS 출력과 실제 에러율(`value: 0`, 즉 0%)을 근거로 이 실행은 threshold를
-통과한 것으로 판단했다. 커밋된 `confirm-summary.json`을 그대로 신뢰하면 오판할 수 있으므로
-남겨 둔다.
+`checks_succeeded`도 100%였다. 같은 실행에서 `--summary-export`로 저장한 JSON의
+`metrics.http_req_failed.thresholds`는 `{"rate<0.01": false}`로 찍혀 있다(값 자체는
+`"value": 0`으로 정상).
+
+**이 필드는 threshold의 실패 여부(`LastFailed`)를 담는다 — `false`는 "실패하지 않음", 즉
+PASS라는 정상 의미다.** 로컬에서 최소 재현으로 검증했다: k6 스크립트 두 개(항상 통과하는
+check, 항상 실패하는 check 각각에 `thresholds: { checks: ['rate>0.99'] }`)를 5회 반복으로
+돌려 `--summary-export`를 비교했다.
+
+```
+$ k6 run --summary-export=fail-summary.json fail.js   # threshold가 실제로 깨지는 케이스
+...THRESHOLDS  ✗ 'rate>0.99' rate=0.00%   (exit code 99)
+$ python3 -c "import json; print(json.load(open('fail-summary.json'))['metrics']['checks']['thresholds'])"
+{'rate>0.99': True}
+
+$ k6 run --summary-export=pass-summary.json pass.js   # threshold가 통과하는 케이스
+...THRESHOLDS  ✓ 'rate>0.99' rate=100.00%   (exit code 0)
+$ python3 -c "import json; print(json.load(open('pass-summary.json'))['metrics']['checks']['thresholds'])"
+{'rate>0.99': False}
+```
+
+CLI가 FAIL(✗, exit 99)을 보인 실행에서만 JSON의 `thresholds` 값이 `true`였고, PASS(✓, exit 0)
+실행에서는 `false`였다 — 즉 이 필드는 "threshold가 깨졌는가"를 뜻하며 버그가 아니다.
+
+방증도 있다: 같은 `{"rate<0.01": false}`가 집중 모형 JSON(`docs/loadtest/2026-07-29-baseline/
+browse-summary.json`, `confirm-summary.json`)에도 똑같이 있다 — "분산 측정에서 새로 발견된
+이상"이라는 최초 서술 자체가 성립하지 않았다. 이 필드는 두 모형 모두에서 정상 PASS 표기였다.
 
 ### 4-2. 분산 검증 (재고 감소가 여러 행에 퍼졌는가)
 
@@ -169,7 +190,7 @@ ramping-vus 200 피크, 같은 백엔드/DB 구성에서 유일하게 바꾼 변
 
 ## 6. 스크립트 커밋 SHA
 
-측정에 사용한 `confirm.js`/`README.md`는 이 문서를 커밋하는 것과 같은 커밋에 포함된다(§8
+측정에 사용한 `confirm.js`/`README.md`는 이 문서를 커밋하는 것과 같은 커밋에 포함된다(§2-1
 참고 — 별도 스모크 재측정 없이 같은 워킹트리에서 이어 측정했다).
 
 ## 7. compose 원복
@@ -193,8 +214,9 @@ JWT 흔적이 없음을 확인했다.
   다시 실행해야 하며, `goods_option`/`goods` 데이터가 이후 마이그레이션으로 바뀌면 정확히
   같은 250개 쌍이 나오지 않을 수 있다(상위집합 조건은 동일하게 유지되므로 재현성 자체는
   보장된다).
-- §4-1의 k6 JSON export 이상은 이번 측정에서 발견된 것으로, 향후 재측정 시에도 같은 k6
-  버전을 쓴다면 다시 나타날 수 있다 — CLI 출력을 항상 함께 확인해야 한다.
+- §4-1에서 정리했듯, `--summary-export` JSON의 `thresholds` 필드(`false`)는 threshold PASS를
+  뜻하는 정상 표기다(버그 아님). 다만 이 필드만 보고 판단하지 말고 CLI의 실시간 THRESHOLDS
+  출력도 함께 확인하는 습관은 유지하는 편이 안전하다(exit code로도 확인 가능).
 
 ## 10. 원본 JSON
 
