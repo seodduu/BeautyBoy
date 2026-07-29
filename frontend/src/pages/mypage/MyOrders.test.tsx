@@ -265,6 +265,56 @@ describe('MyOrders — 마이페이지 주문내역', () => {
     expect(screen.getAllByRole('button', { name: '주문 취소' })).toHaveLength(2);
   });
 
+  it('취소된 주문 상세는 회차 이력과 환불 합계를 보여준다', async () => {
+    const canceled: OrderDetail = {
+      ...ORDER_DETAIL,
+      status: 'PARTIALLY_CANCELED',
+      items: [
+        { ...ORDER_DETAIL.items[0], canceledQuantity: 1 },
+        ORDER_DETAIL.items[1],
+      ],
+      refundedAmount: 20000,
+      cancels: [
+        { refundAmount: 20000, reason: '단순 변심', canceledAt: '2026-07-25T13:40:00' },
+      ],
+    };
+    server.use(
+      http.get('/api/v1/orders', () =>
+        HttpResponse.json(
+          envelope({
+            content: [ORDER_SUMMARY],
+            page: 0,
+            size: 10,
+            totalElements: 1,
+            totalPages: 1,
+            hasNext: false,
+          }),
+        ),
+      ),
+      http.get('/api/v1/orders/:orderNo', () => HttpResponse.json(envelope(canceled))),
+    );
+
+    renderMyOrders('/mypage/orders/ORD-1');
+
+    expect(await screen.findByText('취소 내역')).toBeInTheDocument();
+    expect(screen.getByText(/2026-07-25/)).toBeInTheDocument();
+    expect(screen.getByText(/단순 변심/)).toBeInTheDocument();
+    // 회차별 환불액(−20,000원)과 합계(20,000원)가 둘 다 읽혀야 한다.
+    expect(screen.getByText('−20,000원')).toBeInTheDocument();
+    expect(screen.getByText('환불 합계')).toBeInTheDocument();
+    // 항목에도 몇 개가 취소됐는지 남는다.
+    expect(screen.getByText('1개 취소')).toBeInTheDocument();
+  });
+
+  it('취소 이력이 없는 주문에는 취소 내역 절이 없다', async () => {
+    registerHandlers();
+
+    renderMyOrders('/mypage/orders/ORD-1');
+
+    await screen.findByText('박철수');
+    expect(screen.queryByText('취소 내역')).not.toBeInTheDocument();
+  });
+
   it('취소 버튼을 누르면 취소 모달이 열린다 — 행 이동은 일어나지 않는다', async () => {
     registerHandlers();
 

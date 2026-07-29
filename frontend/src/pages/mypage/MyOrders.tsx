@@ -253,6 +253,32 @@ function OrderDetailView({ orderNo }: { orderNo: string }) {
         </p>
       </section>
 
+      {/* 취소 이력은 회차 단위다 — 한 주문이 여러 번 부분취소될 수 있어 합계만으로는 설명이 안 된다. */}
+      {detail.cancels.length > 0 && (
+        <section className="bb-order-detail__section">
+          <h3 className="bb-order-detail__section-title">취소 내역</h3>
+          <ul className="bb-order-detail__cancels">
+            {detail.cancels.map((cancel, index) => (
+              <li key={`${cancel.canceledAt}-${index}`} className="bb-order-detail__cancel-row">
+                <span className="bb-order-detail__cancel-meta">
+                  {cancel.canceledAt.slice(0, 10)} · {cancel.reason}
+                </span>
+                <span className="bb-order-detail__cancel-amount">
+                  −{formatWon(cancel.refundAmount)}
+                </span>
+              </li>
+            ))}
+          </ul>
+          <p className="bb-order-detail__refunded">
+            <span>환불 합계</span>
+            {/* 합계는 서버가 준 refundedAmount다 — 화면이 회차를 더하지 않는다. */}
+            <span className="bb-order-detail__refunded-value">
+              {formatWon(detail.refundedAmount)}
+            </span>
+          </p>
+        </section>
+      )}
+
       <section className="bb-order-detail__section bb-order-detail__amount">
         <span>결제금액</span>
         <span className="bb-order-detail__amount-value">{formatWon(detail.payableAmount)}</span>
