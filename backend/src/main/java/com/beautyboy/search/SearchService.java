@@ -5,6 +5,7 @@ import com.beautyboy.catalog.WishedGoodsProvider;
 import com.beautyboy.common.PageResponse;
 import com.beautyboy.search.dto.SearchCondition;
 import com.beautyboy.search.dto.SearchResultItem;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,17 +33,46 @@ public class SearchService {
     private final PopularKeywordHolder popularKeywordHolder;
     private final GoodsRatingProvider goodsRatingProvider;
     private final WishedGoodsProvider wishedGoodsProvider;
+    private final ObjectProvider<SearchService> self;
 
     public SearchService(GoodsSearchRepository goodsSearchRepository,
                          SearchKeywordLogRepository searchKeywordLogRepository,
                          PopularKeywordHolder popularKeywordHolder,
                          GoodsRatingProvider goodsRatingProvider,
-                         WishedGoodsProvider wishedGoodsProvider) {
+                         WishedGoodsProvider wishedGoodsProvider,
+                         ObjectProvider<SearchService> self) {
         this.goodsSearchRepository = goodsSearchRepository;
         this.searchKeywordLogRepository = searchKeywordLogRepository;
         this.popularKeywordHolder = popularKeywordHolder;
         this.goodsRatingProvider = goodsRatingProvider;
         this.wishedGoodsProvider = wishedGoodsProvider;
+        // 캐시(@Cacheable)는 프록시가 가로채야 동작하는데, this.searchCached(...)처럼 클래스 안에서
+        // 스스로를 부르면 프록시를 거치지 않아 캐시가 조용히 무시된다(Spring AOP 자기호출 함정).
+        // 그렇다고 별도 컴포넌트로 쪼개면 이 서비스 밖에 로그-only 클래스가 하나 더 생기므로,
+        // ObjectProvider로 스스로의 프록시 빈을 늦게(lazy) 받아 생성자 순환 참조 없이 자기주입한다.
+        this.self = self;
+    }
+
+    /**
+     * B3 — 검색어 로그를 남기고 캐시된 조회({@link #searchCached})에 위임한다.
+     *
+     * <p>로그(0건 검색어 파악용)는 인기검색어 집계의 원장이라 캐시 히트 여부와 무관하게 매번
+     * 남아야 한다 — 그래서 {@code @Cacheable}은 이 메서드가 아니라 {@link #searchCached}에 걸어
+     * 로그 기록을 캐시 경계 밖으로 뺐다. {@code this.searchCached(...)}로 직접 부르면 프록시를
+     * 거치지 않아 캐시가 무시되므로, 반드시 {@link #self}(자기주입 프록시)를 통해 호출한다.
+     */
+    @Transactional
+    public PageResponse<SearchResultItem> search(SearchCondition condition, Long memberId) {
+        // 로그를 먼저 남긴다 — 결과가 0건인 검색어야말로 "찾는데 없는 것"이라 가장 알고 싶은 데이터다.
+        // 캐시 히트/미스와 무관하게 항상 실행된다(이 메서드 자체에는 @Cacheable이 없다).
+        searchKeywordLogRepository.save(
+                new SearchKeywordLog(condition.keyword(), memberId, LocalDateTime.now()));
+
+        // self(ObjectProvider) 자체가 null이거나(예: Mockito @InjectMocks처럼 생성자 인자를 다 채우지
+        // 못한 채 Spring 컨테이너 밖에서 만들어진 경우) 그 안에 프록시가 없으면(getIfAvailable) this로
+        // 안전하게 폴백한다 — 결과는 같고 캐싱만 안 될 뿐이다.
+        SearchService proxy = (self == null) ? this : self.getIfAvailable(() -> this);
+        return proxy.searchCached(condition, memberId);
     }
 
     /**
@@ -54,22 +84,16 @@ public class SearchService {
      * (GoodsService.list의 B3 판단과 같은 함정), 키에 검색 조건뿐 아니라 {@code memberId}까지
      * 반영한다 — 그렇지 않으면 먼저 검색한 사용자의 찜 상태가 다른 사용자에게 그대로 캐시돼 나간다.
      *
-     * <p><b>알려진 트레이드오프</b>: 검색어 로그(0건 검색어 파악용) 기록이 이 메서드 안에 있어,
-     * 캐시 히트 시에는 로그가 남지 않는다(TTL 5분 동안 같은 조건·같은 사용자의 재검색만 영향받는다).
-     * 로그를 캐시 밖으로 분리하려면 이 서비스를 자기주입하거나 별도 컴포넌트로 쪼개야 하는데,
-     * B3 Files 범위 밖의 새 클래스가 필요해 이번 웨이브에서는 다루지 않는다.
+     * <p>public이어야 하는 이유: Spring의 CGLIB/JDK 프록시 기반 {@code @Cacheable}은 프록시를
+     * 거치는 외부 호출만 가로챈다 — package-private/private이면 프록시가 오버라이드/노출하지
+     * 못해 캐시가 걸리지 않는다. 반드시 {@link #search}가 {@link #self}를 통해 호출해야 한다.
      */
     @Cacheable(cacheNames = "goodsList",
             key = "'search:' + T(com.beautyboy.common.CacheKeys).goodsList("
                     + "#condition.keyword(), #condition.sort().name(), #condition.page(), "
                     + "T(com.beautyboy.search.SearchService).filtersOf(#condition)) + ':' + #memberId")
-    @Transactional
-    public PageResponse<SearchResultItem> search(SearchCondition condition, Long memberId) {
-        // 로그를 먼저 남긴다 — 결과가 0건인 검색어야말로 "찾는데 없는 것"이라 가장 알고 싶은 데이터다.
-        // (캐시 히트 시에는 메서드 자체가 실행되지 않아 로그가 남지 않는다 — 위 문서의 트레이드오프.)
-        searchKeywordLogRepository.save(
-                new SearchKeywordLog(condition.keyword(), memberId, LocalDateTime.now()));
-
+    @Transactional(readOnly = true)
+    public PageResponse<SearchResultItem> searchCached(SearchCondition condition, Long memberId) {
         List<GoodsSearchRepository.SearchRow> rows = goodsSearchRepository.search(condition);
         long totalElements = goodsSearchRepository.count(condition);
 
