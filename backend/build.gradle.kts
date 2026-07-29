@@ -18,6 +18,9 @@ extra["testcontainers.version"] = "1.21.4"
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+    // B5 — 캐시 히트율(cache.gets)·컨슈머 랙 등 운영 지표를 /actuator/metrics로 노출한다.
+    // micrometer-core는 이 starter가 전이로 끌고 온다(부하 리포트 C2가 이 값을 읽는다).
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
     // 조회수는 상세를 볼 때마다 쓰기가 나가는 최고 경합 카운터라 Redis INCR 버퍼로 뺄 값어치가 있다.
     // 단, Redis는 선택이다(beautyboy.view-count.redis 토글). 기본은 DB 즉시 증가라 컨테이너 없이도 뜬다.
     implementation("org.springframework.boot:spring-boot-starter-data-redis")

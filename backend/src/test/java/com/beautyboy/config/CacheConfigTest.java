@@ -1,13 +1,15 @@
 package com.beautyboy.config;
 
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.actuate.metrics.cache.CacheMetricsRegistrar;
+import org.springframework.boot.actuate.metrics.cache.RedisCacheMeterBinderProvider;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.redis.cache.CacheStatistics;
-import org.springframework.data.redis.cache.RedisCache;
 import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -16,6 +18,7 @@ import org.springframework.stereotype.Component;
 
 import java.nio.ByteBuffer;
 import java.time.Duration;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -74,14 +77,14 @@ class CacheConfigTest {
     }
 
     /**
-     * B5 — 캐시 히트율 관측. 계획서 사양은 {@code /actuator/metrics}의 {@code cache.gets}(hit≥1)를
-     * 요구하지만, {@code spring-boot-starter-actuator}·micrometer-core 의존성이
-     * {@code backend/build.gradle.kts}에 없다(이 태스크 Files 목록 밖 — 추가하지 않고 보고).
-     * 그래서 Micrometer 바인딩 자체는 여기서 검증할 수 없다. 대신 Micrometer가 결국 읽는
-     * 원천인 {@link RedisCache#getStatistics()}가 실제로 집계되는지(=
-     * {@code enableStatistics()}가 켜져 있는지)를 조회 2회(1 put + 2 get으로 히트 1회 이상 유도)로
-     * 검증한다. Redis 직렬화·TTL이 실제로 먹는 것과 {@code /actuator/metrics} 노출 자체는
-     * Redis 컨테이너와 actuator 의존성이 모두 있는 compose 실기동(C1)에서 확인한다.
+     * B5 — 캐시 히트율 관측. 계획서 사양대로 Micrometer {@code cache.gets} 미터(결과 태그
+     * hit/miss)가 실제로 hit≥1로 집계되는지를 확인한다. {@code spring-boot-starter-actuator}가
+     * 이제 클래스패스에 있으므로(build.gradle.kts), 실제 프로덕션 바인딩 경로인
+     * {@link CacheMetricsRegistrar}#{@code bindCacheToRegistry}로 {@link RedisCacheManager}가
+     * 만든 캐시를 {@link SimpleMeterRegistry}에 바인딩해 미터를 직접 읽는다 — Redis 자체는
+     * 여전히 목(target: put/get 왕복이 실제로 집계되는 stateful 목)이므로 Global Constraints의
+     * "인프라 없이 테스트" 규칙을 지킨다. Redis 직렬화·TTL이 실제로 먹는지와
+     * {@code /actuator/metrics} HTTP 노출 자체는 compose 실기동(C1)에서 확인한다.
      */
     @Test
     void 캐시_히트율_메트릭이_노출된다() {
@@ -90,15 +93,22 @@ class CacheConfigTest {
                 .withPropertyValues("beautyboy.cache.redis=true")
                 .run(context -> {
                     CacheManager cacheManager = context.getBean(CacheManager.class);
-                    RedisCache ranking = (RedisCache) cacheManager.getCache("ranking");
+                    Cache ranking = cacheManager.getCache("ranking");
 
                     ranking.put("key1", "value1");
                     ranking.get("key1");
                     ranking.get("key1");
 
-                    CacheStatistics statistics = ranking.getStatistics();
-                    assertThat(statistics.getGets()).isEqualTo(2);
-                    assertThat(statistics.getHits()).isGreaterThanOrEqualTo(1);
+                    SimpleMeterRegistry registry = new SimpleMeterRegistry();
+                    new CacheMetricsRegistrar(registry, List.of(new RedisCacheMeterBinderProvider()))
+                            .bindCacheToRegistry(ranking);
+
+                    double hits = registry.get("cache.gets")
+                            .tag("cache", "ranking")
+                            .tag("result", "hit")
+                            .functionCounter()
+                            .count();
+                    assertThat(hits).isGreaterThanOrEqualTo(1);
                 });
     }
 
