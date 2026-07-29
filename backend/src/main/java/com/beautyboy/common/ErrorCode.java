@@ -82,7 +82,12 @@ public enum ErrorCode {
     // 동시에 들어와 내 요청이 한 발 늦었다"는 뜻이다. 401로 내리면 client.ts의 응답 인터셉터가
     // refresh 401을 곧바로 세션 소멸(clear)로 해석해, 승자가 방금 정상 발급한 세션까지 지워버린다.
     // (client.ts는 동결 계약이라 서버가 상태 코드로 구분해줘야 한다.)
-    AUTH_REFRESH_CONFLICT(HttpStatus.CONFLICT, "리프레시 토큰이 다른 요청에 의해 이미 교체되었습니다. 다시 시도해주세요");
+    AUTH_REFRESH_CONFLICT(HttpStatus.CONFLICT, "리프레시 토큰이 다른 요청에 의해 이미 교체되었습니다. 다시 시도해주세요"),
+
+    // 취소·환불 (2026-07-30 — 취소 계획 T0 선점. T1·T2는 이 파일을 열지 않는다)
+    ORDER_CANCEL_EMPTY(HttpStatus.BAD_REQUEST, "취소할 항목을 선택해주세요"),
+    ORDER_CANCEL_QUANTITY_EXCEEDED(HttpStatus.CONFLICT, "취소 수량이 남은 수량을 초과합니다"),
+    PAYMENT_CANCEL_FAILED(HttpStatus.BAD_GATEWAY, "결제 취소에 실패했습니다. 잠시 후 다시 시도해주세요");
 
     private final HttpStatus status;
     private final String message;
