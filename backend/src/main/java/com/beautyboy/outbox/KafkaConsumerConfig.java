@@ -1,5 +1,6 @@
 package com.beautyboy.outbox;
 
+import org.apache.kafka.common.TopicPartition;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -55,15 +56,30 @@ public class KafkaConsumerConfig {
 
     /**
      * 실패 처리(설계 §5). 재시도를 소진한 레코드를 {@code order-events.DLT}로 보낸다 —
-     * 토픽 이름은 {@link DeadLetterPublishingRecoverer}의 기본 규칙(원본 토픽 + {@code .DLT})이고,
      * 원본 토픽·파티션·오프셋·예외는 헤더에 보존된다. A6의 replay가 그 헤더에 기댄다.
+     *
+     * <p><b>목적지를 명시하는 이유(A7 실브로커 통합 테스트가 잡은 배선 버그)</b>: 이 자리는
+     * 원래 {@code new DeadLetterPublishingRecoverer(kafkaTemplate)}(목적지 리졸버 미지정)였고,
+     * 주석은 "기본 규칙이 원본 토픽 + {@code .DLT}"라고 적어 뒀다 — 그 가정이 틀렸다.
+     * Spring Kafka(이 프로젝트가 쓰는 3.3.6)의 실제 기본 목적지 리졸버는 원본 토픽에
+     * <b>{@code -dlt}(소문자, 하이픈)</b>를 붙인다(바이트코드로 확인: {@code DEFAULT_DESTINATION_RESOLVER}가
+     * {@code "<토픽>-dlt"} 템플릿을 쓴다). 그래서 재시도를 소진한 레코드는 {@link KafkaTopicConfig}가
+     * 실제로 만든 {@code order-events.DLT}가 아니라 존재하지 않는 {@code order-events-dlt}로 갔다 —
+     * 브로커가 그 토픽을 몰라 프로듀서가 파티션을 스스로 정하는 경고(UNKNOWN_TOPIC_OR_PARTITION)만
+     * 남기고, {@link DlqReplayService}는 처음부터 아무것도 못 읽는다. DLQ 재처리 기능 전체가
+     * 실제로는 작동하지 않는 상태였다 — Testcontainers Kafka로 실브로커를 거친 A7이 처음 잡았다
+     * (H2/목 기반 테스트는 목적지 리졸버 호출 자체를 검증하지 않아 이 불일치를 볼 수 없었다).
+     * 그래서 목적지를 {@link KafkaTopicConfig}가 만든 실제 DLT 토픽 이름으로 명시한다.
      *
      * <p>{@code CommonErrorHandler} 빈이 하나 있으면 Spring Boot가 구성하는 리스너 컨테이너
      * 팩토리가 그것을 집어 모든 {@code @KafkaListener}에 적용한다 — 컨슈머마다 붙일 필요가 없다.
      */
     @Bean
     public DefaultErrorHandler kafkaErrorHandler(KafkaTemplate<Object, Object> kafkaTemplate) {
-        return new DefaultErrorHandler(new DeadLetterPublishingRecoverer(kafkaTemplate), 재시도_백오프());
+        DeadLetterPublishingRecoverer recoverer = new DeadLetterPublishingRecoverer(kafkaTemplate,
+                (record, exception) -> new TopicPartition(
+                        record.topic() + ".DLT", record.partition()));
+        return new DefaultErrorHandler(recoverer, 재시도_백오프());
     }
 
     /**

@@ -2,7 +2,11 @@ spring:
   application:
     name: beautyboy
   datasource:
-    url: ${DB_URL:jdbc:mysql://localhost:3306/beautyboy}
+    # useAffectedRows=true가 없으면 MySQL JDBC 드라이버가 `INSERT ... ON DUPLICATE KEY UPDATE`의
+    # 반환값을 "실제로 바뀐 행 수"가 아니라 "매치된 행 수"로 돌려준다(중복이어도 보통 2) —
+    # outbox의 processed_event/notification 멱등성 게이트(영향 행 0 == 중복)가 실 MySQL에서
+    # 조용히 깨진다(A7 Testcontainers MySQL 통합 테스트가 실측: 재발행 시 판매집계가 배로 늚).
+    url: ${DB_URL:jdbc:mysql://localhost:3306/beautyboy?useAffectedRows=true}
     username: ${DB_USERNAME:beautyboy}
     password: ${DB_PASSWORD:}
   jpa:
