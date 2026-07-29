@@ -100,7 +100,12 @@ services:
       start_period: 40s
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        # 결제창 클라이언트 키. Vite가 빌드 시점에 번들로 굽는 값이라 environment(런타임)로는
+        # 늦다 — build.args여야 한다. 비어 있으면 결제창만 안 열리고 나머지는 정상이다.
+        VITE_TOSS_CLIENT_KEY: ${TOSS_CLIENT_KEY:-}
     ports: ["3000:80"]
     depends_on:
       backend:
