@@ -31,3 +31,16 @@ cosmetics.csv
 
 # 개인 메모
 일어나서 다시 할 것.txt
+
+# 로컬 전용 작업 문서 — 원격 저장소에서는 정리했고 로컬에서만 유지 (히스토리 178cb84 이전 참조)
+docs/plans/
+docs/superpowers/
+docs/adr/
+docs/loadtest/
+docs/2026-07-25-흐름-추천-설계메모.md
+docs/남성_화장품_상품상세페이지_UX_기획.md
+docs/상품상세페이지_성분패널_UI_리뷰.md
+화장품_성분_주의도_점수_설계.md
+
+# 데모 영상 원본(mov) — README용 GIF는 docs/demo에 커밋됨
+BeautyBoy Video/
