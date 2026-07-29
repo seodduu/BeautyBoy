@@ -32,17 +32,28 @@ services:
   kafka:
     image: apache/kafka:3.9.0
     container_name: beautyboy-kafka
-    ports: ["9092:9092"]
+    # 9092는 컨테이너 내부 리스너 포트로 그대로 두고, 호스트 전용 리스너는 29092로 뺀다.
+    # 호스트 포트와 컨테이너 내부 리스너 포트를 같은 숫자로 겹쳐 두면 어느 쪽 리스너를
+    # 말하는 건지 로그/문서에서 헷갈리기 쉬워서 일부러 다른 번호를 쓴다.
+    ports: ["9092:9092", "29092:29092"]
     environment:
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: broker,controller
       KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
-      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      # PLAINTEXT_HOST: 호스트에서 뜬 클라이언트(loadtest 프로필 ./gradlew bootRun 등) 전용 리스너.
+      # 컨테이너 내부 경로는 여전히 kafka:9092 하나뿐이라 backend 컨테이너의
+      # KAFKA_BOOTSTRAP: kafka:9092 설정은 그대로 둔다.
+      KAFKA_LISTENERS: PLAINTEXT://:9092,PLAINTEXT_HOST://:29092,CONTROLLER://:9093
+      # 컨테이너 내부에는 여전히 kafka:9092로 광고(backend 컨테이너 경로 불변).
+      # 호스트에는 localhost:29092로 광고 — 브로커가 이 주소로 다시 접속하라고 응답해야
+      # 호스트에서 뜬 클라이언트가 실제로 데이터를 주고받을 수 있다.
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_HEAP_OPTS: "-Xmx512m -Xms256m"   # 로컬 스택 보호 — 이 이상 필요하면 설계가 틀린 것
     healthcheck:
+      # 컨테이너 안에서 localhost:9092를 보므로 내부 PLAINTEXT 리스너를 가리킨다(그대로 둔다).
       test: ["CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list"]
       interval: 10s
       timeout: 10s

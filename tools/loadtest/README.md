@@ -37,7 +37,26 @@ docker compose up -d mysql redis
 - `backend/src/main/resources/application-local.yml`이 이미 13306/root/local1234로 맞춰져 있어야
   한다(없다면 그 파일 상단 주석대로 example을 복사).
 
-### 1-2. 백엔드를 `local,loadtest` 프로필로 bootRun
+### 1-2. Kafka — 비동기 후처리(아웃박스 릴레이/컨슈머) before/after 측정 시
+
+compose의 kafka 서비스는 리스너가 두 개다: 컨테이너 내부용(`kafka:9092`, backend 컨테이너가
+쓰는 경로 — 안 바꿈)과 호스트용(`PLAINTEXT_HOST`, `localhost:29092`로 광고). 호스트에서
+`./gradlew bootRun`한 백엔드는 컨테이너가 아니므로 `kafka`라는 이름을 못 찾는다 — 반드시
+호스트 리스너 포트로 접속해야 한다.
+
+```bash
+docker compose up -d kafka
+```
+
+- `KAFKA_BOOTSTRAP=localhost:29092`를 bootRun 환경변수로 넘긴다(1-3절 예시 참고). **9092가
+  아니다** — 9092는 컨테이너 내부 리스너가 광고하는 주소(`kafka:9092`)와 짝지어진 포트라 호스트가
+  붙어도 브로커가 "kafka:9092로 다시 오라"고 응답해 실패한다.
+- 확인: `docker exec beautyboy-kafka /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 --list`
+  (컨테이너 내부 경로), `docker run --rm --network host apache/kafka:3.9.0
+  /opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:29092 --list`(호스트 경로 — 이 리포
+  검증 시점 macOS Docker Desktop에서 `--network host`가 기대대로 동작해 확인 가능했다).
+
+### 1-3. 백엔드를 `local,loadtest` 프로필로 bootRun
 
 ```bash
 cd backend
@@ -49,6 +68,20 @@ JWT_SECRET=$(openssl rand -base64 32) \
   요청 금액 그대로 승인하므로 `paymentKey`는 아무 값이나 통과한다(스크립트는 `stub-<orderNo>`를 보낸다).
 - `JWT_SECRET`은 Base64 문자열이어야 한다(설계 문서 관례 — `curl-smoke-recipe` 참고).
 - 백엔드는 기본 8080 포트로 뜬다.
+- **Kafka 후처리(아웃박스 릴레이/컨슈머) before/after를 측정할 때**는 위 환경변수에 더해
+  `KAFKA_BOOTSTRAP=localhost:29092 ORDER_EVENTS=true`를 얹는다(랭킹/목록/궁합 캐시까지 같이
+  보려면 `CACHE_REDIS=true`도). 예:
+
+  ```bash
+  cd backend
+  JWT_SECRET=$(openssl rand -base64 32) \
+  KAFKA_BOOTSTRAP=localhost:29092 ORDER_EVENTS=true CACHE_REDIS=true \
+    ./gradlew bootRun --args='--spring.profiles.active=local,loadtest'
+  ```
+
+  기동 로그에 Kafka consumer group이 `localhost:29092`를 향해 조인하는 줄이 보이고 재시도/연결
+  실패 경고가 없으면 정상이다. `ORDER_EVENTS=false`(기본값)면 이 변수들은 무시되고 outbox
+  릴레이도 컨슈머도 뜨지 않는다.
 
 ## 2. 환경변수
 
