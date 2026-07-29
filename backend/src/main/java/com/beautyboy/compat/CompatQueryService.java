@@ -1,6 +1,10 @@
 package com.beautyboy.compat;
 
+import com.beautyboy.common.CacheKeys;
+import org.springframework.cache.annotation.Cacheable;
+
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -17,4 +21,20 @@ public interface CompatQueryService {
      * 후보가 비어 있으면 빈 맵을 돌려준다.
      */
     Map<Long, String> worstVerdicts(Long baseGoodsNo, Collection<Long> candidateGoodsNos);
+
+    /**
+     * B4 — 상품 두 개 사이의 궁합 최악 판정. 배치 진입점(worstVerdicts)은 후보 컬렉션을 받아
+     * (a,b) 단일 키로 캐싱할 수 없으므로, 캐싱 가능한 단일쌍 진입점을 별도로 둔다.
+     *
+     * <p>개인화 없음: 반환값은 성분 집합·규칙표로만 결정되고 조회자(viewer)를 참조하지 않는다.
+     * 대칭성: {@code worstVerdicts}는 base·candidate의 분류 집합 사이 무순서 쌍만 검사하므로
+     * (a,b)와 (b,a)의 판정값은 항상 같다 — {@link CacheKeys#compat}의 대칭 키와 응답이 일치한다.
+     *
+     * <p>기본 메서드로 둔 이유: CompatQueryService.java만 수정 대상인 태스크 경계라
+     * 구현체({@code CompatService})는 건드리지 않고 기존 배치 로직(worstVerdicts)에 위임한다.
+     */
+    @Cacheable(cacheNames = "compat", key = "T(com.beautyboy.common.CacheKeys).compat(#a, #b)")
+    default String worstVerdict(long a, long b) {
+        return worstVerdicts(a, List.of(b)).getOrDefault(b, "OK");
+    }
 }
