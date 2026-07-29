@@ -6,6 +6,10 @@
 //   - POST /api/v1/orders              req {items:[{goodsNo,optionNo,quantity}], receiverName,
 //                                            receiverPhone, zipcode, address1, address2, deliveryType}
 //                                       → 201, data.{orderNo, payableAmount}
+//     검증 레이어가 필드마다 다르다 — receiverName/receiverPhone/zipcode/address1/deliveryType은
+//     OrderCreateRequest에 @NotBlank(Bean Validation, 400)가 붙어 있고, items/goodsNo/optionNo/quantity는
+//     어노테이션이 없다(@Valid만). 이 셋은 OrderService가 서비스 레이어에서 판정한다
+//     (CART_EMPTY, CART_QUANTITY_INVALID, GOODS_NOT_FOUND, ORDER_OUT_OF_STOCK).
 //   - POST /api/v1/payments/confirm    req {orderNo, paymentKey, amount} → 200, data.{orderNo,status,paidAmount}
 import http from 'k6/http';
 import { check } from 'k6';

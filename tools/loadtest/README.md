@@ -48,7 +48,7 @@ JWT_SECRET=$(openssl rand -base64 32) \
 | `GOODS_ID` | 예: `42` | `V65__seed_goods_bulk.sql`에 명시적 PK로 박힌 상품(41~190 중 하나). 아래 3절 순서로 옵션 재고를 먼저 채워야 한다. |
 | `OPTION_ID` | 아래 3절에서 조회한 값 | `goods_option.id`는 auto-increment라 마이그레이션 실행 순서에 의존한다 — 하드코딩하지 말고 직접 SELECT해서 넣는다. |
 | `CATEGORY_CODE` | `C002001001` (기본값, 클렌징폼 하위 leaf) | `V10__catalog.sql`/`V12__seed_catalog.sql`의 category leaf 코드. 접두사 매칭이라 `C002`처럼 상위 코드도 동작한다. |
-| `GOODS_A` / `GOODS_B` | 예: `41` / `42` | 궁합 조회(`GET /api/v1/compat/verdicts?base=&candidates=`)의 기준/후보 상품. 존재하는 goods.id면 되고, 존재하지 않아도 CompatVerdictsController는 200 + 전량 OK로 응답한다(에러율에 영향 없음). |
+| `GOODS_A` / `GOODS_B` | `41` / `42` (기본값, `browse.js`에 하드코딩) | 궁합 조회(`GET /api/v1/compat/verdicts?base=&candidates=`)의 기준/후보 상품. 존재하는 goods.id면 되고, 존재하지 않아도 CompatVerdictsController는 200 + 전량 OK로 응답한다. **주의**: 비워 두면(undefined) 쿼리스트링이 `base=undefined&candidates=undefined`가 되어 Spring이 400을 돌려주고 이 트래픽(전체의 10%)이 `http_req_failed` threshold(`rate<0.01`)를 즉시 깬다 — 그래서 기본값을 스크립트에 박아 뒀다. |
 
 ## 3. GOODS_ID/OPTION_ID 재고 준비 (중요 — confirm.js 전용)
 
@@ -56,10 +56,11 @@ JWT_SECRET=$(openssl rand -base64 32) \
 차감하지 않는다). confirm.js는 200VU로 1~2분간 반복 주문→확정을 돌리므로 시드 재고
 (수십~수백 개 수준)는 순식간에 바닥나 `ORDER_OUT_OF_STOCK`(409)이 쏟아진다.
 
-> `http_req_failed` 기본 정의는 네트워크/연결 실패만 집계하고 4xx/5xx 애플리케이션 에러는
-> 포함하지 않는다 — 그래서 재고 고갈이 threshold(`rate<0.01`) 자체를 깨뜨리지는 않는다. 하지만
-> 재고가 바닥난 뒤로는 `checks`(`order created`/`confirmed`)가 대량 실패해 측정한 지연시간이
-> "정상 처리 경로"를 반영하지 않게 된다 — 재고를 반드시 넉넉하게 채워야 유효한 baseline이 된다.
+> k6 기본 분류는 **status 200~399 밖을 전부 failed로 집계한다**(`setResponseCallback`으로
+> 재정의하지 않는 한 — 이 스크립트는 재정의하지 않았다). 즉 재고 고갈로 409(`ORDER_OUT_OF_STOCK`)가
+> 유의미한 비율로 나오면 지연시간만 왜곡되는 게 아니라 **`http_req_failed` threshold(`rate<0.01`) 자체가
+> 깨져 k6 실행이 실패로 끝난다.** 재고 사전 보충은 선택이 아니라 이 스크립트가 성립하기 위한 필수
+> 전제조건이다 — 매 실행 전 아래 절차를 반드시 거친다.
 
 실행 전 매번 아래 순서를 따른다:
 

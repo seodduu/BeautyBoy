@@ -26,7 +26,7 @@ export default function () {
   } else if (r < 0.9) {
     res = http.get(`${BASE}/api/v1/goods?categoryCode=${__ENV.CATEGORY_CODE || 'C002001001'}&page=0`); // 20% 목록
   } else {
-    res = http.get(`${BASE}/api/v1/compat/verdicts?base=${__ENV.GOODS_A}&candidates=${__ENV.GOODS_B}`); // 10% 궁합
+    res = http.get(`${BASE}/api/v1/compat/verdicts?base=${__ENV.GOODS_A || '41'}&candidates=${__ENV.GOODS_B || '42'}`); // 10% 궁합
   }
   check(res, { '2xx': (x) => x.status >= 200 && x.status < 300 });
 }
