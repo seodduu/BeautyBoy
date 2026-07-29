@@ -28,6 +28,8 @@ public class Order {
 
     public static final String STATUS_PENDING = "PENDING";
     public static final String STATUS_PAID = "PAID";
+    public static final String STATUS_PARTIALLY_CANCELED = "PARTIALLY_CANCELED";
+    public static final String STATUS_CANCELED = "CANCELED";
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -122,6 +124,28 @@ public class Order {
         }
         this.status = STATUS_PAID;
         this.paidAt = paidAt;
+    }
+
+    /**
+     * 취소 가능 상태 검사. PAID·PARTIALLY_CANCELED만 통과한다(설계 §2).
+     *
+     * <p>PARTIALLY_CANCELED를 통과시키는 이유: 회차로 나눠 취소하는 것이 정상 경로다.
+     * 잔여가 0인 항목만 남았는지는 항목 단위 잔여 검증({@code OrderItem.cancel})이 판정한다.
+     */
+    public void ensureCancelable() {
+        if (!STATUS_PAID.equals(status) && !STATUS_PARTIALLY_CANCELED.equals(status)) {
+            throw new BusinessException(ErrorCode.ORDER_INVALID_STATUS);
+        }
+    }
+
+    /**
+     * 파생 판정: 모든 항목 잔여 0이면 CANCELED, 아니면 PARTIALLY_CANCELED.
+     * 취소 수량을 전부 반영한 <b>뒤</b>에 호출한다 — 상태를 따로 저장하지 않고 매번 다시 센다.
+     */
+    public String applyCancelStatus() {
+        boolean 전량_취소됨 = items.stream().allMatch(i -> i.remainingQuantity() == 0);
+        this.status = 전량_취소됨 ? STATUS_CANCELED : STATUS_PARTIALLY_CANCELED;
+        return this.status;
     }
 
     public boolean ownedBy(Long memberId) {

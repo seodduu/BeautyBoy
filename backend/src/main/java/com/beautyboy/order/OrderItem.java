@@ -1,5 +1,7 @@
 package com.beautyboy.order;
 
+import com.beautyboy.common.BusinessException;
+import com.beautyboy.common.ErrorCode;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -42,6 +44,13 @@ public class OrderItem {
 
     @Column(name = "line_amount", nullable = false)
     private int lineAmount;
+
+    /**
+     * 지금까지 취소된 수량의 누계(V94). 회차로 나눠 취소해도 여기 쌓인다 —
+     * 잔여 검증의 유일한 기준이라 회차 이력(order_cancel_item)을 합산하지 않는다.
+     */
+    @Column(name = "canceled_quantity", nullable = false)
+    private int canceledQuantity;
 
     protected OrderItem() {
     }
@@ -88,5 +97,21 @@ public class OrderItem {
 
     public int getLineAmount() {
         return lineAmount;
+    }
+
+    public int getCanceledQuantity() {
+        return canceledQuantity;
+    }
+
+    public int remainingQuantity() {
+        return quantity - canceledQuantity;
+    }
+
+    /** 취소 수량 반영. 잔여를 넘으면 ORDER_CANCEL_QUANTITY_EXCEEDED. */
+    public void cancel(int cancelQuantity) {
+        if (cancelQuantity <= 0 || cancelQuantity > remainingQuantity()) {
+            throw new BusinessException(ErrorCode.ORDER_CANCEL_QUANTITY_EXCEEDED);
+        }
+        this.canceledQuantity += cancelQuantity;
     }
 }

@@ -14,6 +14,12 @@ import java.time.LocalDateTime;
 public interface OutboxAppender {
 
     void appendOrderConfirmed(OrderConfirmedEvent event);
+
+    /**
+     * 취소 확정 이벤트. 확정과 같은 토픽·같은 트랜잭션 규약이다(설계 §8) —
+     * 취소 트랜잭션이 롤백되면 이 행도 함께 사라지므로 "취소 안 됐는데 이벤트만 나감"이 없다.
+     */
+    void appendOrderCanceled(OrderCanceledEvent event);
 }
 
 /**
@@ -41,20 +47,38 @@ class OutboxAppenderImpl implements OutboxAppender {
 
     @Override
     public void appendOrderConfirmed(OrderConfirmedEvent event) {
-        // 1) 채번을 위해 우선 저장한다. payload는 NOT NULL이라 자리표시자를 넣고,
-        //    같은 트랜잭션 안에서 아래 update로 실제 값을 채운다 — 트랜잭션 밖에서는
-        //    보이지 않으므로 자리표시자가 노출될 일이 없다.
-        OutboxEvent outboxEvent = new OutboxEvent(AGGREGATE_TYPE_ORDER, event.orderId(),
-                event.eventType(), "{}", LocalDateTime.now());
+        채번_후_페이로드를_채운다(event.orderId(), event.eventType(),
+                eventId -> new OrderConfirmedEvent(event.version(), eventId,
+                        event.eventType(), event.orderId(), event.memberId(), event.orderNo(),
+                        event.confirmedAt(), event.lines()));
+    }
+
+    @Override
+    public void appendOrderCanceled(OrderCanceledEvent event) {
+        채번_후_페이로드를_채운다(event.orderId(), event.eventType(),
+                eventId -> new OrderCanceledEvent(event.version(), eventId,
+                        event.eventType(), event.orderId(), event.memberId(), event.orderNo(),
+                        event.canceledAt(), event.refundAmount(), event.lines()));
+    }
+
+    /**
+     * 1) 채번을 위해 우선 저장한다. payload는 NOT NULL이라 자리표시자를 넣고, 같은 트랜잭션
+     * 안에서 아래 update로 실제 값을 채운다 — 트랜잭션 밖에서는 보이지 않으므로 자리표시자가
+     * 노출될 일이 없다. 2) 채번된 PK를 eventId에 심어 다시 직렬화한다.
+     *
+     * <p>이벤트 타입마다 record가 달라 "eventId를 채운 복사본"만 호출자가 만든다.
+     */
+    private void 채번_후_페이로드를_채운다(Long orderId, String eventType,
+                                 java.util.function.LongFunction<Object> eventId를_채운_페이로드) {
+        OutboxEvent outboxEvent = new OutboxEvent(AGGREGATE_TYPE_ORDER, orderId,
+                eventType, "{}", LocalDateTime.now());
         outboxEvent = repository.saveAndFlush(outboxEvent);
 
-        OrderConfirmedEvent withEventId = new OrderConfirmedEvent(event.version(), outboxEvent.getId(),
-                event.eventType(), event.orderId(), event.memberId(), event.orderNo(),
-                event.confirmedAt(), event.lines());
         try {
-            outboxEvent.setPayload(objectMapper.writeValueAsString(withEventId));
+            outboxEvent.setPayload(objectMapper.writeValueAsString(
+                    eventId를_채운_페이로드.apply(outboxEvent.getId())));
         } catch (JsonProcessingException e) {
-            throw new IllegalStateException("아웃박스 이벤트 직렬화 실패: orderId=" + event.orderId(), e);
+            throw new IllegalStateException("아웃박스 이벤트 직렬화 실패: orderId=" + orderId, e);
         }
         repository.save(outboxEvent);
     }
