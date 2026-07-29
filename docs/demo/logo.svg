@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 460" role="img" aria-label="BEAUTY BOY. — MEN'S SKINCARE COMMERCE">
+  <!-- 색은 DESIGN.md 토큰 값: canvas #f7f7f7 · ink #030303 · signal-sale #b42318 · slate #676f7b -->
+  <rect width="720" height="460" fill="#f7f7f7"/>
+  <g font-family="'Helvetica Neue', Helvetica, Arial, sans-serif" font-weight="400">
+    <text x="72" y="212" font-size="132" letter-spacing="-3" fill="#030303">BEAUTY</text>
+    <text x="72" y="333" font-size="132" letter-spacing="-3" fill="#030303">BOY<tspan fill="#b42318">.</tspan></text>
+    <line x1="72" y1="372" x2="648" y2="372" stroke="#030303" stroke-width="1"/>
+    <text x="72" y="412" font-size="20" letter-spacing="5" fill="#676f7b">MEN'S SKINCARE COMMERCE</text>
+  </g>
+</svg>

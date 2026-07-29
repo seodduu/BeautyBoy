@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="720" viewBox="0 0 1440 720" font-family="Apple SD Gothic Neo, Pretendard, -apple-system, sans-serif">
+  <defs>
+    <marker id="arrow2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#141414"/>
+    </marker>
+    <marker id="arrow2g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#9b9b9b"/>
+    </marker>
+  </defs>
+
+  <rect width="1440" height="720" fill="#ffffff"/>
+  <text x="60" y="66" font-size="30" font-weight="700" fill="#141414">같은 부하, 구매 대상만 분산 — p95 15.3초 → 1.1초</text>
+
+  <!-- ============ LEFT: concentrated ============ -->
+  <rect x="60" y="104" width="620" height="470" rx="16" fill="#fafafa" stroke="#e0e0e0" stroke-width="1.5"/>
+  <text x="90" y="148" font-size="22" font-weight="700" fill="#141414">집중 모형 — 200 VU 전원이 옵션 1개 구매</text>
+
+  <rect x="290" y="176" width="160" height="56" rx="10" fill="#141414"/>
+  <text x="370" y="212" text-anchor="middle" font-size="20" font-weight="700" fill="#ffffff">200 VU</text>
+
+  <!-- converging arrows -->
+  <g stroke="#9b9b9b" stroke-width="1.8" marker-end="url(#arrow2g)">
+    <line x1="310" y1="232" x2="352" y2="270"/>
+    <line x1="370" y1="232" x2="370" y2="270"/>
+    <line x1="430" y1="232" x2="388" y2="270"/>
+  </g>
+
+  <!-- queue -->
+  <text x="370" y="300" text-anchor="middle" font-size="16" fill="#6b6b6b">락 대기 행렬 — 트랜잭션이 100ms씩 직렬 통과</text>
+  <g>
+    <rect x="164" y="316" width="52" height="52" rx="8" fill="#ffffff" stroke="#9b9b9b" stroke-width="1.5"/>
+    <rect x="226" y="316" width="52" height="52" rx="8" fill="#ffffff" stroke="#9b9b9b" stroke-width="1.5"/>
+    <rect x="288" y="316" width="52" height="52" rx="8" fill="#ffffff" stroke="#9b9b9b" stroke-width="1.5"/>
+    <rect x="350" y="316" width="52" height="52" rx="8" fill="#ffffff" stroke="#9b9b9b" stroke-width="1.5"/>
+    <rect x="412" y="316" width="52" height="52" rx="8" fill="#ffffff" stroke="#9b9b9b" stroke-width="1.5"/>
+    <rect x="474" y="316" width="52" height="52" rx="8" fill="#ffffff" stroke="#141414" stroke-width="2.5"/>
+    <text x="500" y="349" text-anchor="middle" font-size="15" font-weight="700" fill="#141414">tx</text>
+  </g>
+  <text x="164" y="392" font-size="14" fill="#9b9b9b">… 200번째의 대기 ≈ 200 × 100ms = 20초</text>
+
+  <line x1="500" y1="368" x2="500" y2="408" stroke="#141414" stroke-width="2" marker-end="url(#arrow2)"/>
+
+  <rect x="330" y="414" width="340" height="64" rx="10" fill="#ffffff" stroke="#141414" stroke-width="2.5"/>
+  <text x="500" y="441" text-anchor="middle" font-size="18" font-weight="700" fill="#141414">goods_option #51 — 행 1개</text>
+  <text x="500" y="466" text-anchor="middle" font-size="15" fill="#6b6b6b">배타 락, 커밋까지 유지</text>
+
+  <text x="90" y="540" font-size="26" font-weight="800" fill="#c9372c">p95 15,300 ms</text>
+  <text x="330" y="540" font-size="18" fill="#6b6b6b">· 18.0 RPS · 에러율 0%</text>
+
+  <!-- ============ CENTER ============ -->
+  <line x1="692" y1="330" x2="744" y2="330" stroke="#141414" stroke-width="3" marker-end="url(#arrow2)"/>
+  <text x="720" y="300" text-anchor="middle" font-size="16" font-weight="700" fill="#141414">구매 대상만</text>
+  <text x="720" y="322" text-anchor="middle" font-size="16" font-weight="700" fill="#141414">변경</text>
+
+  <!-- ============ RIGHT: spread ============ -->
+  <rect x="760" y="104" width="620" height="470" rx="16" fill="#fafafa" stroke="#e0e0e0" stroke-width="1.5"/>
+  <text x="790" y="148" font-size="22" font-weight="700" fill="#141414">분산 모형 — 250개 상품을 회전 구매</text>
+
+  <rect x="990" y="176" width="160" height="56" rx="10" fill="#141414"/>
+  <text x="1070" y="212" text-anchor="middle" font-size="20" font-weight="700" fill="#ffffff">200 VU</text>
+
+  <!-- fanning arrows -->
+  <g stroke="#9b9b9b" stroke-width="1.8" marker-end="url(#arrow2g)">
+    <line x1="1010" y1="232" x2="880"  y2="300"/>
+    <line x1="1040" y1="232" x2="980"  y2="300"/>
+    <line x1="1070" y1="232" x2="1070" y2="300"/>
+    <line x1="1100" y1="232" x2="1160" y2="300"/>
+    <line x1="1130" y1="232" x2="1260" y2="300"/>
+  </g>
+
+  <!-- grid of rows -->
+  <g fill="#ffffff" stroke="#141414" stroke-width="1.5">
+    <rect x="820"  y="310" width="52" height="42" rx="8"/><rect x="884"  y="310" width="52" height="42" rx="8"/>
+    <rect x="948"  y="310" width="52" height="42" rx="8"/><rect x="1012" y="310" width="52" height="42" rx="8"/>
+    <rect x="1076" y="310" width="52" height="42" rx="8"/><rect x="1140" y="310" width="52" height="42" rx="8"/>
+    <rect x="1204" y="310" width="52" height="42" rx="8"/><rect x="1268" y="310" width="52" height="42" rx="8"/>
+    <rect x="820"  y="362" width="52" height="42" rx="8"/><rect x="884"  y="362" width="52" height="42" rx="8"/>
+    <rect x="948"  y="362" width="52" height="42" rx="8"/><rect x="1012" y="362" width="52" height="42" rx="8"/>
+    <rect x="1076" y="362" width="52" height="42" rx="8"/><rect x="1140" y="362" width="52" height="42" rx="8"/>
+    <rect x="1204" y="362" width="52" height="42" rx="8"/><rect x="1268" y="362" width="52" height="42" rx="8"/>
+  </g>
+  <text x="1070" y="438" text-anchor="middle" font-size="16" fill="#6b6b6b">250개 행에 분산 — 대기 행렬이 생기지 않는다</text>
+  <text x="1070" y="462" text-anchor="middle" font-size="14" fill="#9b9b9b">측정 후 확인: 224개 행에서 재고 1~342개씩 고르게 감소</text>
+
+  <text x="790" y="540" font-size="26" font-weight="800" fill="#1f7a4d">p95 1,101 ms</text>
+  <text x="1010" y="540" font-size="18" fill="#6b6b6b">· 177 RPS (9.9배) · 처리량 9.3배</text>
+
+  <!-- bottom caption -->
+  <text x="720" y="630" text-anchor="middle" font-size="21" font-weight="700" fill="#141414">같은 서버 · 같은 DB · 같은 2분 · 같은 200 VU 피크 — 바뀐 것은 “어떤 상품을 사는가” 하나</text>
+  <text x="720" y="664" text-anchor="middle" font-size="18" fill="#6b6b6b">병목은 코드가 아니라 트래픽의 모양이 만들었다 (p95 −92.8%)</text>
+</svg>
