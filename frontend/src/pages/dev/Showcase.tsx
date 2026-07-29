@@ -246,12 +246,12 @@ export function Showcase() {
 
       <section className="bb-showcase__section">
         <h2 className="bb-showcase__section-title">스켈레톤 그리드</h2>
-        <GoodsGrid items={[]} loading skeletonCount={5} />
+        <GoodsGrid items={[]} loading skeletonCount={5} onWishToggle={handleWishToggle} />
       </section>
 
       <section className="bb-showcase__section">
         <h2 className="bb-showcase__section-title">빈 상태</h2>
-        <GoodsGrid items={[]} />
+        <GoodsGrid items={[]} onWishToggle={handleWishToggle} />
       </section>
     </div>
   );

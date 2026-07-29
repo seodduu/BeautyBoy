@@ -4,6 +4,22 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { NextStepSection } from './NextStepSection';
+import { ToastProvider } from '../ui/ToastProvider';
+/* jsdom에는 matchMedia가 없다 — ToastProvider(prefers-reduced-motion)가 이 값을 읽는다.
+   카드 하트가 실패 토스트를 띄울 수 있게 되면서 이 화면들도 ToastProvider 안에서 렌더한다. */
+if (typeof window.matchMedia !== 'function') {
+  window.matchMedia = ((query: string) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    addListener: () => {},
+    removeListener: () => {},
+    dispatchEvent: () => false,
+  })) as unknown as typeof window.matchMedia;
+}
+
 
 // 테스트마다 새 QueryClient — 캐시가 테스트 간에 새지 않게. retry는 끈다(실패를 즉시 드러낸다).
 function wrapper({ children }: { children: ReactNode }) {
@@ -13,7 +29,9 @@ function wrapper({ children }: { children: ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <MemoryRouter>{children}</MemoryRouter>
+      <ToastProvider>
+        <MemoryRouter>{children}</MemoryRouter>
+      </ToastProvider>
     </QueryClientProvider>
   );
 }

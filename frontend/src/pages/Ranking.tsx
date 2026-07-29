@@ -6,6 +6,7 @@ import { GoodsCard } from '../components/goods/GoodsCard';
 import { GoodsCardSkeleton } from '../components/goods/GoodsCardSkeleton';
 import '../components/goods/GoodsGrid.css';
 import { CategoryTabs } from '../components/ranking/CategoryTabs';
+import { useWishToggle } from '../features/wishlist/useWishToggle';
 import type { GoodsListItem } from '../types/goods';
 import type { RankingItem } from '../types/ranking';
 import './Ranking.css';
@@ -42,6 +43,7 @@ function toGoodsListItem(item: RankingItem): GoodsListItem {
 export function Ranking() {
   const [searchParams, setSearchParams] = useSearchParams();
   const categoryCode = searchParams.get('category') ?? undefined;
+  const toggleWish = useWishToggle();
 
   const rankingQuery = useQuery({
     queryKey: ['ranking', categoryCode],
@@ -83,7 +85,9 @@ export function Ranking() {
               {/* 순위 배지: 스크린리더도 그대로 읽을 수 있는 실텍스트("N위"). 장식용 아이콘이
                   아니라 순위 정보 자체이므로 aria-hidden을 걸지 않는다. */}
               <span className="bb-ranking-item__rank">{item.rank}위</span>
-              <GoodsCard item={toGoodsListItem(item)} onWishToggle={() => {}} />
+              {/* 랭킹 응답에는 wished가 없어 위 변환이 항상 false를 채운다 — 눌린 하트는
+                  wishStore 오버레이가 켜준다. 새로고침 전까지의 표시만 이 오버레이가 책임진다. */}
+              <GoodsCard item={toGoodsListItem(item)} onWishToggle={toggleWish} />
             </div>
           ))}
         </div>

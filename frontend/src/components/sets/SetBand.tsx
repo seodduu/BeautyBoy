@@ -5,6 +5,7 @@ import { Button } from '../ui/Button';
 import { Skeleton } from '../ui/Skeleton';
 import { GoodsCard } from '../goods/GoodsCard';
 import { GoodsCardSkeleton } from '../goods/GoodsCardSkeleton';
+import { useWishToggle } from '../../features/wishlist/useWishToggle';
 import './SetBand.css';
 
 interface SetBandProps {
@@ -29,6 +30,7 @@ interface SetBandProps {
  */
 export function SetBand({ concept, letter, picks, loading, onAddSet, adding }: SetBandProps) {
   const pickCount = picks.filter((pick): pick is GoodsListItem => pick !== null).length;
+  const toggleWish = useWishToggle();
 
   return (
     <section className="bb-set-band">
@@ -74,9 +76,11 @@ export function SetBand({ concept, letter, picks, loading, onAddSet, adding }: S
                     {orderLabel} {step.label}
                   </p>
                   {pick ? (
-                    // 찜 토글은 이 화면의 관심사가 아니다 — GoodsGrid 기본값(onWishToggle = () => {})과
-                    // 같은 패턴으로, 대안·이유 문장 없이 카드만 표시 전용으로 재사용한다.
-                    <GoodsCard item={pick} onWishToggle={() => {}} categoryCode={step.categoryCode} />
+                    <GoodsCard
+                      item={pick}
+                      onWishToggle={toggleWish}
+                      categoryCode={step.categoryCode}
+                    />
                   ) : (
                     <p className="bb-set-band__empty">추천할 상품이 없어요</p>
                   )}

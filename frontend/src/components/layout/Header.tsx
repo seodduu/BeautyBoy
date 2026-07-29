@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import './Header.css';
 import { useAuthStore } from '../../stores/authStore';
@@ -49,6 +49,18 @@ export function Header() {
      않는다(§2 결정 6) — 시트가 오버레이 없이 상단바 바로 아래 붙는 형태라, 바깥 클릭 감지를
      추가하면 그 아래 콘텐츠의 첫 클릭을 삼킨다. */
   const [menuOpen, setMenuOpen] = useState(false);
+
+  /* 헤더 검색어. 상태의 진실은 URL(`/search?q=`)이고 이 값은 그 사본이다. */
+  const [keyword, setKeyword] = useState('');
+
+  /* 검색 화면에 있는 동안에는 헤더 입력을 URL의 q와 맞춘다 — 인기 검색어 칩·뒤로가기·딥링크로
+     q가 바뀌었는데 헤더에 직전 검색어가 남으면, 화면에 보이는 결과와 다른 말이 상단바에 떠 있게 된다. */
+  const searchQuery = useSearchParams()[0].get('q') ?? '';
+  useEffect(() => {
+    if (pathname === '/search') {
+      setKeyword(searchQuery);
+    }
+  }, [pathname, searchQuery]);
 
   // 라우트가 바뀌면 시트를 닫는다 — 안 닫으면 이동 후에도 시트가 남는다.
   useEffect(() => {
@@ -126,6 +138,17 @@ export function Header() {
   // 맞춰야 "헤더 배지 = 장바구니에서 보이는 줄 수"라는 사용자 기대가 어긋나지 않는다.
   const cartCount = cartQuery.data?.length;
 
+  const handleSearchSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const trimmed = keyword.trim();
+    // 공백만 넣고 엔터를 치면 아무 일도 일어나지 않는다 — 서버는 빈 검색어에 400을 준다
+    // (SearchController의 SEARCH_QUERY_TOO_SHORT).
+    if (!trimmed) {
+      return;
+    }
+    navigate(`/search?q=${encodeURIComponent(trimmed)}`);
+  };
+
   const handleLogout = async () => {
     try {
       await logout();
@@ -183,14 +206,23 @@ export function Header() {
           BEAUTY BOY
         </Link>
 
-        {/* 검색 기능은 이 태스크의 범위가 아님 — 자리만 확보 */}
-        <div className="bb-header__search" role="search" aria-label="상품 검색(준비 중)">
+        {/* 앱 전역의 검색 진입점. 자동완성은 검색 페이지의 SearchBox가 맡고, 여기서는
+            검색어를 /search?q=로 넘기는 일만 한다 — 헤더에 오버레이를 띄우면 상단바 위로
+            레이어가 겹쳐 장바구니·계정 조작을 가린다. */}
+        <form className="bb-header__search" role="search" aria-label="상품 검색" onSubmit={handleSearchSubmit}>
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
             <circle cx="7" cy="7" r="5" stroke="currentColor" strokeWidth="1.4" />
             <path d="M11 11L14.5 14.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
           </svg>
-          <span className="bb-header__search-text">스킨케어, 클렌징, 헤어 검색</span>
-        </div>
+          <input
+            type="search"
+            className="bb-header__search-input"
+            aria-label="상품 검색"
+            placeholder="스킨케어, 클렌징, 헤어 검색"
+            value={keyword}
+            onChange={(event) => setKeyword(event.target.value)}
+          />
+        </form>
 
         <nav className="bb-header__nav" aria-label="주요 메뉴">
           {/* 주요 메뉴는 장바구니·계정과 같은 우측 그룹에 둔다 — 상단바의 조작 지점을

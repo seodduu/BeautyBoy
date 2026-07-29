@@ -5,6 +5,7 @@ import { fetchPopularKeywords, fetchSearch } from '../api/search';
 import { EmptyState } from '../components/common/EmptyState';
 import { GoodsGrid } from '../components/goods/GoodsGrid';
 import { SearchBox } from '../components/search/SearchBox';
+import { useWishToggle } from '../features/wishlist/useWishToggle';
 import './Search.css';
 
 /**
@@ -16,6 +17,7 @@ export function Search() {
   const q = searchParams.get('q') ?? '';
   const hasQuery = q.length > 0;
 
+  const toggleWish = useWishToggle();
   const [suggestionCount, setSuggestionCount] = useState(0);
   const [liveMessage, setLiveMessage] = useState('');
 
@@ -113,7 +115,11 @@ export function Search() {
       )}
 
       {hasQuery && !searchQuery.isError && !isEmptyResult && (
-        <GoodsGrid items={searchQuery.data?.content ?? []} loading={searchQuery.isLoading} />
+        <GoodsGrid
+          items={searchQuery.data?.content ?? []}
+          loading={searchQuery.isLoading}
+          onWishToggle={toggleWish}
+        />
       )}
 
       {!hasQuery && renderPopularKeywords()}

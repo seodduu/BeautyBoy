@@ -7,6 +7,8 @@ import { server } from '../../mocks/server';
 import { ToastProvider } from '../../components/ui/ToastProvider';
 import { MyWishlist } from './MyWishlist';
 import * as wishlistApi from '../../api/wishlist';
+import { useAuthStore } from '../../stores/authStore';
+import { useWishStore } from '../../features/wishlist/wishStore';
 import type { GoodsDetail } from '../../types/detail';
 
 function envelope<T>(data: T) {
@@ -76,6 +78,18 @@ function renderMyWishlist() {
 }
 
 beforeEach(() => {
+  // 앞 테스트에서 누른 하트의 오버레이가 다음 테스트로 새지 않게 비운다.
+  useWishStore.getState().reset();
+
+  /* 이 화면은 RequireAuth 뒤에 있어 실서비스에서는 항상 로그인 상태다. 해제가 공용
+     useWishToggle을 타므로(비로그인이면 로그인으로 보낸다) 테스트도 그 전제를 맞춰준다. */
+  useAuthStore.getState().setAuth('token-abc', {
+    id: 1,
+    email: 'test@beautyboy.dev',
+    nickname: '민수',
+    grade: 'BRONZE',
+  });
+
   window.matchMedia = vi.fn().mockImplementation((query: string) => ({
     matches: false,
     media: query,

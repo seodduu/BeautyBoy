@@ -1,6 +1,6 @@
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Route, Routes, useSearchParams } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { http, HttpResponse } from 'msw';
 import { server } from '../../mocks/server';
@@ -51,6 +51,12 @@ function renderHeaderAt(path: string) {
 
 function envelope<T>(data: T) {
   return { code: 'OK', message: 'success', data };
+}
+
+/** /search로 실제 이동했는지와 그때 실린 q를 화면에 드러내는 목적지 컴포넌트. */
+function SearchRouteMarker() {
+  const [params] = useSearchParams();
+  return <div>{`SEARCH_ROUTE:${params.get('q') ?? ''}`}</div>;
 }
 
 describe('Header — 로그인/로그아웃 UI', () => {
@@ -215,6 +221,65 @@ describe('Header — 앱(로그인 이후) 내비', () => {
       el.textContent?.trim(),
     );
     expect(labels).toEqual(['루틴 가이드', '랭킹', '전체 상품', '장바구니', '민수님', '로그아웃']);
+  });
+});
+
+describe('Header — 검색', () => {
+  beforeEach(() => {
+    useAuthStore.setState({ accessToken: null, member: null, isBootstrapping: false });
+  });
+
+  /* 헤더 + /search 목적지를 함께 그려 실제 이동 결과(q 파라미터)를 눈으로 확인한다. */
+  function renderHeaderWithSearchRoute() {
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+
+    return render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={['/main']}>
+          <Header />
+          <Routes>
+            <Route path="/main" element={<div />} />
+            <Route path="/search" element={<SearchRouteMarker />} />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+  }
+
+  it('헤더 검색은 자리표시 텍스트가 아니라 입력 가능한 검색창이다', () => {
+    renderHeaderAt('/main');
+
+    expect(screen.getByRole('searchbox', { name: '상품 검색' })).toBeInTheDocument();
+    // "준비 중"이라고 이름 붙은 죽은 자리표시가 남아 있으면 안 된다.
+    expect(screen.queryByLabelText('상품 검색(준비 중)')).not.toBeInTheDocument();
+  });
+
+  it('검색어를 넣고 제출하면 /search?q=로 이동한다', async () => {
+    renderHeaderWithSearchRoute();
+
+    fireEvent.change(screen.getByRole('searchbox', { name: '상품 검색' }), {
+      target: { value: '크림' },
+    });
+    fireEvent.submit(screen.getByRole('search', { name: '상품 검색' }));
+
+    expect(await screen.findByText('SEARCH_ROUTE:크림')).toBeInTheDocument();
+  });
+
+  it('검색 화면에서는 헤더 입력이 URL의 q를 그대로 보여준다 — 직전 검색어가 남지 않는다', () => {
+    renderHeaderAt('/search?q=토너');
+
+    expect(screen.getByRole('searchbox', { name: '상품 검색' })).toHaveValue('토너');
+  });
+
+  it('공백만 입력하면 이동하지 않는다 — 빈 검색은 서버가 400을 준다', () => {
+    renderHeaderWithSearchRoute();
+
+    fireEvent.change(screen.getByRole('searchbox', { name: '상품 검색' }), {
+      target: { value: '   ' },
+    });
+    fireEvent.submit(screen.getByRole('search', { name: '상품 검색' }));
+
+    expect(screen.queryByText(/^SEARCH_ROUTE:/)).not.toBeInTheDocument();
   });
 });
 

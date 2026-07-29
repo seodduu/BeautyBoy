@@ -5,6 +5,22 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { http, HttpResponse } from 'msw';
 import { server } from '../mocks/server';
 import { GoodsList } from './GoodsList';
+import { ToastProvider } from '../components/ui/ToastProvider';
+/* jsdom에는 matchMedia가 없다 — ToastProvider(prefers-reduced-motion)가 이 값을 읽는다.
+   카드 하트가 실패 토스트를 띄울 수 있게 되면서 이 화면들도 ToastProvider 안에서 렌더한다. */
+if (typeof window.matchMedia !== 'function') {
+  window.matchMedia = ((query: string) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    addListener: () => {},
+    removeListener: () => {},
+    dispatchEvent: () => false,
+  })) as unknown as typeof window.matchMedia;
+}
+
 
 /** 목 서버가 마지막으로 받은 /goods 요청의 searchParams — 배선 테스트의 관측 지점. */
 let capturedSearchParams: URLSearchParams | null = null;
@@ -44,10 +60,12 @@ function renderList(search: string) {
 
   return render(
     <QueryClientProvider client={queryClient}>
-      <MemoryRouter initialEntries={[`/goods${search}`]}>
-        <GoodsList />
-        <LocationProbe />
-      </MemoryRouter>
+      <ToastProvider>
+        <MemoryRouter initialEntries={[`/goods${search}`]}>
+          <GoodsList />
+          <LocationProbe />
+        </MemoryRouter>
+      </ToastProvider>
     </QueryClientProvider>,
   );
 }

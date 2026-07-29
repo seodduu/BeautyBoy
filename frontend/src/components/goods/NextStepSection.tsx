@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { fetchNextStep } from '../../api/goods';
 import { GoodsGrid } from './GoodsGrid';
+import { useWishToggle } from '../../features/wishlist/useWishToggle';
 import './NextStepSection.css';
 
 interface NextStepSectionProps {
@@ -15,6 +16,7 @@ interface NextStepSectionProps {
  * (RecommendedSection과 동일 원칙).
  */
 export function NextStepSection({ goodsNo }: NextStepSectionProps) {
+  const toggleWish = useWishToggle();
   const nextStepQuery = useQuery({
     queryKey: ['goods-next-step', goodsNo],
     queryFn: () => fetchNextStep(goodsNo),
@@ -24,7 +26,7 @@ export function NextStepSection({ goodsNo }: NextStepSectionProps) {
     return (
       <section className="bb-next-step">
         <h2 className="bb-next-step__title">다음 단계</h2>
-        <GoodsGrid items={[]} loading skeletonCount={4} />
+        <GoodsGrid items={[]} loading skeletonCount={4} onWishToggle={toggleWish} />
       </section>
     );
   }
@@ -41,7 +43,7 @@ export function NextStepSection({ goodsNo }: NextStepSectionProps) {
       {blocks.map((block, index) => (
         <div className="bb-next-step__block" key={`${block.edgeKind}-${index}`}>
           <p className="bb-next-step__reason">{block.reason}</p>
-          <GoodsGrid items={block.items} />
+          <GoodsGrid items={block.items} onWishToggle={toggleWish} />
         </div>
       ))}
     </section>

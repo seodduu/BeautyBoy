@@ -5,6 +5,7 @@ import { Price } from '../ui/Price';
 import { Rating } from '../ui/Rating';
 import { Tag } from '../ui/Tag';
 import { WEIGHT, recordEvent, toCat3 } from '../../features/affinity/events';
+import { useWishedState } from '../../features/wishlist/wishStore';
 import './GoodsCard.css';
 
 interface GoodsCardProps {
@@ -13,7 +14,11 @@ interface GoodsCardProps {
    * GoodsListItem(tags required)도 구조적으로 호환되므로 목록·랭킹·추천 등 다른 화면은 그대로 넘긴다.
    */
   item: SearchResultItem;
-  onWishToggle: (goodsNo: number) => void;
+  /**
+   * 하트를 누를 때 호출된다. 두 번째 인자는 **누르기 직전의 찜 여부**로, 받는 쪽이
+   * 찜(POST)인지 해제(DELETE)인지 판단할 근거다 — 카드가 그 판단까지 하지는 않는다.
+   */
+  onWishToggle: (goodsNo: number, wished: boolean) => void;
   /**
    * 품절 신호. GoodsListItem에는 status 필드가 없어(Wave 1 범위 밖) 옵션 prop으로 둔다.
    * DESIGN.md 사양: 썸네일 opacity 0.45 + "품절" 라벨(색만으로 알리지 않는다).
@@ -42,6 +47,10 @@ export function GoodsCard({
   soldOut = false,
   categoryCode,
 }: GoodsCardProps) {
+  // 서버가 준 item.wished 위에 이 세션의 토글 결과를 덧씌운 값이 화면의 진실이다 —
+  // 목록을 다시 받아오기 전에도 방금 누른 하트가 켜져 있어야 한다.
+  const wished = useWishedState(item.goodsNo, item.wished);
+
   const handleWishClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
     event.stopPropagation();
@@ -56,7 +65,7 @@ export function GoodsCard({
         w: WEIGHT.wish,
       });
     }
-    onWishToggle(item.goodsNo);
+    onWishToggle(item.goodsNo, wished);
   };
 
   // 표시 규칙(전역): 카드에는 효과(EFFECT) 태그만, 최대 2개 — 사용감(TEXTURE)은 상세에서만 보여준다.
@@ -116,11 +125,11 @@ export function GoodsCard({
       <button
         type="button"
         className="bb-goods-card__wish"
-        aria-pressed={item.wished}
-        aria-label={item.wished ? '찜 해제' : '찜하기'}
+        aria-pressed={wished}
+        aria-label={wished ? '찜 해제' : '찜하기'}
         onClick={handleWishClick}
       >
-        {item.wished ? '♥' : '♡'}
+        {wished ? '♥' : '♡'}
       </button>
     </div>
   );

@@ -51,7 +51,7 @@ describe('GoodsCard', () => {
     expect(screen.getByText('8,000원')).toBeInTheDocument();
   });
 
-  it('wished=true면 하트가 aria-pressed=true이고, 클릭하면 onWishToggle(goodsNo)가 호출된다', () => {
+  it('wished=true면 하트가 aria-pressed=true이고, 클릭하면 onWishToggle(goodsNo, 직전 찜 여부)가 호출된다', () => {
     const onWishToggle = vi.fn();
     renderCard({ ...baseItem, wished: true }, onWishToggle);
 
@@ -59,7 +59,7 @@ describe('GoodsCard', () => {
     expect(wishButton).toHaveAttribute('aria-pressed', 'true');
 
     fireEvent.click(wishButton);
-    expect(onWishToggle).toHaveBeenCalledWith(baseItem.goodsNo);
+    expect(onWishToggle).toHaveBeenCalledWith(baseItem.goodsNo, true);
   });
 
   it('찜 버튼 클릭이 링크 네비게이션(카드 링크)을 트리거하지 않는다', () => {
@@ -169,7 +169,17 @@ describe('GoodsCard', () => {
 
       fireEvent.click(screen.getByRole('button', { name: '찜하기' }));
 
-      expect(onWishToggle).toHaveBeenCalledWith(1);
+      // 두 번째 인자는 누르기 직전의 찜 여부다 — 받는 쪽이 POST/DELETE를 고르는 근거.
+      expect(onWishToggle).toHaveBeenCalledWith(1, false);
+    });
+
+    it('이미 찜한 카드는 직전 상태 true를 함께 넘긴다', () => {
+      const onWishToggle = vi.fn();
+      renderCard({ ...baseItem, wished: true }, onWishToggle);
+
+      fireEvent.click(screen.getByRole('button', { name: '찜 해제' }));
+
+      expect(onWishToggle).toHaveBeenCalledWith(1, true);
     });
   });
 });

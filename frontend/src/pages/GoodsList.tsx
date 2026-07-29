@@ -7,6 +7,7 @@ import { GoodsGrid } from '../components/goods/GoodsGrid';
 import { ListToolbar, PRICE_BAND_RANGE, type PriceBand } from '../components/goods/ListToolbar';
 import { Pager } from '../components/ui/Pager';
 import { ROUTINE_STEPS } from '../features/routine/steps';
+import { useWishToggle } from '../features/wishlist/useWishToggle';
 import './GoodsList.css';
 
 /** 한 페이지 건수. 5열 그리드 기준 4줄이다. */
@@ -57,6 +58,7 @@ export function GoodsList() {
   // 페이지 전환의 스크롤 목적지. 문서 최상단이 아니라 "툴바가 보이는 위치"다(DESIGN.md `pager`) —
   // 헤더까지 올라가면 방금 바꾼 정렬·필터가 화면 밖으로 나가 맥락이 끊긴다.
   const toolbarRef = useRef<HTMLDivElement>(null);
+  const toggleWish = useWishToggle();
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['goods-list', category, tag, sort, priceBand, page],
@@ -146,6 +148,7 @@ export function GoodsList() {
             loading={isLoading}
             skeletonCount={10}
             categoryCode={category ?? undefined}
+            onWishToggle={toggleWish}
           />
           {data && (
             <Pager page={page} totalPages={data.totalPages} onPageChange={handlePageChange} />

@@ -10,7 +10,12 @@ interface GoodsGridProps {
    * 호환되므로 목록/랭킹/추천/루틴/위시리스트 등 tags가 항상 있는 화면도 그대로 넘길 수 있다.
    */
   items: SearchResultItem[];
-  onWishToggle?: (goodsNo: number) => void;
+  /**
+   * 필수다. 예전에는 `= () => {}` 기본값이 있었고, 그 결과 목록·검색 화면이 아무것도
+   * 넘기지 않은 채 하트가 조용히 죽어 있었다(찜을 추가할 경로가 앱에 없었다).
+   * 기본값을 없애 "찜을 어떻게 처리할지"를 모든 호출부가 반드시 정하게 한다.
+   */
+  onWishToggle: (goodsNo: number, wished: boolean) => void;
   loading?: boolean;
   skeletonCount?: number;
   /**
@@ -26,7 +31,7 @@ interface GoodsGridProps {
  */
 export function GoodsGrid({
   items,
-  onWishToggle = () => {},
+  onWishToggle,
   loading = false,
   skeletonCount = 10,
   categoryCode,
