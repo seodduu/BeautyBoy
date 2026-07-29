@@ -1,0 +1,192 @@
+/*
+ * 주문 취소 모달 — 데스크톱 중앙 다이얼로그 / 모바일 바텀시트.
+ * DESIGN.md: 색은 signal-* 텍스트만, 배경 채움 금지. 오버레이·스크림·닫기 버튼은
+ * CautionPanel과 같은 값을 쓴다(같은 층위의 모달이 화면마다 달라 보이지 않게).
+ */
+.bb-cancel-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-lg);
+  z-index: 100;
+}
+
+.bb-cancel-modal {
+  width: 100%;
+  max-width: 520px;
+  max-height: 100%;
+  background: var(--color-canvas);
+  border-radius: var(--rounded-lg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.bb-cancel-modal__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-md) var(--space-lg);
+  border-bottom: 1px solid var(--color-hairline);
+  flex: none;
+}
+
+.bb-cancel-modal__title {
+  margin: 0;
+  font-size: var(--fs-heading-sm);
+  font-weight: var(--fw-heading-sm);
+  color: var(--color-ink);
+}
+
+.bb-cancel-modal__close {
+  appearance: none;
+  background: none;
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--rounded-sm);
+  padding: var(--space-xxs) var(--space-sm);
+  font-size: var(--fs-link-sm);
+  color: var(--color-graphite);
+  cursor: pointer;
+}
+
+.bb-cancel-modal__body {
+  padding: var(--space-lg);
+  overflow-y: auto;
+}
+
+.bb-cancel-modal__items {
+  list-style: none;
+  margin: 0 0 var(--space-lg);
+  padding: 0;
+}
+
+.bb-cancel-modal__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding: var(--space-sm) 0;
+  border-bottom: 1px solid var(--color-hairline);
+}
+
+/* 실제 탭 영역은 input이 아니라 이 label이다 — 최소 44px 높이를 label이 보장한다. */
+.bb-cancel-modal__pick {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  min-height: 44px;
+  flex: 1;
+  min-width: 0;
+  cursor: pointer;
+}
+
+/* 상품명·옵션·잔여를 한 열로 묶는다 — 스테퍼가 나타나도 줄바꿈 위치가 흔들리지 않게. */
+.bb-cancel-modal__pick-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.bb-cancel-modal__pick:has(input:disabled) {
+  cursor: default;
+  color: var(--color-mute);
+}
+
+.bb-cancel-modal__item-name {
+  font-size: var(--fs-body);
+  color: var(--color-ink);
+}
+
+.bb-cancel-modal__item-option {
+  font-size: var(--fs-meta);
+  color: var(--color-slate);
+}
+
+.bb-cancel-modal__item-remaining {
+  font-size: var(--fs-meta);
+  color: var(--color-graphite);
+}
+
+.bb-cancel-modal__pick:has(input:disabled) .bb-cancel-modal__item-name,
+.bb-cancel-modal__pick:has(input:disabled) .bb-cancel-modal__item-remaining {
+  color: var(--color-signal-muted);
+}
+
+.bb-cancel-modal__reason {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-lg);
+}
+
+.bb-cancel-modal__label {
+  font-size: var(--fs-eyebrow);
+  font-weight: var(--fw-eyebrow);
+  letter-spacing: var(--ls-eyebrow);
+  color: var(--color-graphite);
+}
+
+.bb-cancel-modal__select,
+.bb-cancel-modal__textarea {
+  width: 100%;
+  padding: var(--space-xs) var(--space-sm);
+  font-family: inherit;
+  font-size: var(--fs-body);
+  color: var(--color-ink);
+  background: var(--color-canvas-warm);
+  border: 1px solid var(--color-hairline-soft);
+  border-radius: var(--rounded-sm);
+}
+
+.bb-cancel-modal__textarea {
+  min-height: 72px;
+  resize: vertical;
+}
+
+.bb-cancel-modal__refund {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--color-hairline);
+}
+
+.bb-cancel-modal__refund-label {
+  font-size: var(--fs-body);
+  color: var(--color-graphite);
+}
+
+.bb-cancel-modal__refund-value {
+  font-size: var(--fs-subtitle);
+  font-weight: var(--fw-body-strong);
+  color: var(--color-ink);
+}
+
+/* 예상액이라는 사실은 캡션이 말한다 — 금액 자체에 색을 주지 않는다(시그널 색 절약). */
+.bb-cancel-modal__caption {
+  margin: var(--space-xxs) 0 var(--space-lg);
+  font-size: var(--fs-meta);
+  line-height: var(--lh-meta);
+  color: var(--color-ash);
+}
+
+.bb-cancel-modal__submit {
+  width: 100%;
+}
+
+@media (max-width: 767px) {
+  .bb-cancel-modal-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .bb-cancel-modal {
+    max-width: none;
+    max-height: 90%;
+    border-radius: var(--rounded-lg) var(--rounded-lg) 0 0;
+  }
+}

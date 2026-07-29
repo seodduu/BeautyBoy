@@ -66,11 +66,22 @@ export async function fetchOrders(page = 0, size = 10): Promise<PageResponse<Ord
 }
 
 export interface OrderDetailItem {
+  /** 취소 요청이 항목을 지목하는 유일한 키 — 상품번호가 아니라 주문항목 PK다(같은 상품이 두 줄일 수 있다). */
+  orderItemId: number;
   goodsName: string;
   optionName: string;
   unitPrice: number;
   quantity: number;
   lineAmount: number;
+  /** 이 항목에서 이미 취소된 수량. 잔여 = quantity − canceledQuantity. */
+  canceledQuantity: number;
+}
+
+/** 취소 1회차 이력. 한 주문이 여러 번 부분취소될 수 있어 배열이다. */
+export interface OrderCancelHistory {
+  refundAmount: number;
+  reason: string;
+  canceledAt: string;
 }
 
 /** 주문 상세 — 배송지·금액·상품 전부 주문 시점 스냅샷이다(현재 상품/회원 정보를 조인하지 않는다). */
@@ -89,10 +100,42 @@ export interface OrderDetail {
   orderedAt: string;
   paidAt: string | null;
   items: OrderDetailItem[];
+  /** 회차 합계 환불액. 서버가 더한 값이다 — 프론트가 cancels를 합산하지 않는다. */
+  refundedAmount: number;
+  cancels: OrderCancelHistory[];
 }
 
 /** GET /orders/{orderNo} */
 export async function fetchOrderDetail(orderNo: string): Promise<OrderDetail> {
   const response = await api.get<ApiEnvelope<OrderDetail>>(`/orders/${orderNo}`);
+  return response.data.data;
+}
+
+/**
+ * POST /orders/{orderNo}/cancel 요청 바디. 금액 필드가 없는 게 의도다 —
+ * 환불액은 서버가 주문 시점 스냅샷 단가로 계산한다(주문 생성과 같은 규칙).
+ */
+export interface OrderCancelRequest {
+  items: { orderItemId: number; quantity: number }[];
+  reason: string;
+}
+
+/** 취소 결과. status는 파생 상태다 — 잔여가 남으면 PARTIALLY_CANCELED, 전부 0이면 CANCELED. */
+export interface OrderCancelResult {
+  orderNo: string;
+  status: string;
+  refundAmount: number;
+  canceledAt: string;
+}
+
+/** POST /orders/{orderNo}/cancel — 수량 단위 부분 취소. */
+export async function cancelOrder(
+  orderNo: string,
+  req: OrderCancelRequest,
+): Promise<OrderCancelResult> {
+  const response = await api.post<ApiEnvelope<OrderCancelResult>>(
+    `/orders/${orderNo}/cancel`,
+    req,
+  );
   return response.data.data;
 }

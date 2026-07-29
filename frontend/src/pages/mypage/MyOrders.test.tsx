@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { http, HttpResponse } from 'msw';
 import { server } from '../../mocks/server';
 import { MyOrders } from './MyOrders';
+import { ToastProvider } from '../../components/ui/ToastProvider';
 import type { Address } from '../../api/member';
 import type { OrderDetail, OrderSummary } from '../../api/order';
 
@@ -64,20 +65,26 @@ const ORDER_DETAIL: OrderDetail = {
   paidAt: '2026-07-20T10:01:00',
   items: [
     {
+      orderItemId: 11,
       goodsName: '그린티 토너',
       optionName: '기본',
       unitPrice: 20000,
       quantity: 2,
       lineAmount: 40000,
+      canceledQuantity: 0,
     },
     {
+      orderItemId: 12,
       goodsName: '저자극 클렌저',
       optionName: '',
       unitPrice: 18000,
       quantity: 1,
       lineAmount: 18000,
+      canceledQuantity: 0,
     },
   ],
+  refundedAmount: 0,
+  cancels: [],
 };
 
 function registerHandlers(options: { orders?: OrderSummary[]; totalPages?: number } = {}) {
@@ -109,13 +116,16 @@ function renderMyOrders(initialPath = '/mypage/orders') {
 
   return render(
     <QueryClientProvider client={queryClient}>
-      <MemoryRouter initialEntries={[initialPath]}>
-        <Routes>
-          <Route path="/mypage/orders" element={<MyOrders />} />
-          <Route path="/mypage/orders/:orderNo" element={<MyOrders />} />
-        </Routes>
-        <LocationProbe />
-      </MemoryRouter>
+      {/* 취소 모달이 토스트를 쓴다 — 실제 앱과 같이 프로바이더 안에서 렌더한다. */}
+      <ToastProvider>
+        <MemoryRouter initialEntries={[initialPath]}>
+          <Routes>
+            <Route path="/mypage/orders" element={<MyOrders />} />
+            <Route path="/mypage/orders/:orderNo" element={<MyOrders />} />
+          </Routes>
+          <LocationProbe />
+        </MemoryRouter>
+      </ToastProvider>
     </QueryClientProvider>,
   );
 }
@@ -159,8 +169,10 @@ describe('MyOrders — 마이페이지 주문내역', () => {
 
     renderMyOrders();
 
-    const status = await screen.findByRole('status');
-    expect(status).toHaveTextContent('아직 주문 내역이 없어요');
+    // 토스트 라이브리전도 role=status로 상시 존재한다 — 역할로 먼저 찾으면 그쪽이 잡힌다.
+    // 빈 상태 문구를 기다린 뒤, 그것이 role=status 안에서 읽히는지를 확인한다.
+    const empty = await screen.findByText('아직 주문 내역이 없어요');
+    expect(empty.closest('[role="status"]')).not.toBeNull();
   });
 
   it('주문을 누르면 상세로 이동해 스냅샷 배송지와 금액을 보여준다', async () => {
@@ -217,5 +229,101 @@ describe('MyOrders — 마이페이지 주문내역', () => {
     fireEvent.click(await screen.findByRole('button', { name: '1' }));
 
     expect(currentLocation().search).not.toContain('page=');
+  });
+
+  it('배지는 상태별 라벨을 렌더한다 — 색이 아니라 글자가 상태를 알린다', async () => {
+    registerHandlers({
+      orders: [
+        { ...ORDER_SUMMARY, orderNo: 'ORD-P', status: 'PENDING' },
+        { ...ORDER_SUMMARY, orderNo: 'ORD-1', status: 'PAID' },
+        { ...ORDER_SUMMARY, orderNo: 'ORD-2', status: 'PARTIALLY_CANCELED' },
+        { ...ORDER_SUMMARY, orderNo: 'ORD-3', status: 'CANCELED' },
+      ],
+    });
+
+    renderMyOrders();
+
+    expect(await screen.findByText('결제대기')).toBeInTheDocument();
+    expect(screen.getByText('결제완료')).toBeInTheDocument();
+    expect(screen.getByText('부분취소')).toBeInTheDocument();
+    expect(screen.getByText('취소완료')).toBeInTheDocument();
+  });
+
+  it('취소 버튼은 결제완료와 부분취소 주문에만 보인다', async () => {
+    registerHandlers({
+      orders: [
+        { ...ORDER_SUMMARY, orderNo: 'ORD-1', status: 'PAID' },
+        { ...ORDER_SUMMARY, orderNo: 'ORD-2', status: 'PARTIALLY_CANCELED' },
+        { ...ORDER_SUMMARY, orderNo: 'ORD-3', status: 'CANCELED' },
+        { ...ORDER_SUMMARY, orderNo: 'ORD-P', status: 'PENDING' },
+      ],
+    });
+
+    renderMyOrders();
+
+    await screen.findByText('결제완료');
+    expect(screen.getAllByRole('button', { name: '주문 취소' })).toHaveLength(2);
+  });
+
+  it('취소된 주문 상세는 회차 이력과 환불 합계를 보여준다', async () => {
+    const canceled: OrderDetail = {
+      ...ORDER_DETAIL,
+      status: 'PARTIALLY_CANCELED',
+      items: [
+        { ...ORDER_DETAIL.items[0], canceledQuantity: 1 },
+        ORDER_DETAIL.items[1],
+      ],
+      refundedAmount: 20000,
+      cancels: [
+        { refundAmount: 20000, reason: '단순 변심', canceledAt: '2026-07-25T13:40:00' },
+      ],
+    };
+    server.use(
+      http.get('/api/v1/orders', () =>
+        HttpResponse.json(
+          envelope({
+            content: [ORDER_SUMMARY],
+            page: 0,
+            size: 10,
+            totalElements: 1,
+            totalPages: 1,
+            hasNext: false,
+          }),
+        ),
+      ),
+      http.get('/api/v1/orders/:orderNo', () => HttpResponse.json(envelope(canceled))),
+    );
+
+    renderMyOrders('/mypage/orders/ORD-1');
+
+    expect(await screen.findByText('취소 내역')).toBeInTheDocument();
+    expect(screen.getByText(/2026-07-25/)).toBeInTheDocument();
+    expect(screen.getByText(/단순 변심/)).toBeInTheDocument();
+    // 회차별 환불액(−20,000원)과 합계(20,000원)가 둘 다 읽혀야 한다.
+    expect(screen.getByText('−20,000원')).toBeInTheDocument();
+    expect(screen.getByText('환불 합계')).toBeInTheDocument();
+    // 항목에도 몇 개가 취소됐는지 남는다.
+    expect(screen.getByText('1개 취소')).toBeInTheDocument();
+  });
+
+  it('취소 이력이 없는 주문에는 취소 내역 절이 없다', async () => {
+    registerHandlers();
+
+    renderMyOrders('/mypage/orders/ORD-1');
+
+    await screen.findByText('박철수');
+    expect(screen.queryByText('취소 내역')).not.toBeInTheDocument();
+  });
+
+  it('취소 버튼을 누르면 취소 모달이 열린다 — 행 이동은 일어나지 않는다', async () => {
+    registerHandlers();
+
+    renderMyOrders();
+
+    fireEvent.click(await screen.findByRole('button', { name: '주문 취소' }));
+
+    expect(await screen.findByRole('dialog')).toBeInTheDocument();
+    // 취소 버튼은 행 클릭(상세 이동)을 삼켜야 한다.
+    expect(currentLocation().pathname).toBe('/mypage/orders');
   });
 });

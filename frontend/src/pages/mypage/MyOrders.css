@@ -13,14 +13,23 @@
   border-top: 1px solid var(--color-hairline);
 }
 
+/* 행 버튼과 취소 버튼은 형제다 — 하나의 행처럼 보이도록 밑줄은 li가 그린다. */
+.bb-my-orders__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  border-bottom: 1px solid var(--color-hairline);
+}
+
 .bb-my-orders__row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-md);
-  width: 100%;
+  flex: 1;
+  min-width: 0;
   padding: var(--space-lg) 0;
-  border-bottom: 1px solid var(--color-hairline);
+  border-bottom: none;
   background: none;
   border-left: none;
   border-right: none;
@@ -53,11 +62,71 @@
   color: var(--color-stone);
 }
 
+.bb-my-orders__row-tail {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-shrink: 0;
+}
+
 .bb-my-orders__row-amount {
   flex-shrink: 0;
   font-size: var(--fs-body-strong);
   font-weight: var(--fw-body-strong);
   color: var(--color-ink);
+}
+
+/*
+ * 상태 배지 — DESIGN.md `{badge-neutral}` 규칙: 흰 바탕 + 색 글자 + micro-caps, 배경 채움 금지.
+ * 색은 Semantic 절 signal-* 5종에서만 고른다(태그 컬러 절의 틴트 팔레트는 태그 pill 전용).
+ * 라벨 글자가 상태의 본체이고 색은 보강 단서다 — 색만으로 구분되게 두지 않는다.
+ */
+.bb-order-status {
+  flex-shrink: 0;
+  padding: 2px var(--space-xs);
+  border: 1px solid currentcolor;
+  border-radius: var(--rounded-full);
+  font-size: var(--fs-micro-caps);
+  font-weight: var(--fw-micro-caps);
+  letter-spacing: var(--ls-micro-caps);
+  line-height: var(--lh-micro-caps);
+  white-space: nowrap;
+}
+
+.bb-order-status--neutral {
+  color: var(--color-graphite);
+}
+
+.bb-order-status--success {
+  color: var(--color-signal-success);
+}
+
+.bb-order-status--caution {
+  color: var(--color-signal-caution);
+}
+
+.bb-order-status--muted {
+  color: var(--color-signal-muted);
+}
+
+/* 취소는 되돌릴 수 없는 부수 행동이다 — 무채색 고스트로 두고 주 동선(행 이동)을 이기지 않게 한다. */
+.bb-my-orders__cancel,
+.bb-order-detail__cancel {
+  flex-shrink: 0;
+  min-height: 44px;
+  padding: var(--space-xs) var(--space-md);
+  background: none;
+  border: 1px solid var(--color-hairline-soft);
+  border-radius: var(--rounded-full);
+  font-size: var(--fs-button);
+  font-weight: var(--fw-button);
+  color: var(--color-graphite);
+  cursor: pointer;
+}
+
+.bb-order-detail__cancel {
+  margin-top: var(--space-lg);
+  width: 100%;
 }
 
 .bb-order-detail__title {
@@ -68,9 +137,17 @@
 }
 
 .bb-order-detail__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
   margin: 0 0 var(--space-xl);
   font-size: var(--fs-meta);
   color: var(--color-stone);
+}
+
+/* 취소된 수량은 signal-muted 글자 + "취소" 문장으로 알린다(색 단독 금지). */
+.bb-order-detail__item-canceled {
+  color: var(--color-signal-muted);
 }
 
 .bb-order-detail__section {
@@ -138,6 +215,51 @@
   margin: 0;
   font-size: var(--fs-body);
   color: var(--color-graphite);
+}
+
+.bb-order-detail__cancels {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.bb-order-detail__cancel-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-md);
+  font-size: var(--fs-body);
+  color: var(--color-graphite);
+}
+
+.bb-order-detail__cancel-meta {
+  color: var(--color-slate);
+}
+
+/* 환불액은 앞의 "−"와 함께 읽힌다 — 부호 없이 색만으로 감액을 알리지 않는다. */
+.bb-order-detail__cancel-amount {
+  flex-shrink: 0;
+  color: var(--color-signal-muted);
+}
+
+.bb-order-detail__refunded {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin: var(--space-md) 0 0;
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--color-hairline);
+  font-size: var(--fs-body);
+  color: var(--color-graphite);
+}
+
+.bb-order-detail__refunded-value {
+  font-size: var(--fs-body-strong);
+  font-weight: var(--fw-body-strong);
+  color: var(--color-ink);
 }
 
 .bb-order-detail__amount {
