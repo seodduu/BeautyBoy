@@ -34,7 +34,15 @@ public class OrderConfirmService implements OrderConfirmPort {
                 .map(item -> new StockLine(item.getOptionId(), item.getQuantity()))
                 .toList();
 
-        return new ConfirmTarget(order.getId(), order.getOrderNo(), order.getPayableAmount(), stockLines);
+        // 이벤트 줄은 필터가 없다 — 확정 이벤트의 소비자는 재고 비관리 상품(optionId null)도
+        // 장바구니에서 지우고 판매로 집계해야 한다. 조립이 여기 있는 이유는 주문 줄의 소유자가
+        // order이기 때문이다(payment가 OrderItem을 직접 읽으면 경계가 깨진다).
+        List<EventLine> eventLines = order.getItems().stream()
+                .map(item -> new EventLine(item.getGoodsId(), item.getOptionId(), item.getQuantity()))
+                .toList();
+
+        return new ConfirmTarget(order.getId(), order.getOrderNo(), order.getMemberId(),
+                order.getPayableAmount(), stockLines, eventLines);
     }
 
     @Override

@@ -4,6 +4,8 @@ import com.beautyboy.catalog.StockCommandService;
 import com.beautyboy.common.BusinessException;
 import com.beautyboy.common.ErrorCode;
 import com.beautyboy.order.OrderConfirmPort;
+import com.beautyboy.outbox.OrderConfirmedEvent;
+import com.beautyboy.outbox.OutboxAppender;
 import com.beautyboy.payment.dto.PaymentApproval;
 import com.beautyboy.payment.dto.PaymentConfirmRequest;
 import com.beautyboy.payment.dto.PaymentConfirmResponse;
@@ -23,6 +25,8 @@ import java.time.LocalDateTime;
  *   <li><b>토스에 승인을 요청한다</b> — 이 시점에 실제로 돈이 움직인다.</li>
  *   <li><b>승인된 금액을 우리 payableAmount와 대조한다</b> — 다르면 <b>즉시 취소</b>하고 실패시킨다.</li>
  *   <li>모두 통과하면 주문을 결제완료로 전이하고 payment를 저장한다.</li>
+ *   <li><b>확정 이벤트를 아웃박스에 INSERT한다</b> — 후처리(장바구니·집계·알림)는 이 이벤트를
+ *       소비하는 쪽이 맡는다.</li>
  * </ol>
  *
  * <p>왜 토스 호출을 상태 검사 뒤에 두는가: 먼저 부르면 이미 결제된 주문에도 토스를 때려
@@ -31,19 +35,26 @@ import java.time.LocalDateTime;
 @Service
 public class PaymentService {
 
+    /** 확정 이벤트 스키마 버전(설계 §4.3). 필드가 늘거나 의미가 바뀌면 올린다. */
+    private static final int ORDER_CONFIRMED_VERSION = 1;
+    private static final String ORDER_CONFIRMED = "ORDER_CONFIRMED";
+
     private final OrderConfirmPort orderConfirmPort;
     private final PaymentRepository paymentRepository;
     private final PaymentGateway paymentGateway;
     private final StockCommandService stockCommandService;
+    private final OutboxAppender outboxAppender;
 
     public PaymentService(OrderConfirmPort orderConfirmPort,
                           PaymentRepository paymentRepository,
                           PaymentGateway paymentGateway,
-                          StockCommandService stockCommandService) {
+                          StockCommandService stockCommandService,
+                          OutboxAppender outboxAppender) {
         this.orderConfirmPort = orderConfirmPort;
         this.paymentRepository = paymentRepository;
         this.paymentGateway = paymentGateway;
         this.stockCommandService = stockCommandService;
+        this.outboxAppender = outboxAppender;
     }
 
     @Transactional
@@ -72,13 +83,33 @@ public class PaymentService {
         }
 
         // (6) 확정. 주문 전이 → payment 저장 순서로.
-        String status = orderConfirmPort.markPaid(target.orderId(), LocalDateTime.now());
+        //     한 시각을 세 곳(전이·payment·이벤트)에 함께 쓴다 — 이벤트의 confirmedAt이
+        //     주문의 paidAt과 어긋나면 소비 측 집계가 날짜 경계에서 갈린다.
+        LocalDateTime confirmedAt = LocalDateTime.now();
+        String status = orderConfirmPort.markPaid(target.orderId(), confirmedAt);
         paymentRepository.save(new Payment(
                 target.orderId(),
                 approval.paymentKey(),
                 approval.approvedAmount(),
                 approval.rawJson(),
-                LocalDateTime.now()));
+                confirmedAt));
+
+        // (7) 확정 이벤트를 아웃박스에 남긴다. 여기가 발행 지점인 이유는 두 가지다.
+        //     같은 트랜잭션이라 "결제는 됐는데 이벤트가 없다"(또는 그 반대)가 원천적으로 불가능하고,
+        //     토스 호출(4)보다 뒤라 앞 단계가 실패하면 롤백이 이 행까지 지워 유령 이벤트가 없다.
+        //     Kafka로의 실제 발행은 릴레이가 커밋 이후에 맡는다 — 여기서 브로커를 기다리지 않는다.
+        outboxAppender.appendOrderConfirmed(new OrderConfirmedEvent(
+                ORDER_CONFIRMED_VERSION,
+                null,                       // eventId는 아웃박스 INSERT로 채번된다(행 PK).
+                ORDER_CONFIRMED,
+                target.orderId(),
+                target.memberId(),
+                target.orderNo(),
+                confirmedAt,
+                target.eventLines().stream()
+                        .map(line -> new OrderConfirmedEvent.Line(
+                                line.goodsId(), line.optionId(), line.quantity()))
+                        .toList()));
 
         return new PaymentConfirmResponse(target.orderNo(), status, target.payableAmount());
     }
