@@ -15,6 +15,9 @@ build/
 # 성분 파이프라인 원본 API 캐시(재현 가능, 커밋 불필요)
 tools/ingredient_pipeline/.cache/
 
+# k6 분산 부하 모형용 goods/option 쌍 목록(SQL로 재현 가능, 커밋 불필요)
+tools/loadtest/pairs.json
+
 # macOS
 .DS_Store
 
