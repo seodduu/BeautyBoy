@@ -14,7 +14,12 @@ import type { ReviewItem, ReviewStats, QnaItem } from '../types/review';
 import type { CartItem } from '../api/cart';
 import type { CompatCheckResult } from '../api/compat';
 import type { Address, AddressInput, ProfileInput } from '../api/member';
-import type { OrderCreateRequest, OrderDetail, OrderSummary } from '../api/order';
+import type {
+  OrderCancelRequest,
+  OrderCreateRequest,
+  OrderDetail,
+  OrderSummary,
+} from '../api/order';
 import type { MyReviewItem } from '../api/review';
 import type { RoutineResponse, SkinType } from '../api/routine';
 import type { FlowRulesResponse } from '../types/routine';
@@ -351,14 +356,17 @@ let wishlistFixture: Set<number> = new Set([1, 3]);
  * 의도적으로 다른 값이다 — 마이페이지 상세 화면이 스냅샷을 쓰는지 눈으로도 구분되게 한다.
  */
 const myOrdersFixture: OrderSummary[] = [
+  // 취소 시연용 주문 — 첫 항목이 수량 2라 "2개 중 1개만 취소"가 목에서 실제로 일어난다.
   {
     orderNo: 'ORD-20260710-0001',
     status: 'PAID',
     representativeGoodsName: goodsFixtures[0].name,
     itemCount: 2,
-    payableAmount: 38000,
+    payableAmount: 58000,
     orderedAt: '2026-07-10T14:20:00',
   },
+  // 결제사 실패(502) 예행 주문 — goodsNo 102를 고의로 거절하는 리뷰 목과 같은 방식이다.
+  // 취소를 눌러도 서버가 PAYMENT_CANCEL_FAILED로 돌려보내 "모달 유지" 경로를 화면에서 확인할 수 있다.
   {
     orderNo: 'ORD-20260620-0002',
     status: 'PAID',
@@ -366,6 +374,23 @@ const myOrdersFixture: OrderSummary[] = [
     itemCount: 1,
     payableAmount: 21000,
     orderedAt: '2026-06-20T09:05:00',
+  },
+  // 배지 3종을 한 화면에서 보기 위한 고정 상태 주문 2건(취소 조작 대상이 아니다).
+  {
+    orderNo: 'ORD-20260515-0003',
+    status: 'PARTIALLY_CANCELED',
+    representativeGoodsName: goodsFixtures[1].name,
+    itemCount: 2,
+    payableAmount: 66000,
+    orderedAt: '2026-05-15T11:30:00',
+  },
+  {
+    orderNo: 'ORD-20260502-0004',
+    status: 'CANCELED',
+    representativeGoodsName: goodsFixtures[2].name,
+    itemCount: 1,
+    payableAmount: 26000,
+    orderedAt: '2026-05-02T16:45:00',
   },
   // 아래는 페이저(Task 2-3)를 dev 화면에서 실제로 확인하기 위한 목 데이터다 —
   // 실 서버 시드는 계정당 10건을 넘지 않을 수 있어, 목이 대신 여러 페이지를 만든다.
@@ -387,9 +412,9 @@ const myOrderDetailFixture: Record<string, OrderDetail> = {
   'ORD-20260710-0001': {
     orderNo: 'ORD-20260710-0001',
     status: 'PAID',
-    totalAmount: 40000,
+    totalAmount: 60000,
     discountAmount: 2000,
-    payableAmount: 38000,
+    payableAmount: 58000,
     receiverName: '박서준',
     receiverPhone: '01055556666',
     zipcode: '13529',
@@ -400,20 +425,26 @@ const myOrderDetailFixture: Record<string, OrderDetail> = {
     paidAt: '2026-07-10T14:21:00',
     items: [
       {
+        orderItemId: 1001,
         goodsName: goodsFixtures[0].name,
         optionName: '기본',
         unitPrice: 20000,
-        quantity: 1,
-        lineAmount: 20000,
+        quantity: 2,
+        lineAmount: 40000,
+        canceledQuantity: 0,
       },
       {
+        orderItemId: 1002,
         goodsName: goodsFixtures[1].name,
         optionName: '기본',
         unitPrice: 20000,
         quantity: 1,
         lineAmount: 20000,
+        canceledQuantity: 0,
       },
     ],
+    refundedAmount: 0,
+    cancels: [],
   },
   'ORD-20260620-0002': {
     orderNo: 'ORD-20260620-0002',
@@ -431,15 +462,93 @@ const myOrderDetailFixture: Record<string, OrderDetail> = {
     paidAt: '2026-06-20T09:06:00',
     items: [
       {
+        orderItemId: 2001,
         goodsName: goodsFixtures[3].name,
         optionName: '기본',
         unitPrice: 21000,
         quantity: 1,
         lineAmount: 21000,
+        canceledQuantity: 0,
       },
+    ],
+    refundedAmount: 0,
+    cancels: [],
+  },
+  'ORD-20260515-0003': {
+    orderNo: 'ORD-20260515-0003',
+    status: 'PARTIALLY_CANCELED',
+    totalAmount: 66000,
+    discountAmount: 0,
+    payableAmount: 66000,
+    receiverName: '박서준',
+    receiverPhone: '01055556666',
+    zipcode: '13529',
+    address1: '경기도 성남시 분당구 판교역로 235',
+    address2: 'H스퀘어 4층',
+    deliveryType: 'NORMAL',
+    orderedAt: '2026-05-15T11:30:00',
+    paidAt: '2026-05-15T11:31:00',
+    items: [
+      {
+        orderItemId: 3001,
+        goodsName: goodsFixtures[1].name,
+        optionName: '기본',
+        unitPrice: 22000,
+        quantity: 2,
+        lineAmount: 44000,
+        canceledQuantity: 1,
+      },
+      {
+        orderItemId: 3002,
+        goodsName: goodsFixtures[2].name,
+        optionName: '기본',
+        unitPrice: 22000,
+        quantity: 1,
+        lineAmount: 22000,
+        canceledQuantity: 0,
+      },
+    ],
+    refundedAmount: 22000,
+    cancels: [{ refundAmount: 22000, reason: '단순 변심', canceledAt: '2026-05-16T09:12:00' }],
+  },
+  'ORD-20260502-0004': {
+    orderNo: 'ORD-20260502-0004',
+    status: 'CANCELED',
+    totalAmount: 26000,
+    discountAmount: 0,
+    payableAmount: 26000,
+    receiverName: '박서준',
+    receiverPhone: '01055556666',
+    zipcode: '13529',
+    address1: '경기도 성남시 분당구 판교역로 235',
+    address2: 'H스퀘어 4층',
+    deliveryType: 'NORMAL',
+    orderedAt: '2026-05-02T16:45:00',
+    paidAt: '2026-05-02T16:46:00',
+    items: [
+      {
+        orderItemId: 4001,
+        goodsName: goodsFixtures[2].name,
+        optionName: '기본',
+        unitPrice: 13000,
+        quantity: 2,
+        lineAmount: 26000,
+        canceledQuantity: 2,
+      },
+    ],
+    refundedAmount: 26000,
+    cancels: [
+      { refundAmount: 13000, reason: '주문 실수', canceledAt: '2026-05-03T10:00:00' },
+      { refundAmount: 13000, reason: '단순 변심', canceledAt: '2026-05-04T18:30:00' },
     ],
   },
 };
+
+/**
+ * 이 주문의 취소는 항상 502(PAYMENT_CANCEL_FAILED)로 떨어진다 — "결제사 통신 실패 시 모달이
+ * 유지된다"는 경로를 브라우저에서 손으로 확인하기 위한 고정 실패 주문이다(리뷰 목의 goodsNo 102와 같은 방식).
+ */
+const CANCEL_GATEWAY_FAILURE_ORDER_NO = 'ORD-20260620-0002';
 
 /** 마이페이지 내 리뷰 dev 목 상태(Task 4-13). backend MyReviewItem과 필드를 1:1로 맞춘다. */
 const myReviewsFixture: MyReviewItem[] = [
@@ -1149,6 +1258,95 @@ export const handlers = [
       },
     };
     return HttpResponse.json(body);
+  }),
+
+  // 주문 취소 — 계약 §3-8. 목이 실제로 목록·상세 fixture를 갱신한다: 취소 후 화면이 배지·잔여
+  // 수량·이력까지 바뀌는 것을 백엔드 없이 눈으로 확인하기 위해서다(단순 성공 응답이면 화면이 그대로다).
+  // 정적 경로 /orders/:orderNo보다 아래에 있어도 메서드가 달라(POST) 가려지지 않는다.
+  http.post('/api/v1/orders/:orderNo/cancel', async ({ params, request }) => {
+    const orderNo = String(params.orderNo);
+    const body = (await request.json()) as OrderCancelRequest;
+    const detail = myOrderDetailFixture[orderNo];
+
+    if (!detail) {
+      return HttpResponse.json(
+        { code: 'ORDER_NOT_FOUND', message: '주문을 찾을 수 없습니다.', data: null },
+        { status: 404 },
+      );
+    }
+    if (body.items.length === 0) {
+      return HttpResponse.json(
+        { code: 'ORDER_CANCEL_EMPTY', message: '취소할 항목을 선택해주세요', data: null },
+        { status: 400 },
+      );
+    }
+    if (detail.status !== 'PAID' && detail.status !== 'PARTIALLY_CANCELED') {
+      return HttpResponse.json(
+        { code: 'ORDER_INVALID_STATUS', message: '취소할 수 없는 주문 상태입니다', data: null },
+        { status: 409 },
+      );
+    }
+
+    // 잔여 초과 검증 — 같은 항목이 두 줄로 와도 합산해서 본다(실 서버의 잔여 검증과 같은 결과).
+    const requested = new Map<number, number>();
+    for (const line of body.items) {
+      requested.set(line.orderItemId, (requested.get(line.orderItemId) ?? 0) + line.quantity);
+    }
+    for (const [orderItemId, quantity] of requested) {
+      const item = detail.items.find((i) => i.orderItemId === orderItemId);
+      if (!item || quantity > item.quantity - item.canceledQuantity) {
+        return HttpResponse.json(
+          {
+            code: 'ORDER_CANCEL_QUANTITY_EXCEEDED',
+            message: '취소 수량이 남은 수량을 초과합니다',
+            data: null,
+          },
+          { status: 409 },
+        );
+      }
+    }
+
+    // 환불액은 서버가 스냅샷 단가로 계산한다 — 요청 바디에 금액이 없는 이유다.
+    let refundAmount = 0;
+    for (const [orderItemId, quantity] of requested) {
+      const item = detail.items.find((i) => i.orderItemId === orderItemId)!;
+      refundAmount += item.unitPrice * quantity;
+    }
+
+    if (orderNo === CANCEL_GATEWAY_FAILURE_ORDER_NO) {
+      // 실 서버는 이 경로에서 전체 롤백한다 — 목도 fixture를 건드리지 않아야 재시도가 안전하다.
+      return HttpResponse.json(
+        {
+          code: 'PAYMENT_CANCEL_FAILED',
+          message: '결제 취소에 실패했습니다. 잠시 후 다시 시도해주세요',
+          data: null,
+        },
+        { status: 502 },
+      );
+    }
+
+    for (const [orderItemId, quantity] of requested) {
+      const item = detail.items.find((i) => i.orderItemId === orderItemId)!;
+      item.canceledQuantity += quantity;
+    }
+    // 파생 상태: 모든 항목 잔여가 0이면 CANCELED, 아니면 PARTIALLY_CANCELED.
+    const status = detail.items.every((i) => i.quantity - i.canceledQuantity === 0)
+      ? 'CANCELED'
+      : 'PARTIALLY_CANCELED';
+    const canceledAt = new Date().toISOString().slice(0, 19);
+
+    detail.status = status;
+    detail.refundedAmount += refundAmount;
+    detail.cancels.push({ refundAmount, reason: body.reason, canceledAt });
+
+    const summary = myOrdersFixture.find((o) => o.orderNo === orderNo);
+    if (summary) summary.status = status;
+
+    return HttpResponse.json({
+      code: 'OK',
+      message: 'success',
+      data: { orderNo, status, refundAmount, canceledAt },
+    });
   }),
 
   // 결제 승인 — Task 4-11(성공/실패 화면)이 소비하지만, 목 스택 일관성을 위해 여기서 함께 등록한다.

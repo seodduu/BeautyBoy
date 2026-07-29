@@ -64,20 +64,26 @@ const ORDER_DETAIL: OrderDetail = {
   paidAt: '2026-07-20T10:01:00',
   items: [
     {
+      orderItemId: 11,
       goodsName: '그린티 토너',
       optionName: '기본',
       unitPrice: 20000,
       quantity: 2,
       lineAmount: 40000,
+      canceledQuantity: 0,
     },
     {
+      orderItemId: 12,
       goodsName: '저자극 클렌저',
       optionName: '',
       unitPrice: 18000,
       quantity: 1,
       lineAmount: 18000,
+      canceledQuantity: 0,
     },
   ],
+  refundedAmount: 0,
+  cancels: [],
 };
 
 function registerHandlers(options: { orders?: OrderSummary[]; totalPages?: number } = {}) {
