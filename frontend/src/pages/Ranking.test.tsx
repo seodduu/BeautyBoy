@@ -6,6 +6,7 @@ import { http, HttpResponse } from 'msw';
 import { server } from '../mocks/server';
 import type { RankingItem } from '../types/ranking';
 import { Ranking } from './Ranking';
+import { ToastProvider } from '../components/ui/ToastProvider';
 
 function makeItem(rank: number, categoryLabel: string): RankingItem {
   return {
@@ -38,9 +39,11 @@ function renderRanking(initialEntry: string) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
     <QueryClientProvider client={queryClient}>
-      <MemoryRouter initialEntries={[initialEntry]}>
-        <Ranking />
-      </MemoryRouter>
+      <ToastProvider>
+        <MemoryRouter initialEntries={[initialEntry]}>
+          <Ranking />
+        </MemoryRouter>
+      </ToastProvider>
     </QueryClientProvider>,
   );
 }

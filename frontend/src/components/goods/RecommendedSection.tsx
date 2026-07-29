@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { fetchRecommended } from '../../api/goods';
 import { GoodsGrid } from './GoodsGrid';
+import { useWishToggle } from '../../features/wishlist/useWishToggle';
 import './RecommendedSection.css';
 
 interface RecommendedSectionProps {
@@ -13,6 +14,7 @@ interface RecommendedSectionProps {
  * 응답이 빈 배열이면 EmptyState를 넣지 않고 섹션 자체를 렌더하지 않는다.
  */
 export function RecommendedSection({ goodsNo }: RecommendedSectionProps) {
+  const toggleWish = useWishToggle();
   const recommendedQuery = useQuery({
     queryKey: ['goods-recommended', goodsNo],
     queryFn: () => fetchRecommended(goodsNo),
@@ -22,7 +24,7 @@ export function RecommendedSection({ goodsNo }: RecommendedSectionProps) {
     return (
       <section className="bb-recommended">
         <h2 className="bb-recommended__title">함께 보면 좋은 상품</h2>
-        <GoodsGrid items={[]} loading skeletonCount={4} />
+        <GoodsGrid items={[]} loading skeletonCount={4} onWishToggle={toggleWish} />
       </section>
     );
   }
@@ -36,7 +38,7 @@ export function RecommendedSection({ goodsNo }: RecommendedSectionProps) {
   return (
     <section className="bb-recommended">
       <h2 className="bb-recommended__title">함께 보면 좋은 상품</h2>
-      <GoodsGrid items={items} />
+      <GoodsGrid items={items} onWishToggle={toggleWish} />
     </section>
   );
 }

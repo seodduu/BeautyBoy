@@ -6,6 +6,7 @@ import { http, HttpResponse } from 'msw';
 import { server } from '../mocks/server';
 import type { SearchResultItem } from '../types/search';
 import { Search } from './Search';
+import { ToastProvider } from '../components/ui/ToastProvider';
 
 /**
  * 실서버 검색 결과 형태를 그대로 재현한다 — SearchResultItem.tags는 optional이고
@@ -48,9 +49,11 @@ function renderSearch(initialEntry: string) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
     <QueryClientProvider client={queryClient}>
-      <MemoryRouter initialEntries={[initialEntry]}>
-        <Search />
-      </MemoryRouter>
+      <ToastProvider>
+        <MemoryRouter initialEntries={[initialEntry]}>
+          <Search />
+        </MemoryRouter>
+      </ToastProvider>
     </QueryClientProvider>,
   );
 }

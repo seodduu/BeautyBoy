@@ -1,5 +1,6 @@
 import type { RoutineStepResponse } from '../../api/routine';
 import { GoodsCard } from '../goods/GoodsCard';
+import { useWishToggle } from '../../features/wishlist/useWishToggle';
 import './RoutineStepCard.css';
 
 interface RoutineStepCardProps {
@@ -17,6 +18,9 @@ interface RoutineStepCardProps {
  * 그래서 라디오와 카드를 형제로 두고 라디오의 접근성 이름만 상품명으로 준다.
  */
 export function RoutineStepCard({ step, selectedGoodsNo, onSelect }: RoutineStepCardProps) {
+  // 루틴은 비회원도 볼 수 있는 화면이다 — 비회원이 하트를 누르면 훅이 로그인으로 안내한다.
+  const toggleWish = useWishToggle();
+
   return (
     <section className="bb-routine-step" data-testid="routine-step">
       <header className="bb-routine-step__header">
@@ -41,7 +45,7 @@ export function RoutineStepCard({ step, selectedGoodsNo, onSelect }: RoutineStep
               onChange={() => onSelect(item.goodsNo)}
             />
             <div className="bb-routine-step__card" data-testid="goods-card">
-              <GoodsCard item={item} onWishToggle={() => {}} />
+              <GoodsCard item={item} onWishToggle={toggleWish} />
             </div>
           </div>
         ))}

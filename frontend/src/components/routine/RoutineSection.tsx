@@ -4,6 +4,7 @@ import { GoodsGrid } from '../goods/GoodsGrid';
 import { PickCard } from './PickCard';
 import { ALTERNATIVE_COUNT, type StepComposition } from '../../features/affinity/composer';
 import { ROUTINE_SECTION_SIZE, type RoutineStep } from '../../features/routine/steps';
+import { useWishToggle } from '../../features/wishlist/useWishToggle';
 import type { GoodsListItem } from '../../types/goods';
 import './RoutineSection.css';
 
@@ -42,6 +43,7 @@ export function RoutineSection({
   isError = false,
   onRetry,
 }: RoutineSectionProps) {
+  const toggleWish = useWishToggle();
   const orderLabel = String(step.order).padStart(2, '0');
   const sideClass = index % 2 === 0 ? 'bb-routine--text-left' : 'bb-routine--text-right';
 
@@ -78,6 +80,7 @@ export function RoutineSection({
               items={composition.alternatives}
               skeletonCount={ALTERNATIVE_COUNT}
               categoryCode={step.categoryCode}
+              onWishToggle={toggleWish}
             />
           </div>
         </>
@@ -87,6 +90,7 @@ export function RoutineSection({
           loading={composition === undefined}
           skeletonCount={ROUTINE_SECTION_SIZE}
           categoryCode={step.categoryCode}
+          onWishToggle={toggleWish}
         />
       )}
 
