@@ -28,8 +28,16 @@ import java.util.Map;
  * 원본 구현으로 폴백하게 한다. 기본 {@code SimpleCacheErrorHandler}는 rethrow라 캐시 장애가
  * 곧 서비스 장애가 되므로 반드시 오버라이드한다.
  */
+/*
+ * B3 추가: proxyTargetClass = true. GoodsService처럼 인터페이스(GoodsQueryService)를
+ * 구현하면서 동시에 다른 빈(AdminGoodsService)에 구체 타입으로 주입되는 클래스에
+ * @Cacheable을 걸면, 기본(JDK 동적 프록시)은 그 인터페이스만 구현한 프록시를 만들어
+ * "expected GoodsService but was $Proxy" 예외로 컨텍스트가 죽는다. RankingService(B2)는
+ * 인터페이스가 없어 우연히 문제가 없었을 뿐이다 — CGLIB(클래스 기반) 프록시로 강제해 이 클래스의
+ * 구체 타입 주입을 전부 안전하게 만든다.
+ */
 @Configuration
-@EnableCaching
+@EnableCaching(proxyTargetClass = true)
 @ConditionalOnProperty(name = "beautyboy.cache.redis", havingValue = "true")
 public class CacheConfig implements CachingConfigurer {
 

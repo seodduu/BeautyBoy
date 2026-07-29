@@ -7,6 +7,7 @@ import com.beautyboy.catalog.dto.GoodsListItem;
 import com.beautyboy.common.BusinessException;
 import com.beautyboy.common.ErrorCode;
 import com.beautyboy.common.PageResponse;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -91,6 +92,12 @@ public class AdminGoodsService {
                 goods.getStatus());
     }
 
+    /**
+     * B3 — 등록/수정은 {@code goodsList} 캐시 전체를 비운다. 카테고리별 패턴 삭제(SCAN)는 키
+     * 구조 결합이 생기는 데 비해 admin 변경 빈도가 낮아 이득이 없다는 판단(설계 §6에서 언급한
+     * "카테고리 패턴 삭제"를 구현 단순화로 전체 clear로 대체 — ADR ③).
+     */
+    @CacheEvict(cacheNames = "goodsList", allEntries = true)
     @Transactional
     public Long create(AdminGoodsSaveRequest request) {
         validateCategory(request.categoryCode());
@@ -104,6 +111,7 @@ public class AdminGoodsService {
         return goodsRepository.save(goods).getId();
     }
 
+    @CacheEvict(cacheNames = "goodsList", allEntries = true)
     @Transactional
     public void update(Long goodsNo, AdminGoodsSaveRequest request) {
         validateCategory(request.categoryCode());

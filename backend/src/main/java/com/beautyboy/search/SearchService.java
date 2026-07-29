@@ -5,10 +5,12 @@ import com.beautyboy.catalog.WishedGoodsProvider;
 import com.beautyboy.common.PageResponse;
 import com.beautyboy.search.dto.SearchCondition;
 import com.beautyboy.search.dto.SearchResultItem;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -43,9 +45,28 @@ public class SearchService {
         this.wishedGoodsProvider = wishedGoodsProvider;
     }
 
+    /**
+     * B3 — 검색 결과 캐시. {@code goodsList} 캐시명을 재사용하되(TTL 맵에 등록된 이름은
+     * ranking/goodsList/compat 셋뿐이라 새 이름을 쓰면 TTL 없이 무한 보관된다) 키를
+     * {@code "search:"}로 접두해 목록 캐시와 섞이지 않게 한다.
+     *
+     * <p>{@link SearchResultItem#wished()}가 {@code memberId}에 따라 갈리는 개인화 응답이라
+     * (GoodsService.list의 B3 판단과 같은 함정), 키에 검색 조건뿐 아니라 {@code memberId}까지
+     * 반영한다 — 그렇지 않으면 먼저 검색한 사용자의 찜 상태가 다른 사용자에게 그대로 캐시돼 나간다.
+     *
+     * <p><b>알려진 트레이드오프</b>: 검색어 로그(0건 검색어 파악용) 기록이 이 메서드 안에 있어,
+     * 캐시 히트 시에는 로그가 남지 않는다(TTL 5분 동안 같은 조건·같은 사용자의 재검색만 영향받는다).
+     * 로그를 캐시 밖으로 분리하려면 이 서비스를 자기주입하거나 별도 컴포넌트로 쪼개야 하는데,
+     * B3 Files 범위 밖의 새 클래스가 필요해 이번 웨이브에서는 다루지 않는다.
+     */
+    @Cacheable(cacheNames = "goodsList",
+            key = "'search:' + T(com.beautyboy.common.CacheKeys).goodsList("
+                    + "#condition.keyword(), #condition.sort().name(), #condition.page(), "
+                    + "T(com.beautyboy.search.SearchService).filtersOf(#condition)) + ':' + #memberId")
     @Transactional
     public PageResponse<SearchResultItem> search(SearchCondition condition, Long memberId) {
         // 로그를 먼저 남긴다 — 결과가 0건인 검색어야말로 "찾는데 없는 것"이라 가장 알고 싶은 데이터다.
+        // (캐시 히트 시에는 메서드 자체가 실행되지 않아 로그가 남지 않는다 — 위 문서의 트레이드오프.)
         searchKeywordLogRepository.save(
                 new SearchKeywordLog(condition.keyword(), memberId, LocalDateTime.now()));
 
@@ -101,6 +122,13 @@ public class SearchService {
                 ratingStat == null ? 0 : ratingStat.reviewCount(),
                 wished,
                 false);
+    }
+
+    /** {@link #search}의 캐시 키에 쓸 필터 맵. 검색 조건에는 size만 카테고리/정렬/페이지 밖에 남는다. */
+    public static Map<String, String> filtersOf(SearchCondition condition) {
+        Map<String, String> filters = new LinkedHashMap<>();
+        filters.put("size", String.valueOf(condition.size()));
+        return filters;
     }
 
     private int discountRate(int listPrice, int salePrice) {
