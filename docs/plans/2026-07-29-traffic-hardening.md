@@ -39,7 +39,7 @@ A5(컨슈머 멱등성 + 이중 계상 방지 전환)**.
 ## 실행 개요 — 웨이브와 터미널
 
 ```
-Wave 0 (메인 세션, main 직커밋) : 부하테스트 도구 + baseline 측정  ← A·B보다 먼저. 이게 "before" 수치다.
+Wave 0 (메인 세션, main 직커밋) : 부하테스트 도구 + baseline 측정(집중·분산 두 모형)  ← A·B보다 먼저
 Wave 1 (병렬 터미널 2개)
   터미널 A: feat/order-events   — 아웃박스 + Kafka 발행/소비 + DLQ   (태스크 A1~A7)
   터미널 B: feat/read-cache     — Redis 캐싱 + 무효화 + 워밍         (태스크 B1~B5)
@@ -226,6 +226,63 @@ export default function () {
 - [ ] `confirm.js`·`browse.js` 각 1회 본 측정, k6 summary(JSON)를
       `docs/loadtest/2026-07-29-baseline/` 에 저장. 측정 조건(하드웨어·프로필·시드 상태)을 같은
       폴더 `conditions.md`에 기록 — after 측정은 이 조건을 그대로 재현해야 한다
+- [ ] 커밋
+
+**측정 결과 (완료 — 커밋 `2646df7`)**: confirm p95 15.3s / p99 17.5s / 18.0 RPS, browse p95 74.3ms /
+p99 79.3ms / 2484 RPS, 양쪽 에러율 0%. 조건은 `docs/loadtest/2026-07-29-baseline/conditions.md`.
+
+### Task 0.4: 분산 모형 추가와 두 번째 baseline
+
+**왜 이 태스크가 생겼나 (Task 0.3의 발견):** confirm p95 15.3초의 지배 원인은 동기 결제 경로의
+일반적 지연이 아니라 **단일 `goods_option` 행에 대한 InnoDB 배타 락 직렬화**였다.
+`PaymentService.confirm`이 한 트랜잭션 안에서 재고 차감 UPDATE(커밋까지 락 유지)를 한 뒤
+스텁 토스 100ms를 기다리는데, `confirm.js`가 모든 VU를 같은 `OPTION_ID` 하나에 몰아넣어
+200 × 100ms ≈ 20초 대기열이 만들어졌다(관측 max 18.6s와 일치).
+
+**세트 A의 Kafka 후처리 비동기화는 커밋 이후 부수 작업만 옮기므로 이 수치를 개선하지 못한다.**
+그래서 부하 모형을 둘로 나눈다 — 이 결정은 사용자 승인 사항이다:
+
+| 모형 | 무엇을 재나 | 리포트에서 맡는 역할 |
+|---|---|---|
+| **집중**(기존, `OPTION_ID` 고정) | 한 SKU에 구매가 몰릴 때의 락 경합 | "병목을 발견하고 원인을 규명한" 진단 서사. 개선 대상은 이번 스코프 밖임을 명시 |
+| **분산**(신규, 여러 옵션에 분산) | 일반적 다품목 트래픽에서의 확정 지연 | Kafka 후처리 비동기화의 before/after 비교 기준 |
+
+**Files:**
+- Modify: `tools/loadtest/confirm.js`(분산/집중 스위치 추가), `tools/loadtest/README.md`
+- Create: `docs/loadtest/2026-07-29-baseline-spread/{confirm-summary.json,conditions.md}`
+
+**부하 모형 계약 — 바꾸지 않는 것:** ramping-vus 단계(10 → 30s 50 → 1m 200 → 30s 0),
+thresholds `http_req_failed: ['rate<0.01']`, 요청 순서(주문 생성 → 확정). 바뀌는 것은
+**어떤 상품을 사는가** 하나뿐이다.
+
+**분산 방식 (판단 — 전량):**
+
+```javascript
+// 환경변수 LOAD_MODEL=spread | single (기본 single — 기존 baseline을 그대로 재현할 수 있어야 한다)
+// spread일 때 OPTION_IDS(쉼표 구분 목록)에서 VU×반복마다 하나를 고른다.
+// __VU와 __ITER를 함께 쓰는 이유: __VU만 쓰면 같은 VU가 매 반복 같은 옵션을 사서
+// VU 수보다 적은 옵션에 다시 몰린다.
+const MODEL = __ENV.LOAD_MODEL || 'single';
+const OPTION_IDS = (__ENV.OPTION_IDS || '').split(',').filter(Boolean).map(Number);
+
+function pickOptionId() {
+  if (MODEL !== 'spread') return Number(__ENV.OPTION_ID);
+  return OPTION_IDS[(__VU + __ITER) % OPTION_IDS.length];
+}
+```
+
+- `OPTION_IDS`는 재고를 보충한 옵션 중 **최소 200개**를 넘긴다(피크 VU 수 이상이어야 같은 행에
+  두 트랜잭션이 겹치지 않는다). 목록은 README에 SQL로 뽑는 법을 적는다.
+- `goodsNo`도 옵션에 맞는 값이어야 하므로, 옵션 id와 상품 id를 쌍으로 넘기거나 옵션 id로
+  상품을 조회해 구성한다 — 실제 스키마에 맞는 방식을 구현자가 정하고 README에 근거를 남긴다.
+
+**스텝:**
+- [ ] `LOAD_MODEL=single`로 돌려 기존 수치가 재현되는지 확인 (하위 호환 회귀)
+- [ ] 옵션 200개 이상에 재고 보충, `LOAD_MODEL=spread`로 본 측정
+      (`--summary-trend-stats="avg,min,med,max,p(90),p(95),p(99)"` 포함)
+- [ ] summary JSON을 커밋 전 `setup_data` 스크럽 후 `docs/loadtest/2026-07-29-baseline-spread/`에 저장
+- [ ] 같은 폴더 `conditions.md`: 집중 모형 조건 문서를 참조하되 **다른 점만** 적고(옵션 목록,
+      LOAD_MODEL, 재고 보충 범위), 두 모형의 수치를 나란히 놓은 비교표와 그 해석을 담는다
 - [ ] 커밋 — **이 커밋이 터미널 A·B의 기점이다**
 
 ---
@@ -646,8 +703,12 @@ C의 부하 리포트가 이 수치를 읽는다.
 
 ### Task C2: after 측정 + 리포트
 
-- [ ] baseline과 **동일 조건**(`docs/loadtest/2026-07-29-baseline/conditions.md`)으로 confirm.js /
-      browse.js 재측정, 결과를 `docs/loadtest/2026-07-29-after/`에 저장. 추가 수집: 컨슈머 랙 추이
+- [ ] baseline과 **동일 조건**으로 재측정 — **세 벌**이다: confirm 분산 모형
+      (`LOAD_MODEL=spread`, 조건은 `2026-07-29-baseline-spread/conditions.md`), confirm 집중 모형
+      (`LOAD_MODEL=single`, 조건은 `2026-07-29-baseline/conditions.md`), browse.
+      결과를 `docs/loadtest/2026-07-29-after/`에 저장.
+      **집중 모형은 개선이 거의 없을 것으로 예측돼 있다**(Task 0.4 참고) — 그 예측이 맞는지가
+      리포트의 논점 하나이므로, 수치가 그대로여도 실패가 아니라 검증된 예측으로 적는다. 추가 수집: 컨슈머 랙 추이
       (`kafka-consumer-groups.sh --describe`를 측정 중 5초 간격 폴링한 로그), 캐시 히트율
       (`/actuator/metrics/cache.gets`)
 - [ ] `docs/loadtest/2026-07-29-report.md` 작성: before/after 표(p50/p95/p99·RPS·에러율),
@@ -661,6 +722,12 @@ C의 부하 리포트가 이 수치를 읽는다.
       이유(릴레이 재발행 창 + 컨슈머 재시도는 어차피 중복을 만든다 → 소비 측 멱등성이 유일한 해법)
 - [ ] `docs/adr/0003-cache-strategy.md` — 대상 선정 기준, 워밍 1안 채택(soft-TTL 미채택 이유),
       B3의 전체-clear 단순화 결정
+- [ ] `docs/adr/0004-stock-lock-contention-out-of-scope.md` — Task 0.4가 발견한 단일 SKU 락 직렬화를
+      기록한다: 측정으로 드러난 현상, 코드상 원인(재고 차감 락이 외부 호출을 포함한 채 커밋까지 유지),
+      **이번 스코프에서 고치지 않은 이유**(후처리 비동기화와 다른 층위의 문제이고, 결제 정합성을
+      건드리는 변경이라 별도 검증이 필요하다), 고친다면의 선택지(낙관적 락 / 재고 차감을 토스 호출
+      뒤로 / Redis 카운터)와 각각의 트레이드오프. **발견하고 진단했으나 의도적으로 미루었다**는
+      것이 이 문서의 요지다 — 못 본 것과 안 고친 것은 다르다.
 - [ ] README "트래픽 개선기" 섹션: 한 장 요약 + 리포트/ADR 링크 + 최종 일관성(장바구니 지연) 명시
 
 ---
