@@ -34,4 +34,14 @@ class StubPaymentGatewayTest {
                 .withUserConfiguration(StubPaymentGateway.class)
                 .run(context -> assertThat(context).doesNotHaveBean(StubPaymentGateway.class));
     }
+
+    @Test
+    void loadtest와_e2e가_함께_켜지면_스텁_빈이_없다() {
+        // FakePaymentGateway(@Profile("e2e"))와 동시에 뜨면 PaymentGateway 빈이 둘이 되어
+        // 컨텍스트가 뜨지 않는다 — @Profile("loadtest & !e2e")로 배타성을 지켜 이를 막는다.
+        new ApplicationContextRunner()
+                .withUserConfiguration(StubPaymentGateway.class)
+                .withInitializer(context -> context.getEnvironment().setActiveProfiles("loadtest", "e2e"))
+                .run(context -> assertThat(context).doesNotHaveBean(StubPaymentGateway.class));
+    }
 }

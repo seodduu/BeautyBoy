@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
  * 근사치({@value #SIMULATED_LATENCY_MS}ms)를 그대로 재현한다.
  */
 @Component
-@Profile("loadtest")
+@Profile("loadtest & !e2e")
 public class StubPaymentGateway implements PaymentGateway {
 
     // 토스 실측 응답시간의 근사치. 이 지연이 없으면 confirm 개선 폭이 과장된다.
