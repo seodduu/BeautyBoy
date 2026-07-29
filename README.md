@@ -16,6 +16,7 @@
 - [서비스 소개](#service-intro)
 - [데모 예시](#demo-examples)
 - [차별화 포인트](#differentiation)
+- [시스템 아키텍처](#system-architecture)
 - [기술 스택](#tech-stack)
 - [실행 방법](#how-to-start)
 - [만든 사람](#members)
@@ -140,6 +141,12 @@ BeautyBoy는 질문을 바꿨습니다 — "무엇을 살까"가 아니라 <stro
     <td><h3>주문 스냅샷으로 서버가 금액을 재계산해 대조하는 2단계 검증 — 금액 위조 승인 요청은 거부(E2E로 검증)</h3></td>
   </tr>
 </table>
+
+<a id="system-architecture"></a>
+
+# 🏗️ 시스템 아키텍처
+
+<img src="docs/demo/architecture.svg" width="100%" alt="BeautyBoy 시스템 아키텍처" />
 
 <a id="tech-stack"></a>
 
