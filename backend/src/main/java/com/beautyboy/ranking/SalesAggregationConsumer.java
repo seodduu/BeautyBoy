@@ -1,17 +1,14 @@
 package com.beautyboy.ranking;
 
+import com.beautyboy.outbox.IdempotencyGate;
 import com.beautyboy.outbox.KafkaConsumerConfig;
 import com.beautyboy.outbox.OrderConfirmedEvent;
 import com.beautyboy.outbox.OutboxRelay;
-import com.beautyboy.outbox.ProcessedEvent;
-import com.beautyboy.outbox.ProcessedEventRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDateTime;
 
 /**
  * sales-aggregation 컨슈머(A5). 확정된 주문의 수량만큼 일별 판매 집계를 증분한다.
@@ -23,18 +20,24 @@ import java.time.LocalDateTime;
  * 중복 소비는 사고가 아니라 정상 경로(재시도·리밸런싱·릴레이 재발행)이므로 방어가 필요하다.
  *
  * <p>그룹 이름이 컨슈머마다 다른 이유는 {@link KafkaConsumerConfig} 클래스 주석에 있다.
+ *
+ * <p><b>outbox와의 경계</b>: 처리 기록은 {@link IdempotencyGate} 인터페이스로만 만진다.
+ * 여기서 {@code ProcessedEvent} 엔티티나 그 리포지토리를 직접 import하면 "패키지 = 서비스 경계,
+ * 타 도메인 엔티티/리포지토리 직접 import 금지"(CLAUDE.md)를 어기는 것이고, 실제로 그렇게
+ * 돼 있던 것을 되돌린 결과가 지금 형태다. 계약 타입({@link OrderConfirmedEvent})은 공유
+ * 메시지 계약이라 그대로 쓴다.
  */
 @Component
 public class SalesAggregationConsumer {
 
-    private final ProcessedEventRepository processedEventRepository;
+    private final IdempotencyGate idempotencyGate;
     private final GoodsDailyStatRepository goodsDailyStatRepository;
     private final ObjectMapper objectMapper;
 
-    public SalesAggregationConsumer(ProcessedEventRepository processedEventRepository,
+    public SalesAggregationConsumer(IdempotencyGate idempotencyGate,
                                     GoodsDailyStatRepository goodsDailyStatRepository,
                                     ObjectMapper objectMapper) {
-        this.processedEventRepository = processedEventRepository;
+        this.idempotencyGate = idempotencyGate;
         this.goodsDailyStatRepository = goodsDailyStatRepository;
         this.objectMapper = objectMapper;
     }
@@ -45,7 +48,7 @@ public class SalesAggregationConsumer {
      * <p>계획서의 판단 코드는 {@code save()} 후 {@code DataIntegrityViolationException}을 잡는
      * 형태였는데, 그 문서가 스스로 지목한 함정(유니크 위반이 트랜잭션을 롤백-only로 만든다)을
      * 피하려고 <b>네이티브 INSERT + 영향 행 수 0이면 스킵</b>으로 바꿨다. 이유는
-     * {@link ProcessedEventRepository#insertIfAbsent}에 적어 두었다.
+     * {@code ProcessedEventRepository.insertIfAbsent}에 적어 두었다.
      */
     @KafkaListener(topics = OutboxRelay.TOPIC,
             groupId = KafkaConsumerConfig.GROUP_SALES_AGGREGATION,
@@ -54,9 +57,9 @@ public class SalesAggregationConsumer {
     public void on(ConsumerRecord<String, String> record) {
         OrderConfirmedEvent event = 역직렬화(record.value());
 
-        int 새로_기록됨 = processedEventRepository.insertIfAbsent(
-                event.eventId(), ProcessedEvent.CONSUMER_SALES_AGGREGATION, LocalDateTime.now());
-        if (새로_기록됨 == 0) {
+        boolean 처음_보는_이벤트 = idempotencyGate.markProcessed(
+                event.eventId(), IdempotencyGate.CONSUMER_SALES_AGGREGATION);
+        if (!처음_보는_이벤트) {
             return;     // 이미 반영한 이벤트다. 중복 소비는 정상 동작이므로 조용히 스킵한다.
         }
 

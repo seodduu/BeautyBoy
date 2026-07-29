@@ -26,8 +26,12 @@ import java.util.Objects;
 @IdClass(ProcessedEvent.Key.class)
 public class ProcessedEvent {
 
-    /** 판매 집계 컨슈머의 이름. {@code consumer} 컬럼 값이자 설계 §5 표의 그 이름이다. */
-    public static final String CONSUMER_SALES_AGGREGATION = "sales-aggregation";
+    /**
+     * 판매 집계 컨슈머의 이름({@code consumer} 컬럼 값, 설계 §5 표의 그 이름).
+     * 진실은 {@link IdempotencyGate#CONSUMER_SALES_AGGREGATION}에 있다 — 타 도메인이 보는 것은
+     * 인터페이스뿐이라 상수도 거기에 산다. 여기서는 그것을 가리키기만 한다.
+     */
+    public static final String CONSUMER_SALES_AGGREGATION = IdempotencyGate.CONSUMER_SALES_AGGREGATION;
 
     @Id
     @Column(name = "event_id")
