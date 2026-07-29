@@ -445,7 +445,8 @@ public void relay() {
 없는 개선을 주장하는 대신 실제 트레이드오프를 보여주는 쪽이 정직하고 설득력도 높다.
 
 **이 태스크의 커밋 SHA를 계획서 이 자리에 적어 둔다** — Wave 2(C2)가 그 지점을 체크아웃해
-"동기 버전" 수치를 잰다. 측정 지점: `동기 커밋 SHA: (A4b 완료 시 기입)`
+"동기 버전" 수치를 잰다. 측정 지점: `동기 커밋 SHA: d9ce1938b172555fdf86c1ac84c06a0f5ab73562`
+(브랜치 `feat/order-events`. C2는 이 커밋을 체크아웃해 `LOAD_MODEL=spread`로 confirm을 잰다.)
 
 **Files:**
 - Create: `backend/src/main/java/com/beautyboy/notification/Notification.java`,
