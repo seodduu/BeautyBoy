@@ -4,6 +4,7 @@ import com.beautyboy.catalog.StockCommandService;
 import com.beautyboy.common.BusinessException;
 import com.beautyboy.common.ErrorCode;
 import com.beautyboy.order.OrderConfirmPort;
+import com.beautyboy.order.PostOrderTasks;
 import com.beautyboy.outbox.OrderConfirmedEvent;
 import com.beautyboy.outbox.OutboxAppender;
 import com.beautyboy.payment.dto.PaymentApproval;
@@ -27,6 +28,8 @@ import java.time.LocalDateTime;
  *   <li>모두 통과하면 주문을 결제완료로 전이하고 payment를 저장한다.</li>
  *   <li><b>확정 이벤트를 아웃박스에 INSERT한다</b> — 후처리(장바구니·집계·알림)는 이 이벤트를
  *       소비하는 쪽이 맡는다.</li>
+ *   <li><b>후처리를 실행한다</b>(A4b — 동기 기준선). 지금은 이 트랜잭션 안에서 곧장 돌기 때문에
+ *       후처리 실패가 결제 실패가 된다. A5가 이 호출부를 그대로 둔 채 구현만 이벤트 소비로 옮긴다.</li>
  * </ol>
  *
  * <p>왜 토스 호출을 상태 검사 뒤에 두는가: 먼저 부르면 이미 결제된 주문에도 토스를 때려
@@ -44,17 +47,20 @@ public class PaymentService {
     private final PaymentGateway paymentGateway;
     private final StockCommandService stockCommandService;
     private final OutboxAppender outboxAppender;
+    private final PostOrderTasks postOrderTasks;
 
     public PaymentService(OrderConfirmPort orderConfirmPort,
                           PaymentRepository paymentRepository,
                           PaymentGateway paymentGateway,
                           StockCommandService stockCommandService,
-                          OutboxAppender outboxAppender) {
+                          OutboxAppender outboxAppender,
+                          PostOrderTasks postOrderTasks) {
         this.orderConfirmPort = orderConfirmPort;
         this.paymentRepository = paymentRepository;
         this.paymentGateway = paymentGateway;
         this.stockCommandService = stockCommandService;
         this.outboxAppender = outboxAppender;
+        this.postOrderTasks = postOrderTasks;
     }
 
     @Transactional
@@ -98,7 +104,7 @@ public class PaymentService {
         //     같은 트랜잭션이라 "결제는 됐는데 이벤트가 없다"(또는 그 반대)가 원천적으로 불가능하고,
         //     토스 호출(4)보다 뒤라 앞 단계가 실패하면 롤백이 이 행까지 지워 유령 이벤트가 없다.
         //     Kafka로의 실제 발행은 릴레이가 커밋 이후에 맡는다 — 여기서 브로커를 기다리지 않는다.
-        outboxAppender.appendOrderConfirmed(new OrderConfirmedEvent(
+        OrderConfirmedEvent 확정_이벤트 = new OrderConfirmedEvent(
                 ORDER_CONFIRMED_VERSION,
                 null,                       // eventId는 아웃박스 INSERT로 채번된다(행 PK).
                 ORDER_CONFIRMED,
@@ -109,7 +115,15 @@ public class PaymentService {
                 target.eventLines().stream()
                         .map(line -> new OrderConfirmedEvent.Line(
                                 line.goodsId(), line.optionId(), line.quantity()))
-                        .toList()));
+                        .toList());
+        outboxAppender.appendOrderConfirmed(확정_이벤트);
+
+        // (8) 후처리 3종(장바구니·집계·알림)을 지금 여기서 실행한다 — A4b의 동기 기준선.
+        //     같은 트랜잭션이므로 후처리가 하나라도 실패하면 (4)에서 이미 승인된 결제까지 롤백된다.
+        //     알림 테이블 잠금처럼 돈과 무관한 사고가 결제 실패로 번지고, 응답 시간도 후처리만큼
+        //     그대로 늘어난다. 이것이 동기 방식의 대가이며 A5가 없애려는 바로 그 성질이다.
+        //     A5는 이 호출부를 그대로 두고 PostOrderTasks의 구현만 갈아끼운다.
+        postOrderTasks.onOrderConfirmed(확정_이벤트);
 
         return new PaymentConfirmResponse(target.orderNo(), status, target.payableAmount());
     }

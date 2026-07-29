@@ -1,6 +1,5 @@
 package com.beautyboy.order;
 
-import com.beautyboy.cart.CartService;
 import com.beautyboy.catalog.GoodsQueryService;
 import com.beautyboy.common.BusinessException;
 import com.beautyboy.common.ErrorCode;
@@ -38,15 +37,12 @@ public class OrderService implements OrderQueryService {
 
     private final OrderRepository orderRepository;
     private final GoodsQueryService goodsQueryService;
-    private final CartService cartService;
     private final SecureRandom random = new SecureRandom();
 
     public OrderService(OrderRepository orderRepository,
-                        GoodsQueryService goodsQueryService,
-                        CartService cartService) {
+                        GoodsQueryService goodsQueryService) {
         this.orderRepository = orderRepository;
         this.goodsQueryService = goodsQueryService;
-        this.cartService = cartService;
     }
 
     @Transactional
@@ -93,9 +89,10 @@ public class OrderService implements OrderQueryService {
 
         Order saved = orderRepository.save(order);
 
-        // 주문이 성립했으므로 장바구니를 비운다. 같은 트랜잭션이라 주문이 실패하면 장바구니도 그대로 남는다.
-        cartService.clear(memberId);
-
+        // 장바구니는 여기서 비우지 않는다(설계 §2-2, 의도된 행동 변경).
+        // 예전에는 주문이 성립하면 곧장 비웠는데, 그러면 결제창을 닫거나 결제가 실패해도
+        // 담아둔 것이 전부 사라졌다. 이제는 결제가 확정된 뒤 그 주문의 상품만 빠진다
+        // — PostOrderTasks.onOrderConfirmed(1).
         return new OrderCreateResponse(saved.getOrderNo(), saved.getPayableAmount());
     }
 

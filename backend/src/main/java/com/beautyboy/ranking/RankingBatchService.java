@@ -16,8 +16,13 @@ import java.util.Map;
 /**
  * 랭킹 스냅샷 재생성 배치.
  *
- * <p>순서: (1) 타 도메인 Provider에서 오늘의 판매·찜을 받아 일별 통계에 반영 →
+ * <p>순서: (1) 찜 Provider에서 오늘의 찜을 받아 일별 통계에 반영 →
  * (2) 최근 3일 통계를 읽어 가중 점수 계산 → (3) 스냅샷을 트랜잭션 안에서 통째 교체.
+ *
+ * <p><b>판매 수집은 여기서 하지 않는다(A4b).</b> 판매량은 주문 확정 시점에 증분으로 쌓인다
+ * ({@code GoodsDailyStatRepository.upsertSalesIncrement}). 배치가 주문 테이블을 다시 집계해
+ * 대입하면 그 증분이 통째로 덮여 사라지므로, 판매는 <b>증분 경로 하나만</b> 남긴다(설계 §2-3).
+ * 배치는 자기가 쓰지 않는 {@code sales_count}를 읽어 점수에만 반영한다.
  *
  * <p>(3)이 한 트랜잭션인 것이 핵심이다. 지우고 커밋한 뒤 새로 넣으면 그 사이에 들어온 조회 요청이
  * "랭킹 없음"을 본다. 매시 몇 초씩 랭킹이 사라지는 것은 장애로 보인다.
@@ -44,18 +49,15 @@ public class RankingBatchService {
 
     private final GoodsDailyStatRepository goodsDailyStatRepository;
     private final RankingSnapshotRepository rankingSnapshotRepository;
-    private final SalesStatProvider salesStatProvider;
     private final WishStatProvider wishStatProvider;
     private final EntityManager em;
 
     public RankingBatchService(GoodsDailyStatRepository goodsDailyStatRepository,
                                RankingSnapshotRepository rankingSnapshotRepository,
-                               SalesStatProvider salesStatProvider,
                                WishStatProvider wishStatProvider,
                                EntityManager em) {
         this.goodsDailyStatRepository = goodsDailyStatRepository;
         this.rankingSnapshotRepository = rankingSnapshotRepository;
-        this.salesStatProvider = salesStatProvider;
         this.wishStatProvider = wishStatProvider;
         this.em = em;
     }
@@ -64,19 +66,21 @@ public class RankingBatchService {
     public void rebuild() {
         LocalDate today = LocalDate.now();
 
-        수집_판매와_찜(today);
+        수집_찜(today);
         Map<Long, Double> scoreByGoodsId = 점수_계산(today);
         스냅샷_통째_교체(scoreByGoodsId, LocalDateTime.now());
     }
 
-    /** Provider가 준 오늘 수치를 일별 통계에 대입한다. 조회수는 인터셉터가 이미 실시간으로 채워 놨다. */
-    private void 수집_판매와_찜(LocalDate today) {
-        Map<Long, Integer> sales = salesStatProvider.salesQuantityByGoods(today);
+    /**
+     * Provider가 준 오늘의 찜 수치를 일별 통계에 대입한다.
+     * 조회수는 인터셉터가, 판매량은 주문 확정 후처리가 이미 실시간으로 채워 놨다 —
+     * {@code upsertWishCount}는 그 둘을 건드리지 않는다.
+     */
+    private void 수집_찜(LocalDate today) {
         Map<Long, Integer> wishes = wishStatProvider.wishCountByGoods(today);
 
-        for (Long goodsId : union(sales.keySet(), wishes.keySet())) {
-            goodsDailyStatRepository.upsertSalesAndWish(
-                    goodsId, today, sales.getOrDefault(goodsId, 0), wishes.getOrDefault(goodsId, 0));
+        for (Map.Entry<Long, Integer> wish : wishes.entrySet()) {
+            goodsDailyStatRepository.upsertWishCount(wish.getKey(), today, wish.getValue());
         }
         // upsert는 네이티브 쿼리라 영속성 컨텍스트를 우회한다.
         // 바로 아래에서 같은 행을 읽으므로 캐시를 비워 DB 값을 보게 한다.
@@ -163,11 +167,5 @@ public class RankingBatchService {
             categoryByGoodsId.put(((Number) row[0]).longValue(), (String) row[1]);
         }
         return categoryByGoodsId;
-    }
-
-    private List<Long> union(java.util.Set<Long> a, java.util.Set<Long> b) {
-        java.util.Set<Long> merged = new java.util.LinkedHashSet<>(a);
-        merged.addAll(b);
-        return List.copyOf(merged);
     }
 }
