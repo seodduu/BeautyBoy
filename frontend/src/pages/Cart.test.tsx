@@ -267,6 +267,93 @@ describe('Cart — 장바구니', () => {
     expect(screen.queryByText('삭제했어요')).not.toBeInTheDocument();
   });
 
+  it('수량을_올리면_서버_응답_전에_숫자가_바뀐다', async () => {
+    registerHandlers({ items: ONE_ITEM });
+    const updateCartQuantitySpy = vi
+      .spyOn(cartApi, 'updateCartQuantity')
+      .mockImplementation(() => new Promise<void>(() => {}));
+
+    try {
+      renderCart();
+
+      const line = await screen.findByTestId('cart-line-1');
+      fireEvent.click(within(line).getByRole('button', { name: '수량 늘리기' }));
+
+      await waitFor(() => expect(within(line).getByRole('status')).toHaveTextContent('3'));
+    } finally {
+      // 이 스파이는 영원히 resolve되지 않는 Promise를 반환한다 — 위 단언이 실패해도
+      // 반드시 원복해야 다음 테스트로 pending mock이 새지 않는다.
+      updateCartQuantitySpy.mockRestore();
+    }
+  });
+
+  it('수량을_올리면_합계도_서버_응답_전에_따라온다', async () => {
+    registerHandlers({ items: ONE_ITEM });
+    const updateCartQuantitySpy = vi
+      .spyOn(cartApi, 'updateCartQuantity')
+      .mockImplementation(() => new Promise<void>(() => {}));
+
+    try {
+      renderCart();
+
+      const line = await screen.findByTestId('cart-line-1');
+      fireEvent.click(within(line).getByRole('button', { name: '수량 늘리기' }));
+
+      // unitPrice(20000) * 3 = 60,000
+      await waitFor(() => expect(screen.getByTestId('cart-total')).toHaveTextContent('60,000'));
+    } finally {
+      updateCartQuantitySpy.mockRestore();
+    }
+  });
+
+  it('실패하면_수량이_원래대로_돌아온다', async () => {
+    registerHandlers({ items: ONE_ITEM });
+    server.use(
+      http.patch('/api/v1/cart/items/:cartItemId', () =>
+        HttpResponse.json({ code: 'ERROR', message: '실패' }, { status: 500 }),
+      ),
+    );
+
+    renderCart();
+
+    const line = await screen.findByTestId('cart-line-1');
+    fireEvent.click(within(line).getByRole('button', { name: '수량 늘리기' }));
+
+    await waitFor(() => expect(within(line).getByRole('status')).toHaveTextContent('2'));
+  });
+
+  it('실패하면_합계도_원래대로_돌아온다', async () => {
+    registerHandlers({ items: ONE_ITEM });
+    server.use(
+      http.patch('/api/v1/cart/items/:cartItemId', () =>
+        HttpResponse.json({ code: 'ERROR', message: '실패' }, { status: 500 }),
+      ),
+    );
+
+    renderCart();
+
+    const line = await screen.findByTestId('cart-line-1');
+    fireEvent.click(within(line).getByRole('button', { name: '수량 늘리기' }));
+
+    await waitFor(() => expect(screen.getByTestId('cart-total')).toHaveTextContent('40,000'));
+  });
+
+  it('실패하면_롤백과_함께_danger_토스트도_뜬다', async () => {
+    registerHandlers({ items: ONE_ITEM });
+    server.use(
+      http.patch('/api/v1/cart/items/:cartItemId', () =>
+        HttpResponse.json({ code: 'ERROR', message: '실패' }, { status: 500 }),
+      ),
+    );
+
+    renderCart();
+
+    const line = await screen.findByTestId('cart-line-1');
+    fireEvent.click(within(line).getByRole('button', { name: '수량 늘리기' }));
+
+    expect(await screen.findByText('수량 변경에 실패했어요. 다시 시도해 주세요')).toBeInTheDocument();
+  });
+
   it('CONFLICT여도 주문하기는 막지 않는다', async () => {
     registerHandlers({
       compat: {
