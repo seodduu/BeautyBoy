@@ -50,6 +50,7 @@ export function Cart() {
     mutationFn: ({ cartItemId, quantity }: { cartItemId: number; quantity: number }) =>
       updateCartQuantity(cartItemId, quantity),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.cart() }),
+    onError: () => toast('수량 변경에 실패했어요. 다시 시도해 주세요', { tone: 'danger' }),
   });
 
   const removeMutation = useMutation({
@@ -58,6 +59,7 @@ export function Cart() {
       queryClient.invalidateQueries({ queryKey: queryKeys.cart() });
       toast('삭제했어요');
     },
+    onError: () => toast('삭제하지 못했어요. 다시 시도해 주세요', { tone: 'danger' }),
   });
 
   if (cartQuery.isLoading) {

@@ -115,6 +115,36 @@ test('빈 배열 응답이면 EmptyState를 보여주고 그리드는 렌더하�
   expect(screen.queryByText(/위$/)).not.toBeInTheDocument();
 });
 
+test('랭킹 조회 실패 시 오류 상태를 보여준다', async () => {
+  server.use(
+    http.get('/api/v1/rankings', () => HttpResponse.json({ code: 'ERROR', message: '실패' }, { status: 500 })),
+  );
+
+  renderRanking('/ranking');
+
+  expect(await screen.findByRole('alert')).toBeInTheDocument();
+  expect(screen.queryByText('아직 랭킹 정보가 없어요')).not.toBeInTheDocument();
+});
+
+test('다시 시도를 누르면 재요청한다', async () => {
+  let callCount = 0;
+  server.use(
+    http.get('/api/v1/rankings', () => {
+      callCount += 1;
+      return HttpResponse.json({ code: 'ERROR', message: '실패' }, { status: 500 });
+    }),
+  );
+
+  renderRanking('/ranking');
+
+  await screen.findByRole('alert');
+  const countAfterFirstFailure = callCount;
+
+  fireEvent.click(screen.getByRole('button', { name: '다시 시도' }));
+
+  await waitFor(() => expect(callCount).toBeGreaterThan(countAfterFirstFailure));
+});
+
 test('화살표 키로 탭 간 포커스가 이동하고(roving tabindex) Enter로 선택된다', async () => {
   renderRanking('/ranking');
 

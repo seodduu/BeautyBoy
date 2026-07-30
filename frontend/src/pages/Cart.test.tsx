@@ -234,6 +234,39 @@ describe('Cart — 장바구니', () => {
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
+  it('수량 변경 실패 시 실패 토스트를 보여준다', async () => {
+    registerHandlers();
+    server.use(
+      http.patch('/api/v1/cart/items/:cartItemId', () =>
+        HttpResponse.json({ code: 'ERROR', message: '실패' }, { status: 500 }),
+      ),
+    );
+
+    renderCart();
+
+    await screen.findByTestId('cart-total');
+    fireEvent.click(screen.getAllByRole('button', { name: '수량 늘리기' })[0]);
+
+    expect(await screen.findByText('수량 변경에 실패했어요. 다시 시도해 주세요')).toBeInTheDocument();
+  });
+
+  it('삭제 실패 시 실패 토스트를 보여주고 성공 문구는 보이지 않는다', async () => {
+    registerHandlers({ items: ONE_ITEM });
+    server.use(
+      http.delete('/api/v1/cart/items/:cartItemId', () =>
+        HttpResponse.json({ code: 'ERROR', message: '실패' }, { status: 500 }),
+      ),
+    );
+
+    renderCart();
+
+    await screen.findByText('그린티 토너');
+    fireEvent.click(screen.getByRole('button', { name: '삭제' }));
+
+    expect(await screen.findByText('삭제하지 못했어요. 다시 시도해 주세요')).toBeInTheDocument();
+    expect(screen.queryByText('삭제했어요')).not.toBeInTheDocument();
+  });
+
   it('CONFLICT여도 주문하기는 막지 않는다', async () => {
     registerHandlers({
       compat: {
