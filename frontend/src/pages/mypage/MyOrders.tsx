@@ -8,6 +8,7 @@ import { ErrorState } from '../../components/common/ErrorState';
 import { Pager } from '../../components/ui/Pager';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { formatWon } from '../../components/ui/Price';
+import { useTitle } from '../../hooks/useTitle';
 import './MyOrders.css';
 
 /** 한 페이지 건수 — 서버 기본값(size=10)과 맞춘다. */
@@ -74,6 +75,7 @@ function buildOrderLabel(representativeGoodsName: string, itemCount: number): st
  * (project law: 주문 시점 데이터는 스냅샷). 금액도 서버가 계산한 payableAmount 그대로 보여준다.
  */
 export function MyOrders() {
+  useTitle('주문 내역');
   const { orderNo } = useParams<{ orderNo?: string }>();
 
   if (orderNo) {

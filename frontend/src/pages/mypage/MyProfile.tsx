@@ -17,6 +17,7 @@ import { Field } from '../../components/ui/Field';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { useToast } from '../../components/ui/useToast';
 import { SkinProfileFields } from '../../components/skin-profile/SkinProfileFields';
+import { useTitle } from '../../hooks/useTitle';
 import './MyProfile.css';
 
 const EMPTY_ADDRESS_INPUT: AddressInput = {
@@ -38,6 +39,7 @@ const EMPTY_ADDRESS_INPUT: AddressInput = {
  * 4-2의 DB 유니크 제약이 막아준다(project law) — 프론트는 낙관적 갱신 없이 재조회로만 반영한다.
  */
 export function MyProfile() {
+  useTitle('내 정보');
   const { toast } = useToast();
   const queryClient = useQueryClient();
 

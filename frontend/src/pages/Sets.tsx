@@ -9,6 +9,7 @@ import { addSetToCart } from '../features/routine/addSetToCart';
 import { deriveSetConcepts, SET_LETTERS } from '../features/affinity/setConcepts';
 import { useComposer } from '../features/affinity/useComposer';
 import { useAuthStore } from '../stores/authStore';
+import { useTitle } from '../hooks/useTitle';
 import './Sets.css';
 
 /**
@@ -19,6 +20,7 @@ import './Sets.css';
  * (concernOverride로 세트 컨셉을 단독 대체)가 맡는다. 이 페이지는 셋을 묶는 접합부다.
  */
 export function Sets() {
+  useTitle('세트');
   const accessToken = useAuthStore((state) => state.accessToken);
   const meQuery = useQuery({ queryKey: ['me'], queryFn: fetchMe, enabled: !!accessToken });
   const { toast } = useToast();

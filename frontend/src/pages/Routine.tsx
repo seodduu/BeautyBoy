@@ -15,6 +15,7 @@ import { Button } from '../components/ui/Button';
 import { Skeleton } from '../components/ui/Skeleton';
 import { useToast } from '../components/ui/useToast';
 import { useAuthStore } from '../stores/authStore';
+import { useTitle } from '../hooks/useTitle';
 import './Routine.css';
 
 /** 시간대 선택 UI는 1차 범위 밖 — 항상 기본(아침) 루틴을 조회한다(설계 8장 "1차: 단순 룩업"). */
@@ -29,6 +30,7 @@ const DEFAULT_TIME = 'BASIC';
  * 비어 있으면 그 결과를 한 번 승격한다(설계 8장 "가입 시 승격").
  */
 export function Routine() {
+  useTitle('루틴 가이드');
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();

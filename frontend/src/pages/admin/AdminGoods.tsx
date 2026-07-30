@@ -14,6 +14,7 @@ import { Button } from '../../components/ui/Button';
 import { Field } from '../../components/ui/Field';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { useToast } from '../../components/ui/useToast';
+import { useTitle } from '../../hooks/useTitle';
 import './AdminGoods.css';
 
 const EMPTY_DRAFT: AdminGoodsSaveInput = {
@@ -54,6 +55,7 @@ const EMPTY_DRAFT: AdminGoodsSaveInput = {
  * 여전히 수정 모드 진입을 막는다(토스트 안내) — 손상 위험을 감수하고 진입시키지 않는다.
  */
 export function AdminGoods() {
+  useTitle('상품 관리');
   const { toast } = useToast();
   const queryClient = useQueryClient();
 

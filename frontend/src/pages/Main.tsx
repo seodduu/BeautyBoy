@@ -7,6 +7,7 @@ import { useToast } from '../components/ui/useToast';
 import { addSetToCart } from '../features/routine/addSetToCart';
 import { ROUTINE_STEPS } from '../features/routine/steps';
 import { useComposer } from '../features/affinity/useComposer';
+import { useTitle } from '../hooks/useTitle';
 import './Main.css';
 
 /**
@@ -23,6 +24,7 @@ import './Main.css';
  * 하나도 못 받아도 화면은 그대로 뜬다: 그 상태가 곧 인기순 기준선이라 빈 슬롯이 생기지 않는다.
  */
 export function Main() {
+  useTitle('추천');
   const [activeId, setActiveId] = useState<string>(ROUTINE_STEPS[0].id);
   const [addingAll, setAddingAll] = useState(false);
   const { toast } = useToast();

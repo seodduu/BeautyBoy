@@ -21,6 +21,7 @@ import { QuantityStepper } from '../components/goods/QuantityStepper';
 import { RecommendedSection } from '../components/goods/RecommendedSection';
 import { useToast } from '../components/ui/useToast';
 import { WEIGHT, recordEvent, toCat3 } from '../features/affinity/events';
+import { useTitle } from '../hooks/useTitle';
 import './Detail.css';
 
 // 태그 표시 정렬 순서(태그확장) — 렌더마다 새로 만들 필요가 없는 고정 상수라 모듈 스코프로 뺀다.
@@ -46,6 +47,9 @@ export function Detail() {
     queryFn: () => fetchGoodsDetail(goodsNo),
     enabled: hasValidGoodsNo,
   });
+
+  // null/undefined면 훅이 아무것도 안 한다 — 로딩 중에는 이전 제목을 유지한다(설계 §1.2).
+  useTitle(detailQuery.data?.name);
 
   const assessmentQuery = useQuery({
     queryKey: ['goods-assessment', goodsNo],

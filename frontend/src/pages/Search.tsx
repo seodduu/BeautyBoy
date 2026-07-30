@@ -6,6 +6,7 @@ import { EmptyState } from '../components/common/EmptyState';
 import { GoodsGrid } from '../components/goods/GoodsGrid';
 import { SearchBox } from '../components/search/SearchBox';
 import { useWishToggle } from '../features/wishlist/useWishToggle';
+import { useTitle } from '../hooks/useTitle';
 import './Search.css';
 
 /**
@@ -16,6 +17,9 @@ export function Search() {
   const [searchParams, setSearchParams] = useSearchParams();
   const q = searchParams.get('q') ?? '';
   const hasQuery = q.length > 0;
+
+  // 검색어는 URL 파라미터라 즉시 확정된다 — 로딩 대기 없이 바로 세운다(설계 §1.3).
+  useTitle(hasQuery ? `'${q}' 검색 결과` : '검색');
 
   const toggleWish = useWishToggle();
   const [suggestionCount, setSuggestionCount] = useState(0);

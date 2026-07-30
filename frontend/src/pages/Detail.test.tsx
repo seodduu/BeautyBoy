@@ -210,6 +210,21 @@ describe('Detail — 상세 페이지', () => {
     expect(await screen.findByText('장바구니에 담았어요')).toBeInTheDocument();
   });
 
+  it('상세는_로딩_중에는_제목을_바꾸지_않고_상품명이_오면_바꾼다', async () => {
+    document.title = '뷰티보이 | BeautyBoy';
+    registerDefaultHandlers();
+    server.use(http.post('/api/v1/cart/items', () => new HttpResponse(null, { status: 201 })));
+
+    renderDetail();
+
+    // 데이터가 아직 없는 시점(마운트 직후)에는 이전 제목이 그대로 유지된다.
+    expect(document.title).toBe('뷰티보이 | BeautyBoy');
+
+    await screen.findByRole('heading', { name: '테스트 세럼' });
+
+    expect(document.title).toBe('테스트 세럼 | 뷰티보이');
+  });
+
   it('한 줄 평(summary)이 상품명 아래·가격 위에 보인다', async () => {
     registerDefaultHandlers();
     server.use(http.post('/api/v1/cart/items', () => new HttpResponse(null, { status: 201 })));

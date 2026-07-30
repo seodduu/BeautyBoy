@@ -8,6 +8,7 @@ import { GoodsCardSkeleton } from '../components/goods/GoodsCardSkeleton';
 import '../components/goods/GoodsGrid.css';
 import { CategoryTabs } from '../components/ranking/CategoryTabs';
 import { useWishToggle } from '../features/wishlist/useWishToggle';
+import { useTitle } from '../hooks/useTitle';
 import type { GoodsListItem } from '../types/goods';
 import type { RankingItem } from '../types/ranking';
 import './Ranking.css';
@@ -42,6 +43,7 @@ function toGoodsListItem(item: RankingItem): GoodsListItem {
  * GoodsCard를 그대로 재사용하면서 순위 배지만 형제 요소로 겹쳐 그리는 전용 그리드를 구성한다.
  */
 export function Ranking() {
+  useTitle('랭킹');
   const [searchParams, setSearchParams] = useSearchParams();
   const categoryCode = searchParams.get('category') ?? undefined;
   const toggleWish = useWishToggle();

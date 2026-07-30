@@ -1,5 +1,6 @@
 import { useNavigate, useRouteError } from 'react-router-dom';
 import { Button } from '../ui/Button';
+import { useTitle } from '../../hooks/useTitle';
 import './RouteError.css';
 
 const MESSAGES = {
@@ -25,6 +26,8 @@ const MESSAGES = {
  * 두 경로에서 같은 일을 해야 손님이 예측할 수 있다.)
  */
 export function RouteError() {
+  // 404와 라우트 오류가 같은 화면이므로 제목도 하나다(설계 §1.3) — 원인별로 나누지 않는다.
+  useTitle('페이지를 찾을 수 없어요');
   const error = useRouteError();
   const navigate = useNavigate();
   // catch-all(path: '*') 자리에는 예외가 없다 — 라우터 구현에 따라 useRouteError()가
