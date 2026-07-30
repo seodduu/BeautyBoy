@@ -8,6 +8,7 @@ import { useAuthStore } from '../stores/authStore';
 import { AuthLayout } from '../components/auth/AuthLayout';
 import { Button } from '../components/ui/Button';
 import { Field } from '../components/ui/Field';
+import { useTitle } from '../hooks/useTitle';
 
 interface AccountFields {
   email: string;
@@ -23,6 +24,7 @@ interface AccountFields {
  * "가입하세요" 히어로를 다시 보여주는 것은 되돌아간 것처럼 읽힌다.
  */
 export function Signup() {
+  useTitle('회원가입');
   const navigate = useNavigate();
   const setAuth = useAuthStore((state) => state.setAuth);
 

@@ -1,4 +1,5 @@
 import { Link, useSearchParams } from 'react-router-dom';
+import { useTitle } from '../hooks/useTitle';
 import './OrderFail.css';
 
 /**
@@ -9,6 +10,7 @@ import './OrderFail.css';
  * 실패 사유는 토스가 준 message를 그대로 보여준다(프론트가 문구를 새로 지어내지 않는다).
  */
 export function OrderFail() {
+  useTitle('주문 실패');
   const [searchParams] = useSearchParams();
 
   const code = searchParams.get('code');

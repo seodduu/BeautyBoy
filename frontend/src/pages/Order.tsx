@@ -12,6 +12,7 @@ import { Button } from '../components/ui/Button';
 import { Skeleton } from '../components/ui/Skeleton';
 import { formatWon } from '../components/ui/Price';
 import { useAuthStore } from '../stores/authStore';
+import { useTitle } from '../hooks/useTitle';
 import './Order.css';
 
 const EMPTY_MANUAL: ManualAddress = {
@@ -56,6 +57,7 @@ function validateReceiver(v: ManualAddress): string | null {
  * (project law: 돈은 서버가 계산한다).
  */
 export function Order() {
+  useTitle('주문서');
   const member = useAuthStore((state) => state.member);
 
   const cartQuery = useQuery({

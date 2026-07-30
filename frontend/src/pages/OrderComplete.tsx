@@ -5,6 +5,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { confirmPayment, type PaymentConfirmResult } from '../api/order';
 import { queryKeys } from '../api/queryKeys';
 import { formatWon } from '../components/ui/Price';
+import { useTitle } from '../hooks/useTitle';
 import './OrderComplete.css';
 
 /** 서버 에러 봉투(`{ code, message, detail }`)에서 코드·문구를 꺼낸다. 문구는 서버가 준 것을 그대로 쓴다. */
@@ -25,6 +26,7 @@ function readServerError(error: unknown): { code: string | null; message: string
  * `paidAmount`다 (project law: 돈은 서버).
  */
 export function OrderComplete() {
+  useTitle('주문 완료');
   const [searchParams] = useSearchParams();
   const queryClient = useQueryClient();
 

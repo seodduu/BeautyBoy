@@ -10,6 +10,7 @@ import { ErrorState } from '../../components/common/ErrorState';
 import { Button } from '../../components/ui/Button';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { useToast } from '../../components/ui/useToast';
+import { useTitle } from '../../hooks/useTitle';
 import './AdminRoutine.css';
 
 /** "101, 102, 103" 같은 콤마 구분 문자열을 goodsNo 배열로 파싱한다. 빈 토큰·NaN은 버린다. */
@@ -119,6 +120,7 @@ function TemplateSection({ template }: { template: AdminRoutineTemplate }) {
  * 그래서 편집 UI도 콤마 구분 목록을 통째로 다시 저장하는 형태다.
  */
 export function AdminRoutine() {
+  useTitle('루틴 관리');
   const query = useQuery({ queryKey: ['admin-routines'], queryFn: fetchAdminRoutines });
 
   if (query.isLoading) {

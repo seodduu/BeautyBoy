@@ -12,6 +12,7 @@ import { Button } from '../components/ui/Button';
 import { Skeleton } from '../components/ui/Skeleton';
 import { formatWon } from '../components/ui/Price';
 import { useToast } from '../components/ui/useToast';
+import { useTitle } from '../hooks/useTitle';
 import './Cart.css';
 
 /**
@@ -22,6 +23,7 @@ import './Cart.css';
  * 궁합은 CONFLICT여도 주문하기를 막지 않는다 — 조언이지 금지가 아니다(설계 8장).
  */
 export function Cart() {
+  useTitle('장바구니');
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();

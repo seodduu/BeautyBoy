@@ -7,6 +7,7 @@ import { useAuthStore } from '../stores/authStore';
 import { AuthLayout } from '../components/auth/AuthLayout';
 import { Button } from '../components/ui/Button';
 import { Field } from '../components/ui/Field';
+import { useTitle } from '../hooks/useTitle';
 
 /**
  * 로그인 페이지.
@@ -15,6 +16,7 @@ import { Field } from '../components/ui/Field';
  * 성공 후에는 랜딩(/)이 아니라 루틴 메인(/main)으로 보낸다 — 랜딩은 비로그인 유입 화면이다.
  */
 export function Login() {
+  useTitle('로그인');
   const navigate = useNavigate();
   const setAuth = useAuthStore((state) => state.setAuth);
 

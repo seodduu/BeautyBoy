@@ -8,6 +8,7 @@ import { ListToolbar, PRICE_BAND_RANGE, type PriceBand } from '../components/goo
 import { Pager } from '../components/ui/Pager';
 import { ROUTINE_STEPS } from '../features/routine/steps';
 import { useWishToggle } from '../features/wishlist/useWishToggle';
+import { useTitle } from '../hooks/useTitle';
 import './GoodsList.css';
 
 /** 한 페이지 건수. 5열 그리드 기준 4줄이다. */
@@ -47,6 +48,7 @@ function normalizePage(raw: string | null): number {
  * 나머지를 볼 경로가 없으면 그 더보기는 죽은 링크가 된다.
  */
 export function GoodsList() {
+  useTitle('상품');
   const [searchParams, setSearchParams] = useSearchParams();
   const category = searchParams.get('category');
   // 태그 pill 클릭(Tag의 `to` prop) 진입점 — `/goods?tag=<slug>`. 카테고리와 동시에 걸리지 않으므로

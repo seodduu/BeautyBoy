@@ -7,6 +7,7 @@ import { ErrorState } from '../../components/common/ErrorState';
 import { GoodsGrid } from '../../components/goods/GoodsGrid';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { useWishToggle } from '../../features/wishlist/useWishToggle';
+import { useTitle } from '../../hooks/useTitle';
 import './MyWishlist.css';
 
 /**
@@ -20,6 +21,7 @@ import './MyWishlist.css';
  * 그대로 돌려주므로 낙관적으로 지워지지 않는다.
  */
 export function MyWishlist() {
+  useTitle('찜한 상품');
   const navigate = useNavigate();
   const handleRemove = useWishToggle();
   const wishlistQuery = useQuery({ queryKey: queryKeys.wishlist(), queryFn: wishlistApi.fetchWishlist });

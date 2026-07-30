@@ -7,6 +7,7 @@ import { Pager } from '../../components/ui/Pager';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { useToast } from '../../components/ui/useToast';
 import { qnaStatusLabel } from '../../features/qna/status';
+import { useTitle } from '../../hooks/useTitle';
 import './AdminQna.css';
 
 function AnswerCell({ item }: { item: AdminQnaResponse }) {
@@ -81,6 +82,7 @@ function AnswerCell({ item }: { item: AdminQnaResponse }) {
  * 여기서 한다.
  */
 export function AdminQna() {
+  useTitle('문의 관리');
   const [page, setPage] = useState(0);
   const query = useQuery({ queryKey: ['admin-qna', page], queryFn: () => fetchAdminQna({ page }) });
 

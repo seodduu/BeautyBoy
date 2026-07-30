@@ -4,6 +4,7 @@ import { fetchMyReviews } from '../../api/review';
 import { EmptyState } from '../../components/common/EmptyState';
 import { ErrorState } from '../../components/common/ErrorState';
 import { Skeleton } from '../../components/ui/Skeleton';
+import { useTitle } from '../../hooks/useTitle';
 import './MyReviews.css';
 
 /** YYYY.MM.DD 포맷 — ReviewList와 같은 날짜 표기 규약(DESIGN.md 접근성 규약). */
@@ -17,6 +18,7 @@ function formatDate(iso: string): string {
 
 /** 마이페이지 내 리뷰 `/mypage/reviews` — 내가 쓴 리뷰를 상품명·썸네일과 함께 보여준다. */
 export function MyReviews() {
+  useTitle('내 리뷰');
   const reviewsQuery = useQuery({ queryKey: ['myReviews'], queryFn: () => fetchMyReviews() });
 
   if (reviewsQuery.isLoading) {
