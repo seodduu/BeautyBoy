@@ -6,13 +6,16 @@ import com.beautyboy.review.dto.MyReviewItem;
 import com.beautyboy.review.dto.ReviewCreateRequest;
 import com.beautyboy.review.dto.ReviewResponse;
 import com.beautyboy.review.dto.ReviewStatResponse;
+import com.beautyboy.review.dto.ReviewUpdateRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -55,6 +58,21 @@ public class ReviewController {
     @GetMapping("/api/v1/reviews/stats")
     public ResponseEntity<ApiResponse<ReviewStatResponse>> stats(@RequestParam Long goodsNo) {
         return ResponseEntity.ok(ApiResponse.ok(reviewService.stat(goodsNo)));
+    }
+
+    @PutMapping("/api/v1/reviews/{reviewId}")
+    public ResponseEntity<ApiResponse<Void>> update(@AuthenticationPrincipal Long memberId,
+                                                      @PathVariable Long reviewId,
+                                                      @Valid @RequestBody ReviewUpdateRequest request) {
+        reviewService.update(memberId, reviewId, request);
+        return ResponseEntity.ok(ApiResponse.ok(null));
+    }
+
+    @DeleteMapping("/api/v1/reviews/{reviewId}")
+    public ResponseEntity<ApiResponse<Void>> delete(@AuthenticationPrincipal Long memberId,
+                                                      @PathVariable Long reviewId) {
+        reviewService.delete(memberId, reviewId);
+        return ResponseEntity.ok(ApiResponse.ok(null));
     }
 
     @PostMapping("/api/v1/reviews/{reviewId}/helpful")

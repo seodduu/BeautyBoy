@@ -12,6 +12,7 @@ import com.beautyboy.review.dto.MyReviewItem;
 import com.beautyboy.review.dto.ReviewCreateRequest;
 import com.beautyboy.review.dto.ReviewResponse;
 import com.beautyboy.review.dto.ReviewStatResponse;
+import com.beautyboy.review.dto.ReviewUpdateRequest;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -80,6 +81,46 @@ public class ReviewService {
         recalculateStat(request.goodsNo());
     }
 
+    /**
+     * 리뷰 수정. 소유자가 아니면(또는 리뷰가 없으면) 404 REVIEW_NOT_FOUND다 — 403을 쓰지 않는
+     * 이유는 존재 여부를 노출하지 않기 위해서다(설계 §2.3). 별점이 바뀌면 rating_sum이
+     * 움직이므로 수정 후에도 recalculateStat을 부른다(설계 §2.5).
+     */
+    @Transactional
+    public void update(Long memberId, Long reviewId, ReviewUpdateRequest request) {
+        if (request.rating() < MIN_RATING || request.rating() > MAX_RATING) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT);
+        }
+        Review review = reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.REVIEW_NOT_FOUND));
+        if (!review.ownedBy(memberId)) {
+            throw new BusinessException(ErrorCode.REVIEW_NOT_FOUND);
+        }
+
+        review.edit(request.rating(), request.content());
+
+        recalculateStat(review.getGoodsId());
+    }
+
+    /**
+     * 리뷰 삭제. 자식(review_helpful)을 review보다 먼저 지운다 — FK(fk_review_helpful_review)
+     * 때문에 순서가 사양이다(설계 §2.5). 삭제 후 recalculateStat으로 재집계한다.
+     */
+    @Transactional
+    public void delete(Long memberId, Long reviewId) {
+        Review review = reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.REVIEW_NOT_FOUND));
+        if (!review.ownedBy(memberId)) {
+            throw new BusinessException(ErrorCode.REVIEW_NOT_FOUND);
+        }
+        Long goodsNo = review.getGoodsId();
+
+        reviewHelpfulRepository.deleteByReviewId(reviewId);
+        reviewRepository.delete(review);
+
+        recalculateStat(goodsNo);
+    }
+
     @Transactional(readOnly = true)
     public PageResponse<ReviewResponse> list(Long goodsNo, int page) {
         // 손으로 친 page를 그대로 PageRequest에 넣으면 음수에서 IllegalArgumentException(500)이 난다.
@@ -134,7 +175,7 @@ public class ReviewService {
 
     /**
      * 그 상품의 리뷰를 통째로 재집계해 goods_review_stat을 upsert한다.
-     * 작성·삭제 어느 경로에서도 이 한 메서드만 부르면 통계와 goods.review_count가 항상 리뷰와 일치한다.
+     * 작성·수정·삭제 어느 경로에서도 이 한 메서드만 부르면 통계와 goods.review_count가 항상 리뷰와 일치한다.
      */
     private void recalculateStat(Long goodsNo) {
         // [count, sum]을 한 쿼리로. 리뷰가 0건이면 count=0, sum=0.

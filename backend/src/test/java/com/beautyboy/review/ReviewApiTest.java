@@ -27,8 +27,10 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -59,6 +61,8 @@ class ReviewApiTest {
     BrandRepository brandRepository;
     @Autowired
     GoodsRepository goodsRepository;
+    @Autowired
+    ReviewHelpfulRepository reviewHelpfulRepository;
     @PersistenceContext
     EntityManager entityManager;
 
@@ -148,6 +152,167 @@ class ReviewApiTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.reviewCount").value(1))
                 .andExpect(jsonPath("$.data.averageRating").value(4.0));
+    }
+
+    // ── 설계 §2.7 수정·삭제 ──────────────────────────────────────────────
+
+    @Test
+    void 작성자는_별점과_본문을_수정할_수_있다() throws Exception {
+        결제완료_주문(구매자, 상품);
+        리뷰작성(구매자, 상품, 5, "원래 본문");
+        Long reviewId = reviewRepository.findAll().get(0).getId();
+
+        리뷰수정(구매자, reviewId, 3, "고친 본문")
+                .andExpect(status().isOk());
+
+        Review review = reviewRepository.findById(reviewId).orElseThrow();
+        assertThat(review.getRating()).isEqualTo(3);
+        assertThat(review.getContent()).isEqualTo("고친 본문");
+    }
+
+    @Test
+    void 수정하면_평점_통계가_다시_집계된다() throws Exception {
+        결제완료_주문(구매자, 상품);
+        리뷰작성(구매자, 상품, 5, "원래 본문");
+        Long reviewId = reviewRepository.findAll().get(0).getId();
+
+        리뷰수정(구매자, reviewId, 2, "고친 본문")
+                .andExpect(status().isOk());
+        TestPersistence.DB_왕복_강제(entityManager);
+
+        GoodsReviewStat stat = goodsReviewStatRepository.findById(상품).orElseThrow();
+        assertThat(stat.getReviewCount()).isEqualTo(1);
+        assertThat(stat.average()).isEqualTo(2.0);
+    }
+
+    @Test
+    void 수정해도_피부타입_스냅샷은_그대로다() throws Exception {
+        결제완료_주문(구매자, 상품);
+        리뷰작성(구매자, 상품, 5, "원래 본문");
+        Review review = reviewRepository.findAll().get(0);
+        entityManager.createQuery("update Review r set r.skinTypeSnapshot = :s where r.id = :id")
+                .setParameter("s", "지성")
+                .setParameter("id", review.getId())
+                .executeUpdate();
+        entityManager.clear();
+
+        리뷰수정(구매자, review.getId(), 3, "고친 본문")
+                .andExpect(status().isOk());
+
+        Review updated = reviewRepository.findById(review.getId()).orElseThrow();
+        assertThat(updated.getSkinTypeSnapshot()).isEqualTo("지성");
+    }
+
+    @Test
+    void 남의_리뷰는_수정할_수_없고_404다() throws Exception {
+        결제완료_주문(구매자, 상품);
+        리뷰작성(구매자, 상품, 5, "원래 본문");
+        Long reviewId = reviewRepository.findAll().get(0).getId();
+
+        리뷰수정(비구매자, reviewId, 3, "남이 고침")
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("REVIEW_NOT_FOUND"));
+    }
+
+    @Test
+    void 없는_리뷰를_수정하면_404다() throws Exception {
+        리뷰수정(구매자, 999999L, 3, "없는 리뷰")
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("REVIEW_NOT_FOUND"));
+    }
+
+    @Test
+    void 별점_범위를_벗어나면_400이다() throws Exception {
+        결제완료_주문(구매자, 상품);
+        리뷰작성(구매자, 상품, 5, "원래 본문");
+        Long reviewId = reviewRepository.findAll().get(0).getId();
+
+        리뷰수정(구매자, reviewId, 6, "범위 밖")
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_INPUT"));
+    }
+
+    @Test
+    void 작성자는_리뷰를_삭제할_수_있다() throws Exception {
+        결제완료_주문(구매자, 상품);
+        리뷰작성(구매자, 상품, 5, "지울 리뷰");
+        Long reviewId = reviewRepository.findAll().get(0).getId();
+
+        리뷰삭제(구매자, reviewId)
+                .andExpect(status().isOk());
+
+        assertThat(reviewRepository.findAll()).isEmpty();
+    }
+
+    @Test
+    void 삭제하면_평점_통계가_0건으로_재집계된다() throws Exception {
+        결제완료_주문(구매자, 상품);
+        리뷰작성(구매자, 상품, 5, "지울 리뷰");
+        Long reviewId = reviewRepository.findAll().get(0).getId();
+
+        리뷰삭제(구매자, reviewId)
+                .andExpect(status().isOk());
+        TestPersistence.DB_왕복_강제(entityManager);
+
+        GoodsReviewStat stat = goodsReviewStatRepository.findById(상품).orElseThrow();
+        assertThat(stat.getReviewCount()).isEqualTo(0);
+        assertThat(stat.average()).isEqualTo(0.0);
+    }
+
+    @Test
+    void 도움돼요가_눌린_리뷰도_삭제된다() throws Exception {
+        결제완료_주문(구매자, 상품);
+        결제완료_주문(비구매자, 상품);
+        리뷰작성(구매자, 상품, 5, "지울 리뷰");
+        Long reviewId = reviewRepository.findAll().get(0).getId();
+
+        mockMvc.perform(post("/api/v1/reviews/{id}/helpful", reviewId).with(로그인(비구매자)))
+                .andExpect(status().isOk());
+
+        리뷰삭제(구매자, reviewId)
+                .andExpect(status().isOk());
+
+        assertThat(reviewRepository.findAll()).isEmpty();
+        assertThat(reviewHelpfulRepository.findAll()).isEmpty();
+    }
+
+    @Test
+    void 남의_리뷰는_삭제할_수_없고_404다() throws Exception {
+        결제완료_주문(구매자, 상품);
+        리뷰작성(구매자, 상품, 5, "지킬 리뷰");
+        Long reviewId = reviewRepository.findAll().get(0).getId();
+
+        리뷰삭제(비구매자, reviewId)
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("REVIEW_NOT_FOUND"));
+
+        assertThat(reviewRepository.findAll()).hasSize(1);
+    }
+
+    @Test
+    void 삭제한_뒤에는_같은_상품에_다시_쓸_수_있다() throws Exception {
+        결제완료_주문(구매자, 상품);
+        리뷰작성(구매자, 상품, 5, "첫 리뷰");
+        Long reviewId = reviewRepository.findAll().get(0).getId();
+        리뷰삭제(구매자, reviewId);
+
+        리뷰작성(구매자, 상품, 4, "다시 쓴 리뷰")
+                .andExpect(status().isCreated());
+    }
+
+    private org.springframework.test.web.servlet.ResultActions 리뷰수정(
+            Long memberId, Long reviewId, int rating, String content) throws Exception {
+        String body = objectMapper.writeValueAsString(Map.of("rating", rating, "content", content));
+        return mockMvc.perform(put("/api/v1/reviews/{id}", reviewId)
+                .with(로그인(memberId))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body));
+    }
+
+    private org.springframework.test.web.servlet.ResultActions 리뷰삭제(
+            Long memberId, Long reviewId) throws Exception {
+        return mockMvc.perform(delete("/api/v1/reviews/{id}", reviewId)
+                .with(로그인(memberId)));
     }
 
     private org.springframework.test.web.servlet.ResultActions 리뷰작성(

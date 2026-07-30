@@ -67,6 +67,93 @@
   color: var(--color-stone);
 }
 
+.bb-my-reviews__actions {
+  display: flex;
+  gap: var(--space-xs);
+  margin-top: var(--space-xs);
+}
+
+/* 인라인 편집 — 모달 대신 항목 자리에서 그대로 열린다. 별점은 ReviewForm과 같은 형태. */
+.bb-my-reviews__edit {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin-top: var(--space-xxs);
+}
+
+.bb-my-reviews__edit-stars {
+  display: flex;
+  gap: var(--space-xxs);
+}
+
+.bb-my-reviews__edit-star {
+  appearance: none;
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 24px;
+  line-height: 1;
+  color: var(--color-hairline-soft);
+  cursor: pointer;
+}
+
+.bb-my-reviews__edit-star--active {
+  color: var(--color-ink);
+}
+
+.bb-my-reviews__edit-star:focus-visible {
+  outline: 2px solid var(--color-ink);
+  outline-offset: 2px;
+}
+
+.bb-my-reviews__edit-label {
+  font-size: var(--fs-meta);
+  color: var(--color-stone);
+}
+
+.bb-my-reviews__edit-textarea {
+  min-height: 96px;
+  padding: var(--space-sm) 0;
+  border: none;
+  border-bottom: 1px solid var(--color-hairline-soft);
+  background: none;
+  font: var(--fs-body)/var(--lh-body) var(--font-body);
+  color: var(--color-ink);
+  resize: vertical;
+  word-break: keep-all;
+}
+
+.bb-my-reviews__edit-textarea:focus-visible {
+  outline: none;
+  border-bottom-color: var(--color-ink);
+}
+
+.bb-my-reviews__edit-actions {
+  display: flex;
+  gap: var(--space-xs);
+}
+
+/* 삭제 확인 — window.confirm 대신 같은 자리에서 바뀌는 인라인 문구. 배경을 signal 색으로
+   칠하지 않는다(액센트는 배경으로 쓰지 않는다는 규칙, DESIGN.md). */
+.bb-my-reviews__delete-confirm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  margin-top: var(--space-xs);
+}
+
+.bb-my-reviews__delete-confirm-text {
+  margin: 0;
+  font-size: var(--fs-body);
+  color: var(--color-ink);
+  word-break: keep-all;
+}
+
+.bb-my-reviews__delete-confirm-actions {
+  display: flex;
+  gap: var(--space-xs);
+}
+
 @media (max-width: 900px) {
   .bb-my-reviews__thumb {
     width: 64px;

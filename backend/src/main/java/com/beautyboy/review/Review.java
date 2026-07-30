@@ -63,6 +63,15 @@ public class Review {
         this.helpfulCount += delta;
     }
 
+    /**
+     * 별점·본문 수정. skinTypeSnapshot은 여기 없다 — 바꿀 수 있는 통로 자체를
+     * 만들지 않는 것이 스냅샷 원칙의 집행 방식이다(설계 §2.4).
+     */
+    public void edit(int rating, String content) {
+        this.rating = rating;
+        this.content = content;
+    }
+
     public boolean ownedBy(Long memberId) {
         return this.memberId.equals(memberId);
     }
