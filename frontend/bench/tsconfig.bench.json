@@ -1,0 +1,10 @@
+{
+  "//": "bench/는 루트 tsconfig.app.json의 include('src')에 없어 타입 검사에서 빠진다. vitest는 타입을 보지 않고 트랜스파일만 하므로, 검사 통로가 없으면 벤치 코드의 타입 오류가 영원히 숨는다. 실행: npx tsc -p bench/tsconfig.bench.json",
+  "extends": "../tsconfig.app.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": "../node_modules/.tmp/tsconfig.bench.tsbuildinfo",
+    "types": ["vite/client", "node"],
+    "noEmit": true
+  },
+  "include": [".", "../src"]
+}

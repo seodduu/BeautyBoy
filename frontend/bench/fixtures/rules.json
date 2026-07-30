@@ -1,0 +1,38 @@
+{
+  "source": "backend V75__seed_routine_flow_rule.sql (전이 12행) + V82__concern_target_rule.sql (고민 19행). 두 SQL과 한 행씩 대조해 옮겼다 — 서버는 DB에서 같은 시드를 읽으므로 이 파일이 어긋나면 동등성 주장이 무너진다. k6 측정 전 GET /api/v1/routine/flow-rules의 행 수(12/19)를 확인해 어긋남을 잡는다.",
+  "flowRules": [
+    { "fromCategoryCode": "C002001", "fromTagSlug": "exfoliate", "toCategoryCode": "C001001", "toTagSlug": "soothe",   "edgeKind": "BUFFER",         "reason": "피지·각질까지 씻어낸 다음엔 진정 토너로 완충해 주세요", "priority": 10 },
+    { "fromCategoryCode": "C002001", "fromTagSlug": null,        "toCategoryCode": "C001001", "toTagSlug": "moisture", "edgeKind": "NEXT_STEP",      "reason": "세안 다음 단계는 수분 충전이에요", "priority": 20 },
+    { "fromCategoryCode": "C002002", "fromTagSlug": null,        "toCategoryCode": "C001001", "toTagSlug": "moisture", "edgeKind": "NEXT_STEP",      "reason": "지운 다음엔 수분 토너로 결부터 정돈하세요", "priority": 20 },
+    { "fromCategoryCode": "C002003", "fromTagSlug": "exfoliate", "toCategoryCode": "C001001", "toTagSlug": "soothe",   "edgeKind": "BUFFER",         "reason": "각질 케어 다음엔 진정 성분으로 완충하는 게 좋아요", "priority": 10 },
+    { "fromCategoryCode": "C001001", "fromTagSlug": "exfoliate", "toCategoryCode": "C001002", "toTagSlug": "soothe",   "edgeKind": "BUFFER",         "reason": "각질 토너 다음 단계는 진정 세럼으로 완충하세요", "priority": 10 },
+    { "fromCategoryCode": "C001001", "fromTagSlug": null,        "toCategoryCode": "C001002", "toTagSlug": null,       "edgeKind": "NEXT_STEP",      "reason": "결을 정돈했다면 영양을 채울 차례예요", "priority": 20 },
+    { "fromCategoryCode": "C001002", "fromTagSlug": null,        "toCategoryCode": "C001003", "toTagSlug": "moisture", "edgeKind": "NEXT_STEP",      "reason": "세럼의 수분을 크림으로 덮어 가두세요", "priority": 20 },
+    { "fromCategoryCode": "C001003", "fromTagSlug": null,        "toCategoryCode": "C004001", "toTagSlug": "uv",       "edgeKind": "NEXT_STEP",      "reason": "아침 루틴의 마지막은 자외선 차단이에요", "priority": 20 },
+    { "fromCategoryCode": "C004001", "fromTagSlug": null,        "toCategoryCode": "C004003", "toTagSlug": "soothe",   "edgeKind": "NEXT_STEP",      "reason": "햇빛을 본 날엔 진정 케어로 마무리하세요", "priority": 20 },
+    { "fromCategoryCode": "C004001", "fromTagSlug": null,        "toCategoryCode": "C002002", "toTagSlug": "cleanse",  "edgeKind": "PAIRED_REMOVAL", "reason": "자외선차단제는 클렌징오일로 지워야 남지 않아요", "priority": 10 },
+    { "fromCategoryCode": "C004002", "fromTagSlug": null,        "toCategoryCode": "C002002", "toTagSlug": "cleanse",  "edgeKind": "PAIRED_REMOVAL", "reason": "선스틱도 저녁엔 오일 클렌징으로 지워 주세요", "priority": 10 },
+    { "fromCategoryCode": "C005002", "fromTagSlug": null,        "toCategoryCode": "C005003", "toTagSlug": null,       "edgeKind": "NEXT_STEP",      "reason": "면도 다음엔 진정 제품으로 마무리하세요", "priority": 20 }
+  ],
+  "concernRules": [
+    { "concernTagSlug": "exfoliate",  "toCategoryCode": "C002003", "toTagSlug": "exfoliate",  "reason": "각질이 고민이라면 주 1~2회 필링부터 시작하세요", "priority": 10 },
+    { "concernTagSlug": "exfoliate",  "toCategoryCode": "C001001", "toTagSlug": "soothe",     "reason": "각질 케어 뒤엔 진정 토너로 완충해 주세요", "priority": 20 },
+    { "concernTagSlug": "sebum",      "toCategoryCode": "C002001", "toTagSlug": "sebum",      "reason": "피지가 고민이라면 세안부터 피지 잡는 제품으로", "priority": 10 },
+    { "concernTagSlug": "sebum",      "toCategoryCode": "C001001", "toTagSlug": "sebum",      "reason": "세안 뒤 유분 정돈까지 이어가세요", "priority": 20 },
+    { "concernTagSlug": "pore",       "toCategoryCode": "C001002", "toTagSlug": "pore",       "reason": "모공은 세럼 단계에서 정면으로 잡는 게 효율적이에요", "priority": 10 },
+    { "concernTagSlug": "pore",       "toCategoryCode": "C002001", "toTagSlug": "pore",       "reason": "모공 관리는 잘 씻어내는 것부터예요", "priority": 20 },
+    { "concernTagSlug": "trouble",    "toCategoryCode": "C001002", "toTagSlug": "trouble",    "reason": "트러블이 고민이라면 세럼으로 집중 관리하세요", "priority": 10 },
+    { "concernTagSlug": "trouble",    "toCategoryCode": "C002001", "toTagSlug": "trouble",    "reason": "트러블 피부일수록 세정 단계 선택이 중요해요", "priority": 20 },
+    { "concernTagSlug": "soothe",     "toCategoryCode": "C001001", "toTagSlug": "soothe",     "reason": "예민한 날엔 진정 토너로 결부터 달래 주세요", "priority": 10 },
+    { "concernTagSlug": "soothe",     "toCategoryCode": "C001002", "toTagSlug": "soothe",     "reason": "진정 성분 세럼으로 한 겹 더 얹어 보세요", "priority": 20 },
+    { "concernTagSlug": "moisture",   "toCategoryCode": "C001003", "toTagSlug": "moisture",   "reason": "보습이 고민이라면 덮어 가두는 크림이 핵심이에요", "priority": 10 },
+    { "concernTagSlug": "moisture",   "toCategoryCode": "C001002", "toTagSlug": "moisture",   "reason": "크림 전에 수분 세럼으로 채워 두세요", "priority": 20 },
+    { "concernTagSlug": "barrier",    "toCategoryCode": "C001003", "toTagSlug": "barrier",    "reason": "장벽이 무너졌다면 크림으로 지붕부터 올리세요", "priority": 10 },
+    { "concernTagSlug": "barrier",    "toCategoryCode": "C001002", "toTagSlug": "barrier",    "reason": "세라마이드 계열 세럼으로 장벽을 채워 보세요", "priority": 20 },
+    { "concernTagSlug": "bright",     "toCategoryCode": "C001002", "toTagSlug": "bright",     "reason": "톤이 고민이라면 브라이트닝 세럼이 출발점이에요", "priority": 10 },
+    { "concernTagSlug": "bright",     "toCategoryCode": "C004001", "toTagSlug": "uv",         "reason": "미백 관리의 절반은 자외선 차단이에요", "priority": 20 },
+    { "concernTagSlug": "anti-aging", "toCategoryCode": "C001002", "toTagSlug": "anti-aging", "reason": "주름 관리는 세럼 단계에서 시작하세요", "priority": 10 },
+    { "concernTagSlug": "anti-aging", "toCategoryCode": "C001003", "toTagSlug": "anti-aging", "reason": "고영양 크림으로 마무리하면 더 오래 갑니다", "priority": 20 },
+    { "concernTagSlug": "gentle",     "toCategoryCode": "C001001", "toTagSlug": "gentle",     "reason": "자극 없는 토너로 결만 정돈해 주세요", "priority": 20 }
+  ]
+}
