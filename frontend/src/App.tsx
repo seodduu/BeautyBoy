@@ -5,6 +5,7 @@ import { RouterProvider } from 'react-router-dom';
 import { router } from './router';
 import { useAuthStore } from './stores/authStore';
 import { refreshSession } from './api/auth';
+import { installSessionCacheReset } from './features/auth/sessionCacheReset';
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -37,6 +38,12 @@ export const queryClient = new QueryClient({
     },
   },
 });
+
+// 세션 경계(로그아웃·계정 전환·부트스트랩 복구)에서 회원 스코프 캐시를 버린다(설계 §6.6).
+// useEffect가 아니라 모듈 최상단에서 한 번만 부르는 이유: 세션 변화는 React 트리의
+// 생애가 아니라 앱의 생애에 걸린 사건이고, StrictMode의 이중 마운트로 구독이 두 번
+// 걸리는 문제를 애초에 만들지 않는다.
+installSessionCacheReset(queryClient);
 
 /**
  * "이 실패는 세션이 없다는 뜻인가?" — 오직 401만 그렇다.

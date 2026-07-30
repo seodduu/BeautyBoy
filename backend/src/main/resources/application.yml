@@ -39,12 +39,24 @@ spring:
       enable-auto-commit: false      # 커밋은 리스너 컨테이너가 처리 성공 후에 한다
   flyway:
     enabled: true
+    # 기본은 db/migration 하나뿐이다 — 자격증명 시드(V64·V66·V80)는 db/seed에 있고
+    # demo 프로필이 활성일 때만 더해진다(application-demo.yml).
+    #
+    # 왜 "운영 프로필에서 빼기"가 아니라 "데모 프로필에서 더하기"인가:
+    # 프로필을 안 붙이고 뜨는 경로가 곧 배포 경로다(아래 profiles.group.default 주석 참조).
+    # 빼는 쪽으로 만들면 프로필을 잊었을 때 결과가 "비밀번호 admin인 ADMIN 계정 생성"이고,
+    # 더하는 쪽으로 만들면 "시드 없는 빈 DB"다. 잊었을 때 사고가 나지 않는 쪽을 기본값으로 둔다.
+    locations: classpath:db/migration
   # default 프로필(명시 프로필 없이 뜨는 운영 경로)에서만 mysql-search를 켠다.
   # `profiles.include`를 쓰면 test 프로필에도 무조건 새어 들어가 H2가 MATCH 문법을
   # 못 읽어 전부 깨진다 — 반드시 group으로 default에만 묶는다.
   profiles:
     group:
       default: mysql-search
+      # 개발자가 매일 쓰는 두 기동은 compose mysql(13306)을 본다 — 이미 V64·V66·V80이
+      # 적용된 DB다. demo를 함께 켜지 않으면 flyway validate가 깨져 아예 뜨지 않는다.
+      local: demo
+      e2e: demo
 
 beautyboy:
   view-count:

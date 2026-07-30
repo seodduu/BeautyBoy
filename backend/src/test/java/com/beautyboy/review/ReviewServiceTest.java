@@ -7,8 +7,10 @@ import com.beautyboy.common.PageResponse;
 import com.beautyboy.order.OrderQueryService;
 import com.beautyboy.review.dto.MyReviewItem;
 import com.beautyboy.review.dto.ReviewCreateRequest;
+import com.beautyboy.review.dto.ReviewResponse;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -19,6 +21,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
@@ -95,5 +98,38 @@ class ReviewServiceTest {
         reviewService.create(회원1, new ReviewCreateRequest(상품A, 5, "좋아요"));
 
         verify(goodsReviewCountCommand).syncReviewCount(eq(상품A), eq(2));
+    }
+
+    @Test
+    void list_page가_음수여도_500이_아니라_0페이지를_준다() {
+        given(reviewRepository.findByGoodsIdOrderByCreatedAtDesc(eq(상품A), any(PageRequest.class)))
+                .willReturn(List.of());
+        given(reviewRepository.countByGoodsId(상품A)).willReturn(0L);
+
+        PageResponse<ReviewResponse> result = reviewService.list(상품A, -1);
+
+        assertThat(result.page()).isZero();
+    }
+
+    @Test
+    void myReviews_음수_page와_size를_안전한_값으로_조인다() {
+        given(reviewRepository.findByMemberIdOrderByIdDesc(eq(회원1), any(PageRequest.class)))
+                .willReturn(List.of());
+        given(reviewRepository.countByMemberId(회원1)).willReturn(0L);
+
+        PageResponse<MyReviewItem> result = reviewService.myReviews(회원1, -1, -5);
+
+        assertThat(result.page()).isZero();
+    }
+
+    @Test
+    void myReviews_size_상한은_100이다() {
+        given(reviewRepository.countByMemberId(회원1)).willReturn(0L);
+
+        reviewService.myReviews(회원1, 0, 100_000);
+
+        ArgumentCaptor<PageRequest> pageRequest = ArgumentCaptor.forClass(PageRequest.class);
+        verify(reviewRepository).findByMemberIdOrderByIdDesc(eq(회원1), pageRequest.capture());
+        assertThat(pageRequest.getValue().getPageSize()).isEqualTo(100);
     }
 }

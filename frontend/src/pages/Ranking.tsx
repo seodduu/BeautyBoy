@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
 import { fetchRanking } from '../api/ranking';
 import { EmptyState } from '../components/common/EmptyState';
+import { ErrorState } from '../components/common/ErrorState';
 import { GoodsCard } from '../components/goods/GoodsCard';
 import { GoodsCardSkeleton } from '../components/goods/GoodsCardSkeleton';
 import '../components/goods/GoodsGrid.css';
@@ -74,11 +75,15 @@ export function Ranking() {
         </div>
       )}
 
-      {!rankingQuery.isLoading && items.length === 0 && (
+      {rankingQuery.isError && (
+        <ErrorState title="랭킹을 불러오지 못했어요" onRetry={() => rankingQuery.refetch()} />
+      )}
+
+      {!rankingQuery.isLoading && !rankingQuery.isError && items.length === 0 && (
         <EmptyState title="아직 랭킹 정보가 없어요" description="다른 카테고리를 확인해 보세요" />
       )}
 
-      {!rankingQuery.isLoading && items.length > 0 && (
+      {!rankingQuery.isLoading && !rankingQuery.isError && items.length > 0 && (
         <div className="bb-goods-grid">
           {items.map((item) => (
             <div key={item.goodsNo} className="bb-ranking-item">

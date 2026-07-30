@@ -3,7 +3,12 @@ spring:
     url: jdbc:h2:mem:beautyboy;MODE=MySQL;DATABASE_TO_LOWER=TRUE
   jpa:
     hibernate: { ddl-auto: create-drop }
-  flyway: { enabled: false }
+  # enabled: false는 그대로다(H2 슬라이스는 create-drop). Testcontainers IT들이
+  # spring.flyway.enabled=true로 켤 때 이 locations를 쓴다 — 시드까지 두 경로를 다 읽는다.
+  # ConcernSlugMigrationIT가 V64 시드 회원의 concerns 변환을 검증하고,
+  # NextStepSeedIT·ConcernTargetRuleSeedIT·PruneDilutedTagsIT가 "Flyway 전체 로드"를 전제한다.
+  # 시드 없는 세계는 SeedIsolationIT가 따로 본다(Flyway API로 db/migration만 걸어서).
+  flyway: { enabled: false, locations: 'classpath:db/migration,classpath:db/seed' }
 jwt:
   secret: dGVzdC1zZWNyZXQtdGVzdC1zZWNyZXQtdGVzdC1zZWNyZXQ=
   access-exp-minutes: 30

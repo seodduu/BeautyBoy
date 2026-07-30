@@ -5,6 +5,7 @@ import com.beautyboy.catalog.GoodsReviewCountCommand;
 import com.beautyboy.catalog.dto.GoodsListItem;
 import com.beautyboy.common.BusinessException;
 import com.beautyboy.common.ErrorCode;
+import com.beautyboy.common.PageRequests;
 import com.beautyboy.common.PageResponse;
 import com.beautyboy.order.OrderQueryService;
 import com.beautyboy.review.dto.MyReviewItem;
@@ -81,11 +82,15 @@ public class ReviewService {
 
     @Transactional(readOnly = true)
     public PageResponse<ReviewResponse> list(Long goodsNo, int page) {
+        // 손으로 친 page를 그대로 PageRequest에 넣으면 음수에서 IllegalArgumentException(500)이 난다.
+        // 리포지토리 호출과 응답에 담기는 page 둘 다 클램프한 값을 써야 한다 — 응답만 원본을
+        // 돌려주면 500이 "page: -1인 200"으로 바뀌기만 한다.
+        int safePage = PageRequests.clampPage(page);
         List<Review> reviews = reviewRepository.findByGoodsIdOrderByCreatedAtDesc(
-                goodsNo, PageRequest.of(page, DEFAULT_PAGE_SIZE));
+                goodsNo, PageRequest.of(safePage, DEFAULT_PAGE_SIZE));
         long total = reviewRepository.countByGoodsId(goodsNo);
         List<ReviewResponse> items = reviews.stream().map(this::toResponse).toList();
-        return PageResponse.of(items, page, DEFAULT_PAGE_SIZE, total);
+        return PageResponse.of(items, safePage, DEFAULT_PAGE_SIZE, total);
     }
 
     /**
@@ -94,8 +99,12 @@ public class ReviewService {
      */
     @Transactional(readOnly = true)
     public PageResponse<MyReviewItem> myReviews(Long memberId, int page, int size) {
+        // page·size 둘 다 클램프한다(OrderService.ordersOf와 동일한 방식) — 안 그러면
+        // 음수 page는 500, 상한 없는 size는 응답 폭주로 샌다.
+        int safePage = PageRequests.clampPage(page);
+        int safeSize = PageRequests.clampSize(size);
         List<Review> reviews = reviewRepository.findByMemberIdOrderByIdDesc(
-                memberId, PageRequest.of(page, size));
+                memberId, PageRequest.of(safePage, safeSize));
         long total = reviewRepository.countByMemberId(memberId);
 
         List<Long> goodsNos = reviews.stream().map(Review::getGoodsId).distinct().toList();
@@ -105,7 +114,7 @@ public class ReviewService {
         List<MyReviewItem> items = reviews.stream()
                 .map(r -> toMyReviewItem(r, goodsByNo.get(r.getGoodsId())))
                 .toList();
-        return PageResponse.of(items, page, size, total);
+        return PageResponse.of(items, safePage, safeSize, total);
     }
 
     private MyReviewItem toMyReviewItem(Review r, GoodsListItem goods) {

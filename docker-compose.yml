@@ -68,6 +68,11 @@ services:
       # spring.datasource.hikari.data-source-properties에 있다 — URL을 덮어쓰는 경로가
       # 여럿이라 URL에 매달아 두면 조용히 사라진다(그 사고가 실제로 있었다. 이유는 그 주석 참고).
       DB_URL: jdbc:mysql://mysql:3306/beautyboy
+      # 로컬 데모 스택이므로 시드(db/seed)를 읽는 demo 프로필을 켠다.
+      # mysql-search를 함께 적는 이유: application.yml의 profiles.group은 "프로필 미지정"일 때만
+      # default 그룹(→ mysql-search)을 건다. demo를 켜는 순간 그 그룹이 풀려 검색이 조용히
+      # LIKE 폴백으로 강등된다(MysqlFulltextGoodsSearchRepository @Profile("mysql-search")).
+      SPRING_PROFILES_ACTIVE: demo,mysql-search
       DB_USERNAME: root
       DB_PASSWORD: local1234
       # Base64 인코딩된 값이어야 한다: openssl rand -base64 48
