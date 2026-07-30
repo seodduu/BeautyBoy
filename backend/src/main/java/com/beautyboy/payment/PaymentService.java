@@ -23,9 +23,9 @@ import java.time.LocalDateTime;
  * <ol>
  *   <li><b>주문을 락과 함께 읽는다</b> — 같은 주문에 승인이 동시에 두 번 오면(더블클릭) 이중 청구가 된다.</li>
  *   <li><b>상태를 먼저 본다</b> — 이미 결제된 주문이면 토스를 부르지도 않고 거부한다.</li>
- *   <li><b>재고를 깎는다</b> — 토스 호출 전이라, 품절이면 돈이 움직이기 전에 끝난다.</li>
- *   <li><b>토스에 승인을 요청한다</b> — 이 시점에 실제로 돈이 움직인다.</li>
+ *   <li><b>토스에 승인을 요청한다</b> — 이 시점에 실제로 돈이 움직인다. 재고 락은 쥐지 않은 채 기다린다.</li>
  *   <li><b>승인된 금액을 우리 payableAmount와 대조한다</b> — 다르면 <b>즉시 취소</b>하고 실패시킨다.</li>
+ *   <li><b>재고를 깎는다</b> — 토스 호출 뒤다. 품절이면 승인을 즉시 되돌린다.</li>
  *   <li>모두 통과하면 주문을 결제완료로 전이하고 payment를 저장한다.</li>
  *   <li><b>확정 이벤트를 조립한다</b> — 후처리(장바구니·집계·알림)는 이 이벤트를 소비하는 쪽이 맡는다.</li>
  *   <li><b>후처리를 맡긴다</b>. A5부터 이 호출은 아웃박스 INSERT 하나로 끝나고, 실제 작업은
@@ -72,15 +72,8 @@ public class PaymentService {
         // (2) 상태 검사도 포트 안에 있다 — 이미 결제됐으면 토스도 재고도 건드리지 않는다.
         OrderConfirmPort.ConfirmTarget target = orderConfirmPort.lockPendingOrder(request.orderNo(), memberId);
 
-        // (3) 재고를 깎는다 — 토스 호출 전. 품절이면 돈이 움직이기 전에 여기서 끝나므로
-        //     승인 취소가 필요 없다. 이후 단계가 실패하면 이 트랜잭션의 롤백이 차감을 되돌린다 —
-        //     복원 코드는 존재하지 않는 것이 설계다(계획서 §2 결정 2).
-        //     옵션 없는 상품(optionId null)을 거르는 것은 포트가 한다(재고 관리 단위는 주문 줄을 아는 쪽의 지식).
-        stockCommandService.deductAll(target.stockLines().stream()
-                .map(line -> new StockCommandService.DeductionLine(line.optionId(), line.quantity()))
-                .toList());
-
-        // (4) 토스에 승인 요청. 여기서 실제 결제가 일어난다.
+        // (3) 토스에 승인 요청. 여기서 실제 결제가 일어난다. 아무 재고 락도 쥐지 않은 채 기다린다 —
+        //     이 대기(스텁 기준 100ms)가 재고 행 배타 락 안에 있던 것이 단일 SKU 폭주의 병목이었다.
         PaymentApproval approval =
                 paymentGateway.confirm(request.paymentKey(), request.orderNo(), request.amount());
 
@@ -88,11 +81,21 @@ public class PaymentService {
         // 하므로 통째로 감싼다 — 예전에는 금액 불일치 한 경로만 취소했고, markPaid 실패 같은
         // 다른 실패는 미취소 승인으로 조용히 남았다(설계 §5-1).
         try {
-            // (5) 금액 대조. 우리가 계산한 payableAmount가 유일한 진실이다.
+            // (4) 금액 대조. 우리가 계산한 payableAmount가 유일한 진실이다.
             //     토스가 알려준 승인액이 그와 다르면 조작이다 — 취소는 아래 catch가 맡는다.
             if (approval.approvedAmount() != target.payableAmount()) {
                 throw new BusinessException(ErrorCode.PAYMENT_AMOUNT_MISMATCH);
             }
+
+            // (5) 재고를 깎는다 — 여기서부터 커밋까지가 재고 행 락 보유 구간(수 ms)이다.
+            //     영향 행 0(품절)은 ORDER_OUT_OF_STOCK으로 올라오고, 아래 catch의 승인을_되돌린다가
+            //     그대로 잡는다 — 승인 후 품절을 위한 신규 실패 경로는 없다(설계 §2).
+            //     조건부 UPDATE(stock >= qty)는 여전히 초과 판매의 최종 방어선이다.
+            //     옵션 없는 상품(optionId null)을 거르는 것은 포트가 한다(재고 관리 단위는 주문 줄을 아는 쪽의 지식).
+            stockCommandService.deductAll(target.stockLines().stream()
+                    .map(line -> new StockCommandService.DeductionLine(line.optionId(), line.quantity()))
+                    .toList());
+
             return 확정한다(target, approval);
         } catch (RuntimeException original) {
             승인을_되돌린다(request.paymentKey(), target, original);
