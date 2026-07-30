@@ -27,6 +27,8 @@ class ExperimentProfileIsolationTest {
         assertThat(context.getBeanNamesForType(ExperimentAffinityController.class)).isEmpty();
         assertThat(context.getBeanNamesForType(AffinityChainService.class)).isEmpty();
         assertThat(context.getBeanNamesForType(ExperimentSecurityConfig.class)).isEmpty();
+        // 이벤트 저장소는 기동 시 실험 테이블을 CREATE한다 — 격리가 무너지면 기본 기동이 DB에 흔적을 남긴다.
+        assertThat(context.getBeanNamesForType(ExperimentAffinityEventStore.class)).isEmpty();
     }
 
     @Test

@@ -19,17 +19,34 @@ import org.springframework.stereotype.Service;
 public class AffinityChainService {
 
     private final FlowRuleService flowRuleService;
+    private final ExperimentAffinityEventStore eventStore;
 
-    public AffinityChainService(FlowRuleService flowRuleService) {
+    public AffinityChainService(FlowRuleService flowRuleService,
+                                ExperimentAffinityEventStore eventStore) {
         this.flowRuleService = flowRuleService;
+        this.eventStore = eventStore;
     }
 
+    /** 무상태(B) — 이벤트를 요청 바디로 받는다. 계산 비용만 잰다. */
     public AffinityNextStepResponse compose(AffinityNextStepRequest request) {
+        return composeWith(request, AffinityComposer.aggregate(request.events()));
+    }
+
+    /**
+     * 상태 있는 서버형(B') — 바디의 events를 무시하고 DB에서 최신 50건을 읽는다.
+     * 무상태와의 차이가 곧 "프로필 읽기 I/O"의 비용이다(쓰기 비용은 수집 엔드포인트가 진다).
+     */
+    public AffinityNextStepResponse composeStateful(String memberKey, AffinityNextStepRequest request) {
+        return composeWith(request, AffinityComposer.aggregate(eventStore.recentEvents(memberKey)));
+    }
+
+    private AffinityNextStepResponse composeWith(AffinityNextStepRequest request,
+                                                 java.util.Map<String, Integer> affinity) {
         FlowRulesResponse rules = flowRuleService.rules();
         return new AffinityNextStepResponse(AffinityComposer.composeChain(
                 request.steps(),
                 request.signals(),
-                AffinityComposer.aggregate(request.events()),
+                affinity,
                 request.conflicts(),
                 rules.flowRules(),
                 rules.concernRules()));
