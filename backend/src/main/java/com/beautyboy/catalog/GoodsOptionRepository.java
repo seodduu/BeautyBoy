@@ -5,6 +5,8 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Optional;
+
 public interface GoodsOptionRepository extends JpaRepository<GoodsOption, Long> {
 
     /**
@@ -22,6 +24,13 @@ public interface GoodsOptionRepository extends JpaRepository<GoodsOption, Long> 
     @Query("update GoodsOption o set o.stock = o.stock - :qty "
             + "where o.id = :optionId and o.stock >= :qty")
     int deduct(@Param("optionId") Long optionId, @Param("qty") int qty);
+
+    /**
+     * 재고 단건 조회. 선점 필터가 Redis 카운터를 처음 적재할 때만 쓴다(설계 §3-2) —
+     * 엔티티 전체가 아니라 숫자 하나만 읽는다. 이 값은 진실의 스냅샷이지 예약이 아니다.
+     */
+    @Query("select o.stock from GoodsOption o where o.id = :id")
+    Optional<Integer> findStockById(@Param("id") Long id);
 
     /** 조건 없는 원자 증가. deduct와 같은 flushAutomatically 근거(락 조회 엔티티 detach 방지). */
     @Modifying(flushAutomatically = true)

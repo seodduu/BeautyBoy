@@ -147,9 +147,10 @@ class PaymentStockConfirmTest {
     }
 
     @Test
-    void 품절이면_토스를_부르지_않고_409_ORDER_OUT_OF_STOCK이다() throws Exception {
-        // 차감이 토스 호출보다 앞이라는 순서를 못 박는다. 뒤에 있으면 돈이 먼저 움직이고
-        // 우리가 승인을 취소해야 한다 — 그 보상 호출을 없애려고 순서를 이렇게 정했다(§2 결정 4).
+    void 승인후_품절이면_전액취소가_호출되고_409_ORDER_OUT_OF_STOCK이다() throws Exception {
+        // 차감이 토스 호출 뒤라는 순서를 못 박는다(2026-07-31 순서 변경, 설계 §2). 이 테스트의
+        // 이전 판본은 "품절이면 토스를 부르지 않는다"였다 — 재고 락 보유 구간에서 외부 호출을
+        // 빼려고 그 성질을 의도적으로 내주고, 대신 승인 즉시 취소로 정합성을 지킨다.
         가짜_게이트웨이_설정.초기화(단가 * 2);
         GoodsOption 옵션 = 옵션_저장("세럼", 1);
         Order 주문 = 주문_저장(항목(옵션, 2));
@@ -158,8 +159,10 @@ class PaymentStockConfirmTest {
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("ORDER_OUT_OF_STOCK"));
 
-        assertThat(가짜_게이트웨이_설정.confirm호출).isEmpty();
+        assertThat(가짜_게이트웨이_설정.confirm호출).containsExactly("pk_soldout");
+        assertThat(가짜_게이트웨이_설정.cancel호출).containsExactly("pk_soldout");
         assertThat(재조회_재고(옵션)).isEqualTo(1);
+        assertThat(재조회_상태(주문)).isEqualTo(Order.STATUS_PENDING);
     }
 
     @Test
