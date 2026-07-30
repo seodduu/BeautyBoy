@@ -1,4 +1,4 @@
-# BeautyBoy
+
 
 <p align="center">
   <img src="docs/demo/logo.svg" width="100%" alt="BEAUTY BOY. 로고" />
