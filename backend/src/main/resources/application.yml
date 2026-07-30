@@ -75,6 +75,10 @@ beautyboy:
   cache:
     # 기본은 캐시 없음(DB 직행). Redis 컨테이너가 떠 있을 때만 true로 켠다.
     redis: ${CACHE_REDIS:false}
+  stock:
+    # 단일 SKU 폭주용 Redis 선점 필터(설계 2026-07-31 §3). 기본은 꺼짐 —
+    # 꺼도 초과 판매는 DB 조건부 UPDATE가 막고, 폭주 패자만 승인 후 취소로 처리된다.
+    admission: ${STOCK_ADMISSION:false}
 
 # B5 — 캐시 히트율 관측. 아직 actuator 노출 목록이 없던 상태라 여기서 새로 만든다
 # (계획서는 "기존 목록에 병기"를 전제했지만 그런 목록이 존재하지 않았다 — 보고 사항).
