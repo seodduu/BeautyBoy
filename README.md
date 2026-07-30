@@ -181,6 +181,9 @@ docker compose up -d --build
 
 MySQL → 백엔드(Flyway 마이그레이션 자동 적용) → 프론트 순으로 헬스체크에 따라 기동된다.
 
+시드 회원·관리자 계정은 `demo` 프로필에서만 들어간다(compose는 자동으로 켠다). compose 없이
+`./gradlew bootRun`으로 직접 띄운다면 `SPRING_PROFILES_ACTIVE=demo`가 있어야 시드가 적용된다.
+
 <a id="members"></a>
 
 ## 🧑‍💻 만든 사람
