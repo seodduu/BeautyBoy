@@ -37,6 +37,8 @@ docs/plans/
 docs/superpowers/
 docs/adr/
 docs/loadtest/
+# 웨이브 검증 근거(기동 로그·스크린샷·쿼리 출력) — 작업 기록이지 산출물이 아니다
+docs/verification/
 docs/2026-07-25-흐름-추천-설계메모.md
 docs/남성_화장품_상품상세페이지_UX_기획.md
 docs/상품상세페이지_성분패널_UI_리뷰.md
