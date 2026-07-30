@@ -11,6 +11,12 @@
   남성 화장품 커머스 플랫폼
 </p>
 
+<p align="center">
+  📝 <a href="https://medium.com/@SeoDDuu/beautyboy-613a7ebe39af">프로젝트 소개 (Medium)</a>
+  &nbsp;·&nbsp;
+  🔧 <a href="https://medium.com/@SeoDDuu/beautyboy-%ED%8A%B8%EB%9F%AC%EB%B8%94%EC%8A%88%ED%8C%85-d5637a4bc448">트러블슈팅 — 재고, 락, 그리고 중복 (Medium)</a>
+</p>
+
 # Table of Contents
 
 - [서비스 소개](#service-intro)
