@@ -64,3 +64,22 @@ export async function createReview(input: ReviewCreateInput): Promise<void> {
 export async function markHelpful(reviewId: number): Promise<void> {
   await api.post(`/reviews/${reviewId}/helpful`);
 }
+
+/** PUT /reviews/{reviewId} 요청 바디 — backend ReviewUpdateRequest와 필드를 1:1로 맞춘다. */
+export interface ReviewUpdateInput {
+  rating: number;
+  content: string;
+}
+
+/**
+ * PUT /reviews/{reviewId} — 리뷰 수정. 남의 리뷰면 서버가 404 REVIEW_NOT_FOUND로 거절한다
+ * (403이 아니다 — 존재 여부를 노출하지 않는다).
+ */
+export async function updateReview(reviewId: number, input: ReviewUpdateInput): Promise<void> {
+  await api.put(`/reviews/${reviewId}`, input);
+}
+
+/** DELETE /reviews/{reviewId} — 리뷰 삭제. 물리 삭제라 되돌릴 수 없다. */
+export async function deleteReview(reviewId: number): Promise<void> {
+  await api.delete(`/reviews/${reviewId}`);
+}

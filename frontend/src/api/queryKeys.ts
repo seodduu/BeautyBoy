@@ -8,6 +8,7 @@
 export const queryKeys = {
   cart: () => ['cart'] as const,
   wishlist: () => ['wishlist'] as const,
+  myReviews: () => ['myReviews'] as const,
 
   /**
    * 성분 궁합. 상품 번호 집합이 같으면 **고른 순서가 달라도 같은 캐시 엔트리**여야 한다 —
