@@ -13,3 +13,8 @@ jwt:
   secret: dGVzdC1zZWNyZXQtdGVzdC1zZWNyZXQtdGVzdC1zZWNyZXQ=
   access-exp-minutes: 30
   refresh-exp-days: 14
+beautyboy:
+  behavior-event:
+    # @EnableScheduling이 전역이라 테스트 컨텍스트에서도 BehaviorEventRetentionJob이 실제로
+    # 틱한다. 절대 안 도는 값(1월 1일)으로 덮어 테스트 도중 배치가 끼어들지 않게 한다.
+    retention-cron: '0 0 4 1 1 *'
