@@ -1,0 +1,41 @@
+{
+ "version": "v3.1",
+ "generatedAt": "2026-09-06T14:38:47Z",
+ "recall4": {
+  "v3": 0.5923,
+  "v2": 0.6109,
+  "improvement": -0.0304
+ },
+ "planted": [
+  {
+   "id": "P1",
+   "pass": false,
+   "measured": {
+    "rivalShare": 0.0,
+    "goodsShare": 0.0
+   }
+  },
+  {
+   "id": "P2",
+   "pass": false,
+   "measured": {
+    "share": 0.3953
+   }
+  },
+  {
+   "id": "P3",
+   "pass": true,
+   "measured": {
+    "share": 1.0
+   }
+  },
+  {
+   "id": "P4",
+   "pass": true,
+   "measured": {
+    "maxDeltaPoints": 0.0233
+   }
+  }
+ ],
+ "verdict": "FAIL"
+}

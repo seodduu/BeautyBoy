@@ -2,8 +2,8 @@
   {
     "id": "P1",
     "kind": "rating_betrayal",
-    "goodsId": 52,
-    "rivalGoodsId": 87,
+    "goodsId": 98,
+    "rivalGoodsId": 155,
     "skinType": "DRY",
     "lowRatingShare": 0.8,
     "pass": "DRY 사용자 상위4에 rivalGoodsId 포함률 ≥ 0.7 AND goodsId 포함률 ≤ 0.2"
@@ -11,7 +11,7 @@
   {
     "id": "P2",
     "kind": "off_rulebook_item",
-    "goodsId": 62,
+    "goodsId": 168,
     "concern": "bright",
     "step": "C001001",
     "buyerShare": 0.4,
@@ -20,7 +20,7 @@
   {
     "id": "P3",
     "kind": "behavior_over_profile",
-    "goodsId": 58,
+    "goodsId": 153,
     "skinType": "DRY",
     "behaviorTag": "sebum",
     "memberCount": 150,
