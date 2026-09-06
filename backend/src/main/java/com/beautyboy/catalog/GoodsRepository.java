@@ -64,10 +64,15 @@ public interface GoodsRepository extends JpaRepository<Goods, Long> {
     /**
      * "다음 단계" 추천(routine)의 태그 무관 후보 조회. 같은 카테고리 코드 접두사 아래에서
      * 조회수 내림차순, 자기 자신·HIDDEN은 제외한다. {@code id desc}를 2차 정렬 키로 두는
-     * 이유는 {@link #findRecommendedRows}와 같다 — 조회수가 동률일 때도 결정적이어야 한다.
+     * 이유는 {@link #findRecommendedRows}와 같다. 조회수가 동률일 때도 결정적이어야 한다.
+     *
+     * <p>{@code excludeId}가 null이면 아무것도 제외하지 않는다. 그냥 {@code g.id <> :excludeId}로
+     * 두면 SQL 3값 논리에서 UNKNOWN이 되어 조건이 통째로 거짓이 되고 0행이 나온다(제외 대상이
+     * 없는 호출자가 결과를 전부 잃는다).
      */
     @Query("select g.id from Goods g "
-            + "where g.categoryCode like concat(:prefix, '%') and g.status <> :hidden and g.id <> :excludeId "
+            + "where g.categoryCode like concat(:prefix, '%') and g.status <> :hidden "
+            + "and (:excludeId is null or g.id <> :excludeId) "
             + "order by g.viewCount desc, g.id desc")
     List<Long> findCandidateIds(@Param("prefix") String prefix, @Param("hidden") String hidden,
                                 @Param("excludeId") Long excludeId, Pageable pageable);
@@ -76,9 +81,12 @@ public interface GoodsRepository extends JpaRepository<Goods, Long> {
      * 위와 같은 후보 조회에 태그 슬러그 조건을 더한 버전. goods_tag·tag를 세타 조인해
      * 지정한 슬러그가 달린 상품만 남긴다(패키지 경계상 GoodsTag/Tag 엔티티는 이 catalog
      * 패키지 안에서만 다루므로 여기서 직접 조인해도 규칙 위반이 아니다).
+     *
+     * <p>{@code excludeId}의 null 처리는 {@link #findCandidateIds}와 같다.
      */
     @Query("select g.id from Goods g "
-            + "where g.categoryCode like concat(:prefix, '%') and g.status <> :hidden and g.id <> :excludeId "
+            + "where g.categoryCode like concat(:prefix, '%') and g.status <> :hidden "
+            + "and (:excludeId is null or g.id <> :excludeId) "
             + "and exists (select 1 from GoodsTag gt, Tag t where gt.tagId = t.id and gt.goodsId = g.id and t.slug = :tagSlug) "
             + "order by g.viewCount desc, g.id desc")
     List<Long> findCandidateIdsByTag(@Param("prefix") String prefix, @Param("tagSlug") String tagSlug,

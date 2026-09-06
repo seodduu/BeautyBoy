@@ -88,7 +88,8 @@ public interface GoodsQueryService {
      *
      * @param categoryCodePrefix 후보를 뽑을 카테고리 코드 접두사
      * @param tagSlug            지정하면 이 슬러그 태그가 달린 상품만, {@code null}이면 태그 무관
-     * @param excludeGoodsNo     후보에서 제외할 상품(보통 지금 보고 있는 상품 자신)
+     * @param excludeGoodsNo     후보에서 제외할 상품(보통 지금 보고 있는 상품 자신).
+     *                           {@code null}이면 아무것도 제외하지 않는다.
      * @param limit              최대 반환 건수
      * @return 조회수 내림차순 goods_no 목록. 입력 순서를 별도로 보존하지 않는다(호출자가
      *         이 순서를 그대로 인기순으로 쓴다).
