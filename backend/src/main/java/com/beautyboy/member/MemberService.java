@@ -11,6 +11,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+
 @Service
 public class MemberService {
 
@@ -90,6 +92,26 @@ public class MemberService {
         } else {
             profile.updateFields(request.skinType(), request.concerns(), request.ageBand());
         }
+
+        return MemberMeResponse.from(member);
+    }
+
+    /**
+     * 행동 로그 수집 동의를 켜거나 끈다. 동의는 프로필 유무와 무관한 의사표시다. 프로필이
+     * 없다고 거부하면 가입 직후에는 동의를 켤 방법이 없어지므로, 프로필이 없으면 빈 프로필을
+     * 만들어 붙인 뒤 동의를 기록한다.
+     */
+    @Transactional
+    public MemberMeResponse updateBehaviorConsent(Long memberId, boolean consent) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND));
+
+        MemberProfile profile = member.getProfile();
+        if (profile == null) {
+            profile = new MemberProfile(null, null, null);
+            member.assignProfile(profile);
+        }
+        profile.updateBehaviorConsent(consent, LocalDateTime.now());
 
         return MemberMeResponse.from(member);
     }
