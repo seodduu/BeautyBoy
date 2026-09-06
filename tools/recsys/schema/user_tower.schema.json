@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://beautyboy.local/schema/user_tower.schema.json",
+  "title": "user_tower.json",
+  "description": "사용자 탑 가중치 파일(설계 §4). 브라우저가 34칸 입력을 48칸 은닉층을 거쳐 32칸 좌표로 옮긴다. 행렬 크기는 minItems/maxItems로 못 박는다. 대략 맞음은 없다.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "dim", "inputOrder", "layers", "normalize"],
+  "properties": {
+    "version": {
+      "description": "ETag. item_embeddings.json의 version과 같아야 한다.",
+      "type": "string",
+      "pattern": "^v3\\.[0-9]+$"
+    },
+    "dim": { "const": 32 },
+    "inputOrder": {
+      "description": "34칸 입력의 자리 배치. 4 + 9 + 3 + 18 = 34이며 이 순서로 이어 붙인다.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["skinType", "concerns", "textures", "behaviorTags"],
+      "properties": {
+        "skinType": { "const": ["DRY", "OILY", "COMBINATION", "SENSITIVE"] },
+        "concerns": {
+          "const": ["exfoliate", "sebum", "pore", "trouble", "soothe", "moisture", "barrier", "bright", "anti-aging"]
+        },
+        "textures": { "const": ["fresh", "dewy", "matte"] },
+        "behaviorTags": {
+          "const": [
+            "cleanse", "exfoliate", "sebum", "soothe", "moisture", "uv", "bright", "firm", "anti-aging", "scalp",
+            "pore", "trouble", "barrier", "antioxidant",
+            "fresh", "dewy", "matte",
+            "gentle"
+          ]
+        }
+      }
+    },
+    "layers": {
+      "description": "2층. [34→48 relu, 48→32 none]. w는 [in][out] 배치다.",
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "prefixItems": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["w", "b", "act"],
+          "properties": {
+            "w": {
+              "type": "array",
+              "minItems": 34,
+              "maxItems": 34,
+              "items": {
+                "type": "array",
+                "minItems": 48,
+                "maxItems": 48,
+                "items": { "type": "number" }
+              }
+            },
+            "b": {
+              "type": "array",
+              "minItems": 48,
+              "maxItems": 48,
+              "items": { "type": "number" }
+            },
+            "act": { "enum": ["relu", "none"] }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["w", "b", "act"],
+          "properties": {
+            "w": {
+              "type": "array",
+              "minItems": 48,
+              "maxItems": 48,
+              "items": {
+                "type": "array",
+                "minItems": 32,
+                "maxItems": 32,
+                "items": { "type": "number" }
+              }
+            },
+            "b": {
+              "type": "array",
+              "minItems": 32,
+              "maxItems": 32,
+              "items": { "type": "number" }
+            },
+            "act": { "enum": ["relu", "none"] }
+          }
+        }
+      ]
+    },
+    "normalize": {
+      "description": "출력 벡터를 L2 정규화한다. 내적을 코사인 유사도로 읽기 위한 전제라 항상 true다.",
+      "const": true
+    }
+  }
+}

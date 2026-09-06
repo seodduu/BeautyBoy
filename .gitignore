@@ -53,7 +53,13 @@ DESIGN.md
 .claude/
 
 # 로컬 전용 — 블로그 원고·스크린샷·에셋 출처·개발 스크립트 (원격에는 docs/demo만)
-tools/
+# tools/recsys(개인화 v3 학습 파이프라인)는 예외로 추적한다. Wave B가 여기에 시드 생성기·
+# 학습표 빌더·학습 스크립트·게이트를 넣는데, 버전 관리 밖에 두면 되돌릴 커밋이 없다.
+tools/*
+!tools/recsys/
+tools/recsys/.venv/
+tools/recsys/**/__pycache__/
+tools/recsys/**/.pytest_cache/
 docs/blog/
 docs/screenshots/
 docs/asset-credits.md
