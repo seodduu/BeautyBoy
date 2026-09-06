@@ -8,6 +8,7 @@ import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -33,6 +34,12 @@ public class MemberProfile {
     @Column(name = "age_band", length = 10)
     private String ageBand;
 
+    @Column(name = "behavior_consent", nullable = false)
+    private boolean behaviorConsent;
+
+    @Column(name = "behavior_consent_at")
+    private LocalDateTime behaviorConsentAt;
+
     protected MemberProfile() {
     }
 
@@ -55,6 +62,23 @@ public class MemberProfile {
         this.skinType = skinType;
         this.concerns = toConcernsColumn(concerns);
         this.ageBand = ageBand;
+    }
+
+    /**
+     * 동의 상태를 바꾼다. 같은 값이어도 시각은 갱신한다.
+     * "언제 마지막으로 의사를 밝혔나"가 감사 대상이기 때문이다.
+     */
+    void updateBehaviorConsent(boolean consent, LocalDateTime at) {
+        this.behaviorConsent = consent;
+        this.behaviorConsentAt = at;
+    }
+
+    public boolean isBehaviorConsent() {
+        return behaviorConsent;
+    }
+
+    public LocalDateTime getBehaviorConsentAt() {
+        return behaviorConsentAt;
     }
 
     public Long getMemberId() {
