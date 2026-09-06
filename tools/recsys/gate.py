@@ -29,6 +29,7 @@ import argparse
 import hashlib
 import json
 import sys
+import tempfile
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
@@ -499,13 +500,19 @@ def retrain_without_noise(
     catalog_dir: Path,
     raw_dir: Path,
     version: str,
-    out_dir: Path,
+    out_dir: Path | None = None,
 ) -> Model:
-    """잡음 회원을 뺀 학습표로 다시 학습한다(P4). train.py를 함수로 부른다."""
+    """잡음 회원을 뺀 학습표로 다시 학습한다(P4). train.py를 함수로 부른다.
+
+    이 모델은 P4 비교용이라 배포되지 않는다. 그래서 임시 디렉터리에 쓰고 버린다.
+    버전 문자열도 원본 그대로 쓴다. `-nonoise` 같은 접미사를 붙이면 모델 스키마의
+    version 패턴(`^v3\\.[0-9]+$`)에 걸려 save_model이 죽는다.
+    """
     noise = {int(mid) for mid in noise_members}
     clean = table[~table["member_id"].astype(int).isin(noise)].reset_index(drop=True)
     space = train.load_item_features(catalog_dir, raw_dir)
-    result = train.run(clean, space, out_dir, version=f"{version}-nonoise")
+    with tempfile.TemporaryDirectory(prefix="gate-nonoise-") as tmp:
+        result = train.run(clean, space, Path(tmp), version=version)
     return model_from_payloads(result["item_payload"], result["user_payload"])
 
 
@@ -592,7 +599,6 @@ def main(argv: list[str] | None = None) -> int:
             return retrain_without_noise(
                 table=table, noise_members=noise_members, catalog_dir=args.catalog,
                 raw_dir=args.raw, version=model.version or DEFAULT_VERSION,
-                out_dir=args.model.parent,
             )
 
     report = run_gate(
