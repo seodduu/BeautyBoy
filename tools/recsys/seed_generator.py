@@ -48,7 +48,8 @@ BEHAVIOR_KINDS = ["VIEW", "WISH", "CART"]
 BEHAVIOR_KIND_WEIGHTS = [0.78, 0.10, 0.12]
 
 SEED = 42
-MEMBER_ID_BASE = 1000          # V64 시드 회원 1~3과 겹치지 않게 한다
+CAT3_LENGTH = 7                # category_code 앞 7자가 3단계(leaf) 코드다. features.py와 같은 값
+MEMBER_ID_BASE = 1000        # V64 시드 회원 1~3과 겹치지 않게 한다
 WINDOW_DAYS = 180              # 전부 오늘로부터 과거 180일 안
 ORDERS_PER_MEMBER = 10         # 600명 → 6,000건
 BEHAVIOR_PER_MEMBER = 100      # 600명 → 60,000건
@@ -63,6 +64,12 @@ P3_BEHAVIOR_SHARE = 0.8        # P3 행동 로그 중 sebum 태그 비율
 # 일반 리뷰 별점 분포. 커머스 리뷰는 5점에 몰린다.
 RATING_CHOICES = [5, 4, 3, 2, 1]
 RATING_WEIGHTS = [0.45, 0.30, 0.15, 0.07, 0.03]
+
+# P2의 C는 pass 문장이 C001001(토너/스킨)로 못 박아 두어 단계를 옮길 수 없다. 그래서
+# 같은 단계로 겹치는 쪽은 P3의 D가 양보한다. 토너 안에서 먼저 찾고, 없으면 스킨케어 대분류,
+# 그래도 없으면 전체로 넓힌다. D의 성격은 "피지 태그를 단 앞단계 스킨케어"라서 이 순서가
+# 성격을 가장 덜 흔든다.
+P3_CATEGORY_LADDER = ["C001001", "C001", ""]
 
 PASS_TEXT = {
     "P1": "DRY 사용자 상위4에 rivalGoodsId 포함률 ≥ 0.7 AND goodsId 포함률 ≤ 0.2",
@@ -118,20 +125,69 @@ class Catalog:
         return sorted(candidates, key=lambda gid: (-self.view_count[gid], gid))
 
 
+def pick_p1_pair(catalog: Catalog, blocked: set[str]) -> tuple[int, int]:
+    """P1의 배신 쌍 A·B를 같은 cat3(leaf) 안에서 고른다.
+
+    게이트는 상품이 속한 cat3의 후보 풀 안에서 상위 4를 잰다. A와 B가 다른 leaf에 있으면
+    둘은 각자 다른 풀에서 재어지고 한 번도 맞대결하지 않는다. 그러면 "같은 태그인데 별점만
+    다른 두 상품 중 모델이 어느 쪽을 올리는가"라는 P1의 질문 자체가 성립하지 않는다.
+    그래서 moisture 상품을 cat3로 묶고 같은 묶음 안에서 조회수 1·2위를 쓴다.
+
+    `blocked`는 P2·P3이 이미 쓰는 cat3다. 같은 풀에 P2·P3이 심은 강한 신호가 있으면
+    그쪽이 B를 밀어내 P1이 또 측정 불능이 된다.
+    """
+    groups: dict[str, list[int]] = defaultdict(list)
+    for gid in catalog.with_any_tag(["moisture"]):
+        groups[catalog.category[gid][:CAT3_LENGTH]].append(gid)
+
+    # moisture 상품이 가장 많은 cat3를 쓴다. 동률은 cat3 오름차순으로 갈라 결정적으로 만든다.
+    candidates = sorted(
+        ((code, gids) for code, gids in groups.items()
+         if len(gids) >= 2 and code not in blocked),
+        key=lambda item: (-len(item[1]), item[0]),
+    )
+    if not candidates:
+        raise SystemExit(
+            "moisture 상품 2개 이상을 가진 cat3가 없다(P2·P3 단계 제외). P1을 심을 수 없다."
+        )
+    ranked = catalog.by_popularity(candidates[0][1])
+    return ranked[0], ranked[1]
+
+
+def pick_p3_goods(catalog: Catalog, blocked: set[str]) -> int:
+    """P3의 상품 D를 고른다. sebum 태그를 달고, `blocked` cat3 밖에 있어야 한다.
+
+    D는 DRY 회원 다수가 별점 5.0을 다는 강한 신호다. 같은 cat3에 P2의 C가 함께 있으면
+    게이트가 그 단계의 상위 4를 잴 때 D가 C를 그대로 눌러 P2 측정이 0이 된다. P1에서 본
+    것과 같은 구조다. C의 단계는 pass 문장에 C001001로 박혀 있어 못 옮기므로 D가 비킨다.
+
+    카테고리 사다리를 위에서부터 내려가며 처음으로 후보가 나오는 칸을 쓴다. 정렬은
+    조회수 내림차순, 동률은 goods_id 오름차순이라 선택이 결정적이다.
+    """
+    sebum = catalog.with_any_tag(["sebum"])
+    for prefix in P3_CATEGORY_LADDER:
+        candidates = [
+            gid for gid in sebum
+            if catalog.category[gid].startswith(prefix)
+            and catalog.category[gid][:CAT3_LENGTH] not in blocked
+        ]
+        if candidates:
+            return catalog.by_popularity(candidates)[0]
+    raise SystemExit(
+        f"sebum 태그 상품이 {sorted(blocked)} 밖에 없다. P3을 P2와 갈라 심을 수 없다."
+    )
+
+
 def pick_planted_goods(catalog: Catalog) -> dict[str, int]:
     """P1~P4가 쓸 상품 A·B·C·D를 카탈로그에서 고른다(구현 계획 §4 Task B1-1).
 
     로드맵의 #88·#91·#217·#140은 아티팩트 작성 시점의 예시 번호라 실제 카탈로그와
     일치한다는 보장이 없다. 그래서 번호를 적지 않고 규칙만 적는다.
-    """
-    moisture_c001 = catalog.by_popularity(
-        [gid for gid in catalog.with_any_tag(["moisture"])
-         if catalog.category[gid].startswith("C001")]
-    )
-    if len(moisture_c001) < 2:
-        raise SystemExit("C001 아래 moisture 태그 상품이 2개 미만이다. P1을 심을 수 없다.")
-    a, b = moisture_c001[0], moisture_c001[1]
 
+    고르는 순서가 곧 우선순위다. 단계를 못 옮기는 C가 먼저, 그다음 C를 피해 D, 마지막으로
+    둘 다 피해 P1 쌍이다. 순서가 반대면 나중에 고른 쪽이 앞서 고른 쪽의 단계로 들어와
+    심은 신호를 지운다.
+    """
     toners = catalog.by_popularity(
         [gid for gid in catalog.ids if catalog.category[gid].startswith("C001001")]
     )
@@ -146,17 +202,23 @@ def pick_planted_goods(catalog: Catalog) -> dict[str, int]:
     else:
         c = toners[17]
 
-    sebum_toners = catalog.by_popularity(
-        [gid for gid in catalog.with_any_tag(["sebum"])
-         if catalog.category[gid].startswith("C001001")]
-    )
-    if not sebum_toners:
-        raise SystemExit("C001001 아래 sebum 태그 상품이 없다. P3을 심을 수 없다.")
-    d = sebum_toners[0]
+    blocked = {catalog.category[c][:CAT3_LENGTH]}
+    d = pick_p3_goods(catalog, blocked)
+
+    blocked.add(catalog.category[d][:CAT3_LENGTH])
+    a, b = pick_p1_pair(catalog, blocked)
 
     picks = {"A": a, "B": b, "C": c, "D": d}
     if len(set(picks.values())) != 4:
         raise SystemExit(f"심은 패턴 상품이 겹쳤다: {picks}. 패턴이 서로를 지운다.")
+
+    steps = {key: catalog.category[gid][:CAT3_LENGTH] for key, gid in picks.items()}
+    if steps["A"] != steps["B"]:
+        raise SystemExit(f"P1 쌍이 서로 다른 단계에 있다: {steps}. 맞대결이 성립하지 않는다.")
+    # P1 쌍이 차지한 단계 하나, P2의 단계 하나, P3의 단계 하나가 셋 다 달라야 한다.
+    # 두 패턴이 한 단계에 들어가면 강한 쪽이 약한 쪽을 눌러 약한 쪽 측정이 0이 된다.
+    if len({steps["A"], steps["C"], steps["D"]}) != 3:
+        raise SystemExit(f"P1·P2·P3 단계가 겹친다: {steps}. 심은 신호가 서로를 지운다.")
     return picks
 
 

@@ -1,17 +1,17 @@
 {
  "version": "v3.1",
- "generatedAt": "2026-09-06T14:38:47Z",
+ "generatedAt": "2026-09-07T04:20:59Z",
  "recall4": {
-  "v3": 0.5923,
-  "v2": 0.6109,
-  "improvement": -0.0304
+  "v3": 0.5829,
+  "v2": 0.608,
+  "improvement": -0.0413
  },
  "planted": [
   {
    "id": "P1",
    "pass": false,
    "measured": {
-    "rivalShare": 0.0,
+    "rivalShare": 0.2533,
     "goodsShare": 0.0
    }
   },
@@ -19,21 +19,21 @@
    "id": "P2",
    "pass": false,
    "measured": {
-    "share": 0.3953
+    "share": 0.1395
    }
   },
   {
    "id": "P3",
    "pass": true,
    "measured": {
-    "share": 1.0
+    "share": 0.98
    }
   },
   {
    "id": "P4",
-   "pass": true,
+   "pass": false,
    "measured": {
-    "maxDeltaPoints": 0.0233
+    "maxDeltaPoints": 0.4884
    }
   }
  ],

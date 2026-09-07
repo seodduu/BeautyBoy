@@ -57,6 +57,12 @@ def read_rows(out: Path, name: str) -> list[dict]:
         return list(csv.DictReader(fp))
 
 
+def catalog_cat3() -> dict[int, str]:
+    """상품 id → 3단계(leaf) 카테고리 코드."""
+    with (CATALOG / "goods.csv").open(encoding="utf-8", newline="") as fp:
+        return {int(row["goods_id"]): row["category_code"][:7] for row in csv.DictReader(fp)}
+
+
 def catalog_tags() -> dict[int, set[str]]:
     tags: dict[int, set[str]] = defaultdict(set)
     with (CATALOG / "goods_tag.csv").open(encoding="utf-8", newline="") as fp:
@@ -130,6 +136,54 @@ def test_planted_상품_넷이_서로_다르다(planted: dict):
         planted["P3"]["goodsId"],
     ]
     assert len(set(picked)) == 4
+
+
+def test_P1_쌍은_같은_단계에_있다(planted: dict):
+    """A와 B가 다른 leaf에 있으면 게이트가 둘을 각자 다른 후보 풀에서 재어 맞대결이 없다."""
+    cat3 = catalog_cat3()
+    assert cat3[planted["P1"]["goodsId"]] == cat3[planted["P1"]["rivalGoodsId"]]
+
+
+def test_P1P2P3_단계가_서로_다르다(planted: dict):
+    """한 단계에 두 패턴이 있으면 강한 쪽이 약한 쪽을 눌러 약한 쪽 측정이 0이 된다.
+
+    P1이 P2·P3과 겹치면 P1이, P2와 P3이 겹치면 P2가 지워진다. 셋 다 갈라야 한다.
+    """
+    cat3 = catalog_cat3()
+    steps = [
+        cat3[planted["P1"]["goodsId"]],
+        cat3[planted["P2"]["goodsId"]],
+        cat3[planted["P3"]["goodsId"]],
+    ]
+    assert len(set(steps)) == 3, steps
+
+
+def test_단계를_가를_수_없는_카탈로그면_죽는다(tmp_path):
+    """sebum 상품이 P2 단계 안에만 있으면 P3을 갈라 심을 수 없다. 조용히 넘어가면 안 된다.
+
+    실패를 삼키면 게이트는 P2 0.0을 "모델이 못 배웠다"로 읽는다. 실제로는 시드가 잰 적이
+    없는 값이다. 그 구분을 잃지 않으려고 종료 코드로 드러낸다.
+    """
+    catalog = tmp_path / "catalog"
+    catalog.mkdir()
+    goods = ["goods_id,category_code,brand_id,sale_price,status,view_count"]
+    tags = ["goods_id,tag_slug,sort_order"]
+    for gid in range(1, 25):
+        goods.append(f"{gid},C001001001,1,10000,ON_SALE,{2500 - gid * 10}")
+        tags.append(f"{gid},sebum,3")
+        tags.append(f"{gid},moisture,5")
+    (catalog / "goods.csv").write_text("\n".join(goods) + "\n", encoding="utf-8")
+    (catalog / "goods_tag.csv").write_text("\n".join(tags) + "\n", encoding="utf-8")
+
+    result = subprocess.run(
+        [sys.executable, str(GENERATOR), "--catalog", str(catalog),
+         "--out", str(tmp_path / "out"), "--members", str(MEMBERS)],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 1, result.stdout
+    assert "P3" in result.stderr
 
 
 def test_P1은_별점배신을_실제로_넣는다(out: Path, planted: dict):
