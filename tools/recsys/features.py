@@ -11,10 +11,16 @@
 | 태그 multi-hot | 18 | `MODEL_TAG_SLUGS` 순 |
 | 가격대 one-hot | 5 | `sale_price` 분위수 20/40/60/80% |
 | 성분 multi-hot | 200 | 등장 상품 수 상위 200개, 동률은 `ingredient_id` 오름차순 |
-| 피부타입별 평균 별점 | 4 | 리뷰가 없는 칸은 전체 평균으로 채운다 |
+| 피부타입별 별점 | 8 | 평균 4칸(5로 나눠 0~1) + 고점비율 4칸(별점 4~5의 비율) |
 
 마지막 블록을 0으로 채우지 않는 이유는 "리뷰 없음"과 "별점 0"이 같은 값이 되면 P1
-(같은 태그를 단 두 상품이 별점만 다른 패턴)이 안 잡히기 때문이다.
+(같은 태그를 단 두 상품이 별점만 다른 패턴)이 안 잡히기 때문이다. 리뷰가 없는 칸은
+평균 블록이면 전체 평균으로, 고점비율 블록이면 전체 고점비율로 채운다.
+
+별점을 평균 한 가지로만 넣으면 "이 피부타입의 80%가 좋아한다"가 표현되지 않는다. 나머지
+20%가 1~2점이면 평균이 눌려 평범한 상품으로 보인다. 그래서 고점비율 4칸을 함께 넣는다.
+평균 4칸을 5로 나누는 이유는 나머지 블록이 전부 0/1인데 1~5 척도가 섞이면 그 칸의 크기만으로
+거리 계산을 지배하기 때문이다.
 
 이 벡터는 배포되지 않는다. 상품 탑은 학습 때만 돌고, 나가는 것은 그 출력인
 `item_embeddings.json` 뿐이다.
@@ -40,6 +46,9 @@ PRICE_QUANTILES = [0.2, 0.4, 0.6, 0.8]            # 가격대 경계
 PRICE_BANDS = len(PRICE_QUANTILES) + 1            # 5칸
 TOP_INGREDIENTS = 200                             # 성분 multi-hot 칸 수
 SKIN_TYPES = ["DRY", "OILY", "COMBINATION", "SENSITIVE"]
+RATING_SCALE = 5.0                                # 별점 최대값. 평균 칸을 0~1로 나눌 때 쓴다
+HIGH_RATING_MIN = 4                               # 별점 4~5를 "고점"으로 본다
+RATING_BLOCK = len(SKIN_TYPES) * 2                # 평균 4칸 + 고점비율 4칸
 
 CATALOG_FILES = ["goods", "goods_tag", "goods_ingredient"]
 RAW_FILES = ["members", "reviews"]
@@ -55,6 +64,7 @@ class ItemFeatureSpace:
     price_bounds: list[float]
     ingredient_ids: list[int]
     overall_rating: float
+    overall_high_rate: float = 0.0
     tag_slugs: list[str] = field(default_factory=lambda: list(MODEL_TAG_SLUGS))
     cat3: dict[int, str] = field(default_factory=dict)
     tags: dict[int, list[str]] = field(default_factory=dict)
@@ -81,10 +91,11 @@ class ItemFeatureSpace:
                 category + tag + PRICE_BANDS + TOP_INGREDIENTS,
             ),
         }
-        offsets["rating"] = (
-            offsets["ingredient"][1],
-            offsets["ingredient"][1] + len(SKIN_TYPES),
-        )
+        base_rating = offsets["ingredient"][1]
+        offsets["rating"] = (base_rating, base_rating + RATING_BLOCK)
+        # 앞 절반이 평균, 뒤 절반이 고점비율이다. 테스트와 진단이 반쪽만 보고 싶을 때 쓴다.
+        offsets["rating_mean"] = (base_rating, base_rating + len(SKIN_TYPES))
+        offsets["rating_high"] = (base_rating + len(SKIN_TYPES), base_rating + RATING_BLOCK)
         if name not in offsets:
             raise KeyError(f"모르는 블록이다: {name}")
         return offsets[name]
@@ -132,29 +143,39 @@ def top_ingredients(goods_ingredient: pd.DataFrame, goods_ids: set[int]) -> list
 
 def rating_by_skin_type(
     reviews: pd.DataFrame, members: pd.DataFrame
-) -> tuple[dict[tuple[int, str], float], float]:
-    """(상품, 피부타입) → 평균 별점, 그리고 전체 평균."""
+) -> tuple[dict[tuple[int, str], float], dict[tuple[int, str], float], float, float]:
+    """(상품, 피부타입) → 평균 별점과 고점비율, 그리고 그 둘의 전체 값.
+
+    고점비율은 별점 4~5의 비율이다. 평균만으로는 "이 피부타입의 대다수가 좋아한다"가
+    표현되지 않아서 함께 낸다.
+    """
     skin_of = {
         int(row.member_id): str(row.skin_type)
         for row in members.itertuples(index=False)
     }
     total = 0.0
+    high_total = 0
     count = 0
     sums: dict[tuple[int, str], float] = defaultdict(float)
+    highs: dict[tuple[int, str], int] = defaultdict(int)
     hits: dict[tuple[int, str], int] = defaultdict(int)
     for row in reviews.itertuples(index=False):
         rating = float(row.rating)
         total += rating
+        high_total += rating >= HIGH_RATING_MIN
         count += 1
         skin = skin_of.get(int(row.member_id), "")
         if skin not in SKIN_TYPES:
             continue
         key = (int(row.goods_id), skin)
         sums[key] += rating
+        highs[key] += rating >= HIGH_RATING_MIN
         hits[key] += 1
     overall = total / count if count else 0.0
+    overall_high = high_total / count if count else 0.0
     means = {key: sums[key] / hits[key] for key in hits}
-    return means, overall
+    high_rates = {key: highs[key] / hits[key] for key in hits}
+    return means, high_rates, overall, overall_high
 
 
 # ---------------------------------------------------------------------------
@@ -195,7 +216,7 @@ def build_item_features(
     categories = category_codes(goods)
     bounds = price_bounds(np.array([prices[gid] for gid in ids], dtype=float))
     ingredient_ids = top_ingredients(goods_ingredient, id_set)
-    means, overall = rating_by_skin_type(reviews, members)
+    means, high_rates, overall, overall_high = rating_by_skin_type(reviews, members)
 
     category_at = {code: i for i, code in enumerate(categories)}
     tag_at = {slug: i for i, slug in enumerate(MODEL_TAG_SLUGS)}
@@ -203,7 +224,7 @@ def build_item_features(
 
     width = (
         len(categories) + len(MODEL_TAG_SLUGS) + PRICE_BANDS
-        + TOP_INGREDIENTS + len(SKIN_TYPES)
+        + TOP_INGREDIENTS + RATING_BLOCK
     )
     matrix = np.zeros((len(ids), width), dtype=np.float32)
 
@@ -222,7 +243,12 @@ def build_item_features(
             if at is not None:
                 matrix[i, base_ingredient + at] = 1.0
         for j, skin in enumerate(SKIN_TYPES):
-            matrix[i, base_rating + j] = means.get((gid, skin), overall)
+            # 앞 4칸은 평균을 0~1로 정규화한 값, 뒤 4칸은 고점비율이다. 둘 다 리뷰가 없으면
+            # 전체 값으로 채운다. 0으로 채우면 "리뷰 없음"이 "최악"으로 읽힌다.
+            matrix[i, base_rating + j] = means.get((gid, skin), overall) / RATING_SCALE
+            matrix[i, base_rating + len(SKIN_TYPES) + j] = high_rates.get(
+                (gid, skin), overall_high
+            )
 
     return ItemFeatureSpace(
         goods_ids=ids,
@@ -231,6 +257,7 @@ def build_item_features(
         price_bounds=bounds,
         ingredient_ids=ingredient_ids,
         overall_rating=overall,
+        overall_high_rate=overall_high,
         cat3={gid: cat3[gid] for gid in ids},
         tags={gid: list(tags.get(gid, [])) for gid in ids},
     )

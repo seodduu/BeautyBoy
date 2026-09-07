@@ -126,19 +126,63 @@ def test_성분은_상위200개_동률은_id순(space):
     assert space.row(2)[start:end].tolist() == [1.0] + [0.0] * 199
 
 
-def test_리뷰없는_피부타입칸은_전체평균이다(space):
+def test_별점블록은_평균4칸과_고점비율4칸이다(space):
     start, end = space.block("rating")
-    assert end - start == len(ft.SKIN_TYPES) == 4
+    assert end - start == ft.RATING_BLOCK == 8
+
+    mean_start, mean_end = space.block("rating_mean")
+    high_start, high_end = space.block("rating_high")
+    assert (mean_start, mean_end) == (start, start + 4)
+    assert (high_start, high_end) == (start + 4, end)
+
+
+def test_리뷰없는_피부타입칸은_전체값으로_채운다(space):
+    mean_start, mean_end = space.block("rating_mean")
+    high_start, high_end = space.block("rating_high")
 
     overall = space.overall_rating
     assert overall == pytest.approx((5 + 3 + 1) / 3)
     assert overall != 0
 
-    # 상품 10은 리뷰가 없다. 네 칸이 전부 전체 평균이고 0이 아니다
-    assert space.row(10)[start:end].tolist() == pytest.approx([overall] * 4)
+    # 별점 4~5는 상품 1의 5점 하나뿐이다. 전체 고점비율은 1/3이다
+    overall_high = space.overall_high_rate
+    assert overall_high == pytest.approx(1 / 3)
 
-    # 상품 1은 DRY 리뷰 두 건의 평균만 자기 값이고 나머지 세 칸은 전체 평균이다
-    row = space.row(1)[start:end]
-    assert row[ft.SKIN_TYPES.index("DRY")] == pytest.approx(4.0)
+    # 상품 10은 리뷰가 없다. 여덟 칸이 전부 전체 값이고 0이 아니다
+    row = space.row(10)
+    assert row[mean_start:mean_end].tolist() == pytest.approx([overall / 5] * 4)
+    assert row[high_start:high_end].tolist() == pytest.approx([overall_high] * 4)
+
+    # 상품 1은 DRY 리뷰 두 건(5점, 3점)만 자기 값이고 나머지 세 칸은 전체 값이다
+    row = space.row(1)
+    dry = ft.SKIN_TYPES.index("DRY")
+    assert row[mean_start + dry] == pytest.approx(4.0 / 5)
+    assert row[high_start + dry] == pytest.approx(0.5)
     for skin in ("OILY", "COMBINATION", "SENSITIVE"):
-        assert row[ft.SKIN_TYPES.index(skin)] == pytest.approx(overall)
+        j = ft.SKIN_TYPES.index(skin)
+        assert row[mean_start + j] == pytest.approx(overall / 5)
+        assert row[high_start + j] == pytest.approx(overall_high)
+
+
+def test_평균칸은_0과_1_사이로_정규화된다(space):
+    """나머지 블록이 전부 0/1이라 1~5 척도가 섞이면 그 칸이 거리 계산을 지배한다."""
+    start, end = space.block("rating_mean")
+    block = space.matrix[:, start:end]
+    assert block.min() >= 0.0
+    assert block.max() <= 1.0
+
+    # 상품 2는 OILY 평균이 1.0점이다. 정규화되면 0.2가 된다
+    oily = ft.SKIN_TYPES.index("OILY")
+    assert space.row(2)[start + oily] == pytest.approx(1.0 / 5)
+
+
+def test_고점비율칸은_0과_1_사이다(space):
+    """고점비율은 별점 4~5의 비율이라 정의상 0~1이다."""
+    start, end = space.block("rating_high")
+    block = space.matrix[:, start:end]
+    assert block.min() >= 0.0
+    assert block.max() <= 1.0
+
+    # 상품 2의 OILY 리뷰는 1점 한 건뿐이라 고점비율 0.0, 상품 1의 DRY는 2건 중 1건이라 0.5
+    assert space.row(2)[start + ft.SKIN_TYPES.index("OILY")] == pytest.approx(0.0)
+    assert space.row(1)[start + ft.SKIN_TYPES.index("DRY")] == pytest.approx(0.5)
