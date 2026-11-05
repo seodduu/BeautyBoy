@@ -18,6 +18,9 @@ dist-ssr
 /blob-report/
 /playwright/.cache/
 
+# MediaPipe 런타임 에셋. scripts/mediapipe-assets.mjs 가 predev/prebuild 에서 채운다
+/public/models/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -28,3 +31,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+/e2e/fixtures/skin/*.y4m
+/e2e/fixtures/skin/portrait.jpg

@@ -18,12 +18,13 @@ const LANDING_NAV = [
   { label: '로그인', to: '/login' },
 ] as const;
 
-/* 앱(로그인 이후) 헤더의 주요 메뉴 — 랜딩 내비의 로그인 링크만 뺀 3개.
+/* 앱(로그인 이후) 헤더의 주요 메뉴. 랜딩 내비에서 로그인 링크를 빼고 피부 분석을 더한 4개.
    로그인/로그아웃은 이 배열과 별도로 기존 자리(cart 옆)에 그대로 둔다. */
 const PRIMARY_NAV = [
   { label: '루틴 가이드', to: '/routine' },
   { label: '랭킹', to: '/ranking' },
   { label: '전체 상품', to: '/goods' },
+  { label: '피부 분석', to: '/skin-analysis' },
 ] as const;
 
 /**

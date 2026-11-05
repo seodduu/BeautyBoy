@@ -72,6 +72,11 @@ public class SecurityConfig {
                                 "/api/v1/routines",
                                 // 규칙 배포(설계 §5.2). 기존 /api/v1/goods/** 패턴에 안 걸리는 새 경로다.
                                 "/api/v1/routine/flow-rules",
+                                // 모델 파일 배포(v3 설계 §10). 규칙 배포와 같은 성격이라 같은 자리에 둔다.
+                                "/api/v1/model/items",
+                                "/api/v1/model/user-tower",
+                                // 후보 30개(v3 설계 §10 3번). 비로그인도 루틴 화면을 본다.
+                                "/api/v1/routine/candidates",
                                 // 궁합 게이트(설계 §3.3). 메인 조합기가 비로그인 상태에서도 호출한다.
                                 "/api/v1/compat/verdicts",
                                 "/api/v1/qna").permitAll()

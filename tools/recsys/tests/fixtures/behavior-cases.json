@@ -1,0 +1,392 @@
+{
+ "generatedFrom": "frontend/bench/exportBehaviorCases.bench.ts가 만든다. 클라이언트 aggregate/behaviorInput의 실제 출력이므로 손으로 고치지 말고 생성기를 다시 돌린다.",
+ "cases": [
+  {
+   "name": "aggregate-조회3회",
+   "events": [
+    {
+     "goodsNo": 1,
+     "cat3": "C001002",
+     "tags": [
+      "moisture"
+     ],
+     "w": 1
+    },
+    {
+     "goodsNo": 1,
+     "cat3": "C001002",
+     "tags": [
+      "moisture"
+     ],
+     "w": 1
+    },
+    {
+     "goodsNo": 1,
+     "cat3": "C001002",
+     "tags": [
+      "moisture"
+     ],
+     "w": 1
+    }
+   ],
+   "aggregate": {
+    "C001002|moisture": 3
+   },
+   "behaviorInput": [
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "name": "aggregate-태그2개-찜",
+   "events": [
+    {
+     "goodsNo": 1,
+     "cat3": "C001002",
+     "tags": [
+      "moisture",
+      "soothe"
+     ],
+     "w": 2
+    }
+   ],
+   "aggregate": {
+    "C001002|moisture": 2,
+    "C001002|soothe": 2
+   },
+   "behaviorInput": [
+    0,
+    0,
+    0,
+    1,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "name": "aggregate-카테고리분리",
+   "events": [
+    {
+     "goodsNo": 1,
+     "cat3": "C001002",
+     "tags": [
+      "exfoliate"
+     ],
+     "w": 1
+    },
+    {
+     "goodsNo": 1,
+     "cat3": "C002001",
+     "tags": [
+      "exfoliate"
+     ],
+     "w": 1
+    }
+   ],
+   "aggregate": {
+    "C001002|exfoliate": 1,
+    "C002001|exfoliate": 1
+   },
+   "behaviorInput": [
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "name": "aggregate-태그없음",
+   "events": [
+    {
+     "goodsNo": 1,
+     "cat3": "C001002",
+     "tags": [],
+     "w": 1
+    }
+   ],
+   "aggregate": {},
+   "behaviorInput": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "name": "aggregate-이벤트없음",
+   "events": [],
+   "aggregate": {},
+   "behaviorInput": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "name": "behaviorInput-빈입력",
+   "events": [],
+   "aggregate": {},
+   "behaviorInput": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "name": "behaviorInput-카테고리합산",
+   "events": [
+    {
+     "goodsNo": 1,
+     "cat3": "C002001",
+     "tags": [
+      "moisture"
+     ],
+     "w": 1
+    },
+    {
+     "goodsNo": 1,
+     "cat3": "C001001",
+     "tags": [
+      "moisture"
+     ],
+     "w": 3
+    }
+   ],
+   "aggregate": {
+    "C002001|moisture": 1,
+    "C001001|moisture": 3
+   },
+   "behaviorInput": [
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "name": "behaviorInput-최대값정규화",
+   "events": [
+    {
+     "goodsNo": 1,
+     "cat3": "C001002",
+     "tags": [
+      "sebum"
+     ],
+     "w": 3
+    },
+    {
+     "goodsNo": 1,
+     "cat3": "C001002",
+     "tags": [
+      "sebum"
+     ],
+     "w": 3
+    },
+    {
+     "goodsNo": 1,
+     "cat3": "C001002",
+     "tags": [
+      "moisture"
+     ],
+     "w": 3
+    }
+   ],
+   "aggregate": {
+    "C001002|sebum": 6,
+    "C001002|moisture": 3
+   },
+   "behaviorInput": [
+    0,
+    0,
+    1,
+    0,
+    0.5,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "name": "behaviorInput-마지막칸",
+   "events": [
+    {
+     "goodsNo": 1,
+     "cat3": "C001002",
+     "tags": [
+      "gentle"
+     ],
+     "w": 1
+    }
+   ],
+   "aggregate": {
+    "C001002|gentle": 1
+   },
+   "behaviorInput": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "behaviorInput-모르는태그",
+   "events": [
+    {
+     "goodsNo": 1,
+     "cat3": "C001002",
+     "tags": [
+      "unknown"
+     ],
+     "w": 1
+    }
+   ],
+   "aggregate": {
+    "C001002|unknown": 1
+   },
+   "behaviorInput": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ]
+  }
+ ]
+}

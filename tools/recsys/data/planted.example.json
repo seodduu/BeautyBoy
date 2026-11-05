@@ -1,0 +1,35 @@
+[
+  {
+    "id": "P1",
+    "kind": "rating_betrayal",
+    "goodsId": 88,
+    "rivalGoodsId": 91,
+    "skinType": "DRY",
+    "lowRatingShare": 0.8,
+    "pass": "DRY 사용자 상위4에 rivalGoodsId 포함률 ≥ 0.7 AND goodsId 포함률 ≤ 0.2"
+  },
+  {
+    "id": "P2",
+    "kind": "off_rulebook_item",
+    "goodsId": 217,
+    "concern": "bright",
+    "step": "C001001",
+    "buyerShare": 0.4,
+    "pass": "bright 사용자의 C001001 단계 상위4에 goodsId 포함률 ≥ 0.6"
+  },
+  {
+    "id": "P3",
+    "kind": "behavior_over_profile",
+    "goodsId": 140,
+    "skinType": "DRY",
+    "behaviorTag": "sebum",
+    "memberCount": 150,
+    "pass": "해당 150명 상위4에 goodsId 포함률 ≥ 0.6"
+  },
+  {
+    "id": "P4",
+    "kind": "noise",
+    "share": 0.15,
+    "pass": "P1~P3 각 지표가 잡음 0% 학습 대비 5%p 이내"
+  }
+]

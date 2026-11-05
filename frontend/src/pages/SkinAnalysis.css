@@ -1,0 +1,206 @@
+/* 피부분석 화면. DESIGN.md "피부분석 화면" 절(camera-preview, face-guide, disclaimer, verdict).
+   토큰은 src/index.css 변수를 이름으로 참조한다. hex 직접 기입 없음. */
+.bb-skin {
+  max-width: var(--landing-column);
+  margin: 0 auto;
+  padding: var(--space-section) var(--space-lg) var(--space-xl);
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.bb-skin__head {
+  margin: 0 0 var(--space-xl);
+}
+
+.bb-skin__title {
+  margin: 0 0 var(--space-sm);
+  font-size: var(--fs-heading-md);
+  font-weight: var(--fw-heading-md);
+  line-height: var(--lh-heading-md);
+  letter-spacing: var(--ls-heading-md);
+  color: var(--color-ink);
+}
+
+.bb-skin__lede {
+  margin: 0;
+  max-width: 40em;
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  color: var(--color-graphite);
+}
+
+/* 데스크톱: 미리보기 좌, 안내·행동 우 */
+.bb-skin__body {
+  display: grid;
+  grid-template-columns: minmax(0, 480px) minmax(0, 1fr);
+  gap: var(--space-xl);
+  align-items: start;
+}
+
+.bb-skin__body--single {
+  grid-template-columns: minmax(0, 1fr);
+  max-width: 640px;
+}
+
+/* camera-preview: surface-cool 프레임, rounded.lg, 거울 모드. 카메라가 켜지기 전에도 크기를 지킨다. */
+.bb-skin__preview {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  border-radius: var(--rounded-lg);
+  background: var(--color-surface-cool);
+}
+
+.bb-skin__preview[hidden] {
+  display: none;
+}
+
+.bb-skin__video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1);
+}
+
+/* face-guide: 1px 점선 ink-soft, 채움 없음 */
+.bb-skin__face-guide {
+  position: absolute;
+  top: 12%;
+  left: 20%;
+  width: 60%;
+  height: 70%;
+  border: 1px dashed var(--color-ink-soft);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.bb-skin__preview-status {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bb-skin__spinner {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--rounded-full);
+  border: 2px solid var(--color-ink);
+  border-top-color: transparent;
+  animation: bb-btn-spin 0.7s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bb-skin__spinner {
+    animation: none;
+  }
+}
+
+.bb-skin__panel {
+  min-width: 0;
+}
+
+.bb-skin__panel-title {
+  margin: 0 0 var(--space-sm);
+  font-size: var(--fs-body-strong);
+  font-weight: var(--fw-body-strong);
+  line-height: var(--lh-body-strong);
+  color: var(--color-ink);
+}
+
+.bb-skin__guide {
+  margin: 0 0 var(--space-lg);
+  padding-left: var(--space-lg);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  color: var(--color-graphite);
+}
+
+.bb-skin__guide li + li {
+  margin-top: var(--space-xxs);
+}
+
+.bb-skin__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin-top: var(--space-lg);
+}
+
+/* 숫자 보조 표기·안내: typography.meta */
+.bb-skin__meta,
+.bb-skin__verdict-note {
+  margin: 0;
+  font-size: var(--fs-meta);
+  font-weight: var(--fw-meta);
+  line-height: var(--lh-meta);
+  letter-spacing: var(--ls-meta);
+  color: var(--color-graphite);
+}
+
+.bb-skin__gate {
+  padding: var(--space-lg) 0;
+  border-top: 1px solid var(--color-hairline-soft);
+  border-bottom: 1px solid var(--color-hairline-soft);
+}
+
+.bb-skin__gate .bb-skin__actions {
+  margin-top: var(--space-md);
+}
+
+/* verdict: 말이 주(heading-sm), 숫자는 meta 보조. signal-* 배경 없음 */
+.bb-skin__verdict {
+  padding: 0 0 var(--space-lg);
+  border-bottom: 1px solid var(--color-hairline-soft);
+}
+
+.bb-skin__verdict-word {
+  margin: 0 0 var(--space-xs);
+  font-size: var(--fs-heading-sm);
+  font-weight: var(--fw-heading-sm);
+  line-height: var(--lh-heading-sm);
+  letter-spacing: var(--ls-heading-sm);
+  color: var(--color-ink);
+}
+
+.bb-skin__suggest {
+  margin-top: var(--space-lg);
+}
+
+.bb-skin__suggest-text {
+  margin: 0 0 var(--space-sm);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  color: var(--color-ink);
+}
+
+/* disclaimer: 모든 상태에서 하단 같은 자리 */
+.bb-skin__disclaimer {
+  margin: var(--space-xxl) 0 0;
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--color-hairline);
+  font-size: var(--fs-meta);
+  font-weight: var(--fw-meta);
+  line-height: var(--lh-meta);
+  color: var(--color-graphite);
+}
+
+@media (max-width: 767px) {
+  .bb-skin {
+    padding: var(--space-xl) var(--space-md) var(--space-lg);
+  }
+
+  .bb-skin__title {
+    font-size: var(--fs-heading-sm);
+    line-height: var(--lh-heading-sm);
+    letter-spacing: var(--ls-heading-sm);
+  }
+
+  .bb-skin__body {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-lg);
+  }
+}

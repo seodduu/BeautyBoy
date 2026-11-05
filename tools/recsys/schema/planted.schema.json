@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://beautyboy.local/schema/planted.schema.json",
+  "title": "planted.json",
+  "description": "심은 패턴 배열(로드맵 §3.5). 시드 생성기가 쓰고 게이트가 읽는 계약이다. 실사용자가 없으므로 정답을 우리가 심고 회수율로 모델을 판정한다. kind마다 필요한 칸이 다르므로 if/then으로 나눠 건다.",
+  "type": "array",
+  "minItems": 1,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["id", "kind", "pass"],
+    "properties": {
+      "id": { "enum": ["P1", "P2", "P3", "P4"] },
+      "kind": {
+        "enum": ["rating_betrayal", "off_rulebook_item", "behavior_over_profile", "noise"]
+      },
+      "pass": {
+        "description": "합격 기준을 사람이 읽는 문장으로. 게이트 리포트에 그대로 실린다.",
+        "type": "string",
+        "minLength": 1
+      },
+      "goodsId": { "type": "integer" },
+      "rivalGoodsId": { "type": "integer" },
+      "skinType": { "enum": ["DRY", "OILY", "COMBINATION", "SENSITIVE"] },
+      "lowRatingShare": { "type": "number", "minimum": 0, "maximum": 1 },
+      "concern": { "type": "string" },
+      "step": {
+        "description": "중분류 7자 카테고리 코드.",
+        "type": "string",
+        "pattern": "^C[0-9]{6}$"
+      },
+      "buyerShare": { "type": "number", "minimum": 0, "maximum": 1 },
+      "behaviorTag": { "type": "string" },
+      "memberCount": { "type": "integer", "minimum": 1 },
+      "share": { "type": "number", "minimum": 0, "maximum": 1 }
+    },
+    "allOf": [
+      {
+        "if": { "properties": { "kind": { "const": "rating_betrayal" } }, "required": ["kind"] },
+        "then": { "required": ["goodsId", "rivalGoodsId", "skinType", "lowRatingShare"] }
+      },
+      {
+        "if": { "properties": { "kind": { "const": "off_rulebook_item" } }, "required": ["kind"] },
+        "then": { "required": ["goodsId", "concern", "step", "buyerShare"] }
+      },
+      {
+        "if": { "properties": { "kind": { "const": "behavior_over_profile" } }, "required": ["kind"] },
+        "then": { "required": ["goodsId", "skinType", "behaviorTag", "memberCount"] }
+      },
+      {
+        "if": { "properties": { "kind": { "const": "noise" } }, "required": ["kind"] },
+        "then": { "required": ["share"] }
+      }
+    ]
+  }
+}

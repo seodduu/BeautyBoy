@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://beautyboy.local/schema/item_embeddings.schema.json",
+  "title": "item_embeddings.json",
+  "description": "상품 탑이 뽑은 상품 임베딩 파일(설계 §4). 브라우저가 통째로 내려받아 사용자 벡터와 내적한다. tagSlugs는 학습과 추론이 같은 자리에 같은 태그를 넣는다는 약속이며, 클라이언트는 이 배열이 MODEL_TAG_SLUGS와 다르면 파일을 버린다.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "dim", "tagSlugs", "items", "tagContribution"],
+  "properties": {
+    "version": {
+      "description": "ETag. user_tower.json의 version과 같아야 한다.",
+      "type": "string",
+      "pattern": "^v3\\.[0-9]+$"
+    },
+    "dim": {
+      "description": "임베딩 차원. 상품 탑과 사용자 탑이 같은 값을 쓴다.",
+      "const": 32
+    },
+    "trainedAt": {
+      "description": "학습 시각(ISO 8601). 운영 메타데이터라 계약이 아니다. 그래서 필수 5개에서 빠진다.",
+      "type": "string",
+      "format": "date-time"
+    },
+    "tagSlugs": {
+      "description": "tag.sort_order 순 18종. TS의 MODEL_TAG_SLUGS, make_fixture.py의 TAG_SLUGS와 같은 순서다.",
+      "const": [
+        "cleanse", "exfoliate", "sebum", "soothe", "moisture", "uv", "bright", "firm", "anti-aging", "scalp",
+        "pore", "trouble", "barrier", "antioxidant",
+        "fresh", "dewy", "matte",
+        "gentle"
+      ]
+    },
+    "items": {
+      "description": "goodsNo 문자열 → 길이 32 임베딩.",
+      "type": "object",
+      "propertyNames": { "pattern": "^[0-9]+$" },
+      "additionalProperties": {
+        "type": "array",
+        "minItems": 32,
+        "maxItems": 32,
+        "items": { "type": "number" }
+      }
+    },
+    "tagContribution": {
+      "description": "goodsNo 문자열 → (태그 → 기여도). 추천 이유 문구가 읽는다. 상위 4개까지만 싣는다.",
+      "type": "object",
+      "propertyNames": { "pattern": "^[0-9]+$" },
+      "additionalProperties": {
+        "type": "object",
+        "maxProperties": 4,
+        "additionalProperties": { "type": "number" }
+      }
+    }
+  }
+}
