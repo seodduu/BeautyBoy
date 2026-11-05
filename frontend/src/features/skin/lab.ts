@@ -45,10 +45,12 @@ export function roiStats(rgba: Uint8ClampedArray): RoiStats {
   const medL = median(Ls);
   const mad = median(Ls.map((l) => Math.abs(l - medL)));
   const cutoff = medL - Math.max(DARK_OUTLIER_MIN_GAP_L, DARK_OUTLIER_K * 1.4826 * mad);
-  let kept = 0, kL = 0, kA = 0, kB = 0;
+  let kept = 0, kL = 0, kL2 = 0, kA = 0, kB = 0;
   for (const [l, a, b] of labs) {
     if (l < cutoff) continue;
-    kept++; kL += l; kA += a; kB += b;
+    kept++; kL += l; kL2 += l * l; kA += a; kB += b;
   }
-  return { meanL: kL / kept, meanA: kA / kept, meanB: kB / kept, stdL, excludedRatio: 1 - kept / n, pixels: n };
+  const keptMeanL = kL / kept;
+  const keptStdL = Math.sqrt(Math.max(0, kL2 / kept - keptMeanL * keptMeanL));
+  return { meanL: keptMeanL, meanA: kA / kept, meanB: kB / kept, stdL, keptStdL, excludedRatio: 1 - kept / n, pixels: n };
 }

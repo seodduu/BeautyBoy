@@ -23,7 +23,7 @@ function envelope<T>(data: T) {
   return { code: 'OK', message: 'success', data };
 }
 
-const okStats: RoiStats = { meanL: 60, meanA: 15, meanB: 12, stdL: 2, excludedRatio: 0, pixels: 1000 };
+const okStats: RoiStats = { meanL: 60, meanA: 15, meanB: 12, stdL: 2, keptStdL: 2, excludedRatio: 0, pixels: 1000 };
 
 const OK_MEASUREMENT: Measurement = {
   redness: 1.3,

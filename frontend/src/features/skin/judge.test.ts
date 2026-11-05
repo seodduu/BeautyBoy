@@ -6,7 +6,7 @@ const T = GATE.REDNESS_NO_CHANGE;
 const D = GATE.MAX_FOREHEAD_L_DELTA_FOR_COMPARE;
 
 function okStats(meanA: number): RoiStats {
-  return { meanL: 65, meanA, meanB: 15, stdL: 5, excludedRatio: 0, pixels: 1000 };
+  return { meanL: 65, meanA, meanB: 15, stdL: 5, keptStdL: 2, excludedRatio: 0, pixels: 1000 };
 }
 
 function rec(redness: number, foreheadL: number): SkinRecord {

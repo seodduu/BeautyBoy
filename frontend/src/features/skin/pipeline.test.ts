@@ -76,6 +76,22 @@ describe('captureAndAnalyze', () => {
     expect(canvases[0].width).toBe(0);
   });
 
+  it('가로_프레임은_짧은변_기준으로_얼굴폭을_잰다', () => {
+    // 16:9 웹캠에서 윤곽선을 채운 얼굴이 프레임 폭 대비로는 작게 잡혀 face-too-small 로 거부되던 결함(설계 6.2 정정).
+    getImageData.mockReturnValue(solid(200, 150, 125));
+    const lm = faceLandmarks();
+    lm[400] = { x: 0.35, y: 0.5 };
+    lm[401] = { x: 0.65, y: 0.5 };
+    lm[234] = { x: 0.35, y: 0.5 };
+    lm[454] = { x: 0.65, y: 0.5 };
+    const detector: FaceLandmarkDetector = { detect: () => ({ landmarks: lm }), close: vi.fn() };
+    const wide = { videoWidth: 1280, videoHeight: 720 } as HTMLVideoElement;
+
+    const m = captureAndAnalyze(wide, detector).measurement!;
+
+    expect(Math.abs(m.faceWidthRatio - (0.3 * 1280) / 720)).toBeLessThan(1e-9);
+  });
+
   it('detect가_던지면_그대로_던진다', () => {
     const detector: FaceLandmarkDetector = {
       detect: () => { throw new Error('boom'); },

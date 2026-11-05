@@ -41,6 +41,7 @@ export const DARK_OUTLIER_MIN_GAP_L = 8;
 export interface RoiStats {
   meanL: number; meanA: number; meanB: number;   // 어두운 이상치를 뺀 절사 평균
   stdL: number;                                  // 절사 전 L* 표준편차. 게이트에 쓰지 않는 진단용(thresholds.md 기록용)
+  keptStdL: number;                              // 절사 후 남은 픽셀의 L* 표준편차. 이마 가림 게이트(4.5 MAX_FOREHEAD_KEPT_STD_L)용
   excludedRatio: number;                         // 절사된 픽셀 비율 (0~1)
   pixels: number;                                // 절사 전 픽셀 수
 }
@@ -74,6 +75,8 @@ export const GATE = {
   MAX_FOREHEAD_L: 85,
   /** 이마 ROI 에서 어두운 이상치로 절사된 비율이 이 값 초과면 앞머리·안경테가 크게 덮인 것으로 본다. 소량은 절사가 흡수한다. */
   MAX_FOREHEAD_EXCLUDED: 0.15,
+  /** 절사하고 남은 이마 픽셀의 L* 표준편차가 이 값 초과면 가림으로 본다. 가림이 50% 이상이면 중앙값이 머리카락 쪽으로 넘어가 절사가 꺼지므로(excludedRatio 0) 남은 분포가 두 봉우리가 된다. */
+  MAX_FOREHEAD_KEPT_STD_L: 6,
   /** 기준 후보 기록과 이마 L* 차이가 이 값을 넘으면 그 기록은 기준에서 뺀다. */
   MAX_FOREHEAD_L_DELTA_FOR_COMPARE: 10,
   /** 붉은기 변화 절대값이 이 값 미만이면 "변화 없음". 11절 공식 2.83σ 의 초기값. */
