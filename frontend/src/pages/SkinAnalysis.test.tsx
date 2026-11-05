@@ -138,7 +138,7 @@ beforeEach(() => {
   );
 });
 
-describe('SkinAnalysis — 피부분석 화면', () => {
+describe('SkinAnalysis: 피부분석 화면', () => {
   it('모델_로드_뒤_카메라를_켜고_me가_오면_촬영_버튼이_활성화된다', async () => {
     renderPage();
 
@@ -175,6 +175,51 @@ describe('SkinAnalysis — 피부분석 화면', () => {
     renderPage();
 
     expect(await screen.findByText(/다른 앱이 카메라를 쓰고 있어요/)).toBeInTheDocument();
+  });
+
+  it.each([
+    {
+      name: 'insecure-context',
+      setup: () => {
+        Object.defineProperty(window, 'isSecureContext', { configurable: true, value: false });
+      },
+      text: /보안 연결에서만 카메라를 쓸 수 있어요/,
+      retry: false,
+    },
+    {
+      name: 'no-camera(mediaDevices 없음)',
+      setup: () => {
+        Object.defineProperty(navigator, 'mediaDevices', { configurable: true, value: undefined });
+      },
+      text: /이 기기에서는 카메라를 쓸 수 없어요/,
+      retry: false,
+    },
+    {
+      name: 'no-camera(NotFoundError)',
+      setup: () => getUserMedia.mockRejectedValue(new DOMException('x', 'NotFoundError')),
+      text: /이 기기에서는 카메라를 쓸 수 없어요/,
+      retry: false,
+    },
+    {
+      name: 'camera-failed(OverconstrainedError)',
+      setup: () => getUserMedia.mockRejectedValue(new DOMException('x', 'OverconstrainedError')),
+      text: /카메라를 켜지 못했어요/,
+      retry: true,
+    },
+  ])('카메라_에러_$name_은_문구를_내고_이력은_없다', async ({ setup, text, retry }) => {
+    setup();
+    try {
+      renderPage();
+
+      const alert = await screen.findByRole('alert');
+      expect(alert).toHaveTextContent(text);
+      if (retry) expect(screen.getByRole('button', { name: '다시 시도' })).toBeInTheDocument();
+      else expect(screen.queryByRole('button', { name: '다시 시도' })).not.toBeInTheDocument();
+      expect(localStorage.getItem(historyKey(MEMBER_ID))).toBeNull();
+    } finally {
+      // jsdom 에는 isSecureContext 가 없다. 다음 테스트를 위해 지운다.
+      delete (window as { isSecureContext?: boolean }).isSecureContext;
+    }
   });
 
   it('얼굴_미검출이면_이력에_기록하지_않는다', async () => {
@@ -358,7 +403,7 @@ describe('SkinAnalysis — 피부분석 화면', () => {
 });
 
 // 사용자가 확정한 화면(2026-11-05)의 문구·버튼 이름·제목 구조. 문안을 바꾸려면 DESIGN.md 피부분석 절과 함께 고친다.
-describe('SkinAnalysis — 확정 화면 구조', () => {
+describe('SkinAnalysis: 확정 화면 구조', () => {
   const CONFIRMED_DISCLAIMER = '의료 진단이 아닙니다. 피부 고민 선택을 돕기 위한 참고 정보입니다.';
 
   it('가이드_4줄이_확정_문안과_같다', async () => {
