@@ -72,6 +72,10 @@ BeautyBoy는 질문을 바꿨습니다 "무엇을 살까"가 아니라 <strong>"
     <td><h3>리뷰 · 문의 · 마이페이지 · Admin</h3></td>
     <td><h3>리뷰 작성·수정·삭제(피부타입 스냅샷 저장), 상품 문의, 프로필·배송지 관리, 관리자 CRUD까지 전 구간 실API 동작</h3></td>
   </tr>
+  <tr>
+    <td><h3>피부 분석(카메라)</h3></td>
+    <td><h3>전면 카메라 한 장으로 볼과 이마의 붉은기 차이를 재서 같은 기기의 최근 측정과 비교하고, 늘었으면 프로필 고민에 '진정' 추가를 제안. MediaPipe 얼굴 랜드마크로 브라우저 안에서만 계산하며 사진은 어디에도 저장하지 않음. 실기기 타당성 검증 전까지 메뉴 비노출, 직접 URL(/skin-analysis) 진입</h3></td>
+  </tr>
 </table>
 
 <a id="demo-examples"></a>
@@ -125,6 +129,14 @@ BeautyBoy는 질문을 바꿨습니다 "무엇을 살까"가 아니라 <strong>"
 <h3>피부 프로필을 바꾸면 메인·루틴 추천이 즉시 따라옵니다.</h3>
 
 <img src="docs/demo/08-profile-edit.gif" width="100%" alt="마이페이지 — 프로필 변경" />
+
+<h2>📷 09. 피부 분석</h2>
+
+<h3>최근 측정과 비교해 붉은기가 늘었는지를 말로 알려 주고, 늘었을 때만 프로필 고민에 '진정' 추가를 제안합니다. 숫자는 보조 표기이고, 의료 진단이 아니라는 안내가 모든 상태에 붙습니다.</h3>
+
+<img src="docs/demo/09-skin-analysis.png" width="100%" alt="피부 분석 결과 화면" />
+
+<sub>E2E·데모의 가짜 카메라 영상은 MediaPipe 테스트 자산 portrait.jpg(https://storage.googleapis.com/mediapipe-assets/portrait.jpg)로 만든다(frontend/e2e/fixtures/skin/make-fixture.sh). 실존 인물 사진이라 데모 이미지에는 얼굴이 나오지 않는 결과 화면만 싣는다.</sub>
 
 <a id="differentiation"></a>
 
@@ -196,6 +208,8 @@ docker compose up -d --build
 | MySQL | localhost:13306 |
 
 MySQL → 백엔드(Flyway 마이그레이션 자동 적용) → 프론트 순으로 헬스체크에 따라 기동된다.
+
+최초 `npm run dev`·`npm run build`·Docker 이미지 빌드가 MediaPipe 에셋 약 18MB 를 받는다(네트워크 필요).
 
 시드 회원·관리자 계정은 `demo` 프로필에서만 들어간다(compose는 자동으로 켠다). compose 없이
 `./gradlew bootRun`으로 직접 띄운다면 `SPRING_PROFILES_ACTIVE=demo`가 있어야 시드가 적용된다.

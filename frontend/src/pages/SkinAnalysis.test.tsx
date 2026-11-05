@@ -334,3 +334,80 @@ describe('SkinAnalysis — 피부분석 화면', () => {
     expect(screen.getByText(DISCLAIMER)).toBeInTheDocument();
   });
 });
+
+// 사용자가 확정한 화면(2026-11-05)의 문구·버튼 이름·제목 구조. 문안을 바꾸려면 DESIGN.md 피부분석 절과 함께 고친다.
+describe('SkinAnalysis — 확정 화면 구조', () => {
+  const CONFIRMED_DISCLAIMER = '의료 진단이 아닙니다. 피부 고민 선택을 돕기 위한 참고 정보입니다.';
+
+  it('가이드_4줄이_확정_문안과_같다', async () => {
+    renderPage();
+    await captureButtonWhenReady();
+
+    expect(screen.getByRole('heading', { level: 1, name: '피부 분석' })).toBeInTheDocument();
+    expect(screen.getByText('촬영 전에 확인해 주세요')).toBeInTheDocument();
+    const lines = screen.getAllByRole('listitem').map((li) => li.textContent);
+    expect(lines).toEqual([
+      '창가를 정면으로 마주 보고 서 주세요',
+      '윤곽선에 얼굴을 맞춰 주세요',
+      '앞머리를 올리고 안경을 벗어 주세요',
+      '화장이나 필터 없이 찍어 주세요',
+    ]);
+    expect(screen.getByText(CONFIRMED_DISCLAIMER)).toBeInTheDocument();
+  });
+
+  it('결과_헤딩과_판정_문구가_확정_문안과_같다', async () => {
+    renderPage();
+    await captureWith(OK_MEASUREMENT);
+
+    expect(await screen.findByText('기준값을 기록했어요')).toBeInTheDocument();
+    expect(screen.getByText('다음 측정부터 변화를 알려 드려요.')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: '피부 분석' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '다시 측정' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: '프로필 보기' })).toHaveAttribute('href', '/mypage/profile');
+    expect(screen.getByText(CONFIRMED_DISCLAIMER)).toBeInTheDocument();
+  });
+
+  it.each([
+    { redness: 1.3, word: '최근 측정보다 붉은기가 늘었어요', meta: '변화 +0.80 · 기준 0.50 (최근 측정 중앙값)' },
+    { redness: 0.0, word: '최근 측정보다 붉은기가 줄었어요', meta: '변화 -0.50 · 기준 0.50 (최근 측정 중앙값)' },
+    { redness: 0.6, word: '최근 측정보다 붉은기가 비슷해요', meta: '변화 +0.10 · 기준 0.50 (최근 측정 중앙값)' },
+  ])('비교_판정은_말이_주이고_숫자는_보조다: $word', async ({ redness, word, meta }) => {
+    localStorage.setItem(historyKey(MEMBER_ID), JSON.stringify([record({ redness: 0.5 })]));
+    renderPage();
+    await captureWith({ ...OK_MEASUREMENT, redness });
+
+    expect(await screen.findByText(word)).toBeInTheDocument();
+    expect(screen.getByText(meta)).toBeInTheDocument();
+  });
+
+  it('조명_불일치_문구가_확정_문안과_같다', async () => {
+    localStorage.setItem(historyKey(MEMBER_ID), JSON.stringify([record({ foreheadL: 60 })]));
+    renderPage();
+    await captureWith({ ...OK_MEASUREMENT, foreheadL: 75 });
+
+    expect(await screen.findByText('최근 측정과 조명이 많이 달라 비교하지 않았어요')).toBeInTheDocument();
+    expect(
+      screen.getByText('이번 값은 기록해 두었어요. 비슷한 조명에서 다시 찍으면 비교할 수 있어요.'),
+    ).toBeInTheDocument();
+  });
+
+  it('제안_버튼_문구가_확정_문안과_같다', async () => {
+    localStorage.setItem(historyKey(MEMBER_ID), JSON.stringify([record()]));
+    renderPage();
+    await captureWith(OK_MEASUREMENT);
+
+    expect(await screen.findByRole('button', { name: "프로필 고민에 '진정' 추가" })).toBeInTheDocument();
+    expect(
+      screen.getByText("프로필 고민에 '진정'을 더해 두면 진정 케어 상품을 추천에 반영해 드려요."),
+    ).toBeInTheDocument();
+  });
+
+  it('게이트_실패는_사유와_다시_찍기를_낸다', async () => {
+    renderPage();
+    await captureWith(null, 0);
+
+    expect(await screen.findByText('얼굴을 찾지 못했어요. 윤곽선 안에서 정면을 봐 주세요.')).toBeInTheDocument();
+    expect(screen.getByText('이번 촬영은 기록하지 않았어요.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '다시 찍기' })).toBeInTheDocument();
+  });
+});
