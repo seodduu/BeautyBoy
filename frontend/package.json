@@ -4,6 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "predev": "node scripts/mediapipe-assets.mjs",
+    "prebuild": "node scripts/mediapipe-assets.mjs",
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
@@ -13,6 +15,7 @@
     "msw:init": "msw init public/ --save"
   },
   "dependencies": {
+    "@mediapipe/tasks-vision": "1.2.2",
     "@tanstack/react-query": "^5.101.4",
     "@tosspayments/tosspayments-sdk": "^2.7.1",
     "axios": "^1.18.1",
