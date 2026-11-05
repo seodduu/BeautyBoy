@@ -32,7 +32,8 @@ export function captureAndAnalyze(video: HTMLVideoElement, detector: FaceLandmar
     }
 
     const measurement = measure(rois, {
-      faceWidthRatio: faceWidthRatio(landmarks),
+      // 짧은 변 기준으로 환산한다. 16:9 가로 프레임에서 프레임 폭 대비로 재면 윤곽선을 채워도 작게 나온다(설계 6.2 정정).
+      faceWidthRatio: (faceWidthRatio(landmarks) * width) / Math.min(width, height),
       noseCenterRatio: noseCenterRatio(landmarks),
       clippedRatio,
     });

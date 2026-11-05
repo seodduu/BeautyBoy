@@ -209,7 +209,9 @@ docker compose up -d --build
 
 MySQL → 백엔드(Flyway 마이그레이션 자동 적용) → 프론트 순으로 헬스체크에 따라 기동된다.
 
-최초 `npm run dev`·`npm run build`·Docker 이미지 빌드가 MediaPipe 에셋 약 18MB 를 받는다(네트워크 필요).
+최초 `npm run dev`·`npm run build`·Docker 이미지 빌드가 MediaPipe 얼굴 모델 `.task` 약 3.8MB 를 내려받고(네트워크 필요) wasm 은 npm 패키지에서 복사한다(브라우저 첫 로드 총량 약 18MB).
+
+피부 분석 wasm 의 gzip 압축·캐시 헤더(nginx)는 운영 과제로 남겨 두었다.
 
 시드 회원·관리자 계정은 `demo` 프로필에서만 들어간다(compose는 자동으로 켠다). compose 없이
 `./gradlew bootRun`으로 직접 띄운다면 `SPRING_PROFILES_ACTIVE=demo`가 있어야 시드가 적용된다.

@@ -1,8 +1,8 @@
 // MediaPipe Face Landmarker 에셋 준비. predev/prebuild 에서 실행된다.
 // 1) node_modules/@mediapipe/tasks-vision/wasm/* → public/models/mediapipe/wasm/
-// 2) public/models/mediapipe/face_landmarker.task 가 없으면 공식 URL 에서 내려받는다.
-// 멱등: 이미 있으면 네트워크를 쓰지 않는다. .task 가 없는데 받지 못하면 종료 코드 1 (조용히 빠진 모델은 런타임에서만 터진다).
-import { cpSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
+// 2) public/models/mediapipe/face_landmarker.task 가 없거나 3,000,000바이트 미만이면 공식 URL 에서 내려받는다(.part 에 쓴 뒤 rename).
+// 멱등: 크기가 정상인 파일이 있으면 네트워크를 쓰지 않는다. .task 가 없는데 받지 못하면 종료 코드 1 (조용히 빠진 모델은 런타임에서만 터진다).
+import { cpSync, existsSync, mkdirSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -22,7 +22,17 @@ if (!existsSync(wasmSrc)) {
 mkdirSync(wasmDst, { recursive: true });
 cpSync(wasmSrc, wasmDst, { recursive: true });
 
+// 이미 있어도 크기가 모자라면(0바이트·중단된 다운로드) 지우고 다시 받는다(설계 6.4 정정).
+if (existsSync(taskDst)) {
+  const size = statSync(taskDst).size;
+  if (size < TASK_MIN_BYTES) {
+    console.log(`[mediapipe-assets] 기존 .task 가 ${size} 바이트라 손상으로 보고 지운 뒤 다시 받는다`);
+    rmSync(taskDst, { force: true });
+  }
+}
+
 if (!existsSync(taskDst)) {
+  const partDst = `${taskDst}.part`;
   let buf;
   try {
     const res = await fetch(TASK_URL);
@@ -36,6 +46,8 @@ if (!existsSync(taskDst)) {
     console.error(`[mediapipe-assets] .task 크기 이상 ${buf.length} 바이트`);
     process.exit(1);
   }
-  writeFileSync(taskDst, buf);
+  // .part 에 다 쓴 뒤 이름을 바꾼다. 쓰다 끊겨도 정식 경로에 부분 파일이 남지 않는다.
+  writeFileSync(partDst, buf);
+  renameSync(partDst, taskDst);
   console.log(`[mediapipe-assets] face_landmarker.task 받음 (${buf.length} 바이트)`);
 }

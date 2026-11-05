@@ -14,7 +14,7 @@ const SEED_EMAIL = 'oily@beautyboy.dev';
 const SEED_PASSWORD = 'seed1234!';
 const HISTORY_PREFIX = 'bb.skin.v1.';
 
-/** 모델(약 18MB) 첫 로드가 들어가므로 기본 30초로는 모자란다. */
+/** 모델과 wasm 약 18MB 첫 로드가 들어가므로 기본 30초로는 모자란다. */
 const SKIN_JOURNEY_TIMEOUT_MS = 120_000;
 
 interface MeResponse {
@@ -82,6 +82,8 @@ test('첫_측정은_기준값을_기록하고_기준을_낮추면_증가와_제�
   await expect(captureButton).toBeEnabled({ timeout: 60_000 });
   await captureButton.click();
   await expect(page.getByText('기준값을 기록했어요')).toBeVisible({ timeout: 30_000 });
+  // 결과 화면에서는 카메라 트랙이 정지돼 있어야 한다(브라우저 카메라 표시등 꺼짐, 설계 2절).
+  await expect.poll(() => page.evaluate(() => document.querySelector('video')?.srcObject ?? null)).toBeNull();
 
   const historyKey = `${HISTORY_PREFIX}${me.id}`;
   const first = await page.evaluate((key) => JSON.parse(localStorage.getItem(key) ?? '[]') as StoredRecord[], historyKey);
@@ -96,6 +98,7 @@ test('첫_측정은_기준값을_기록하고_기준을_낮추면_증가와_제�
   await expect(captureButton).toBeEnabled({ timeout: 60_000 });
   await captureButton.click();
   await expect(page.getByText(/늘었/)).toBeVisible({ timeout: 30_000 });
+  await expect.poll(() => page.evaluate(() => document.querySelector('video')?.srcObject ?? null)).toBeNull();
 
   await page.getByRole('button', { name: "프로필 고민에 '진정' 추가" }).click();
   await expect(page.getByText("프로필 고민에 '진정'을 추가했어요")).toBeVisible();

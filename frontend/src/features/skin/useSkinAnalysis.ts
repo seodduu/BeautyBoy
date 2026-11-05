@@ -52,6 +52,8 @@ export function useSkinAnalysis(): SkinAnalysisState &
   // 검출기 요청마다 번호를 매겨, 언마운트(또는 StrictMode 첫 마운트) 뒤에 온 결과는 버린다.
   // 버린 검출기는 close 하지 않는다. landmarker 의 공유 캐시라 다음 마운트가 그대로 받는다(설계 6.3 언마운트 행).
   const loadGenerationRef = useRef(0);
+  // 숨은 탭에서 검출기가 도착해 카메라 켜기를 미룬 상태.
+  const pendingStartRef = useRef(false);
 
   const loadDetector = useCallback(() => {
     const generation = ++loadGenerationRef.current;
@@ -62,7 +64,9 @@ export function useSkinAnalysis(): SkinAnalysisState &
         if (generation !== loadGenerationRef.current) return;
         detectorRef.current = detector;
         setBasePhase('ready');
-        void startCamera();   // 카메라는 모델 뒤 직렬
+        // 카메라는 모델 뒤 직렬. 탭이 숨어 있으면 켜지 않고 다시 보일 때 켠다(설계 6.3 정정).
+        if (document.visibilityState === 'hidden') pendingStartRef.current = true;
+        else void startCamera();
       },
       () => {
         if (generation !== loadGenerationRef.current) return;
@@ -78,11 +82,23 @@ export function useSkinAnalysis(): SkinAnalysisState &
     return () => {
       mountedRef.current = false;
       loadGenerationRef.current += 1;
+      pendingStartRef.current = false;
       detectorRef.current?.close();
       detectorRef.current = null;
       stopCamera();
     };
   }, [loadDetector, stopCamera]);
+
+  useEffect(() => {
+    const onVisibility = () => {
+      if (document.visibilityState !== 'hidden' && pendingStartRef.current) {
+        pendingStartRef.current = false;
+        void startCamera();
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => document.removeEventListener('visibilitychange', onVisibility);
+  }, [startCamera]);
 
   const me = meQuery.data;
   const meStatus: SkinAnalysisState['meStatus'] = meQuery.isError ? 'error' : me ? 'ready' : 'loading';

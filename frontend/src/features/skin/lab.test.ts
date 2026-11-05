@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { roiStats, srgbToLab } from './lab';
+import { GATE } from './types';
 
 /** 같은 색 count 개를 RGBA 배열로 만든다. */
 function px(r: number, g: number, b: number, count: number, alpha = 255): number[] {
@@ -71,6 +72,19 @@ describe('roiStats', () => {
     expect(Math.abs(s.meanA - skin[1])).toBeLessThanOrEqual(0.01);
   });
 
+  it('roiStats_머리카락_20퍼센트는_절사되고_keptStdL은_0', () => {
+    const s = roiStats(arr(px(200, 150, 125, 1600), px(75, 55, 52, 400)));
+    expect(Math.abs(s.excludedRatio - 0.2)).toBeLessThan(1e-9);
+    expect(s.keptStdL).toBeLessThan(1e-6);
+  });
+
+  it('roiStats_머리카락_50퍼센트는_절사가_꺼지고_keptStdL이_크다', () => {
+    // 가림이 절반이면 중앙값이 머리카락 쪽으로 넘어가 절사가 꺼진다. 남은 분포의 분산으로 잡는다(설계 4.3·4.5 정정).
+    const s = roiStats(arr(px(200, 150, 125, 1000), px(75, 55, 52, 1000)));
+    expect(s.excludedRatio).toBe(0);
+    expect(s.keptStdL).toBeGreaterThan(GATE.MAX_FOREHEAD_KEPT_STD_L);
+  });
+
   it('roiStats_머리카락_45퍼센트도_절사된다', () => {
     const s = roiStats(arr(px(200, 150, 125, 1100), px(75, 55, 52, 900)));
     expect(Math.abs(s.excludedRatio - 0.45)).toBeLessThan(1e-9);
@@ -85,6 +99,7 @@ describe('roiStats', () => {
   it('roiStats_단색은_stdL_0_절사없음', () => {
     const s = roiStats(arr(px(200, 150, 140, 4)));
     expect(Math.abs(s.stdL)).toBeLessThan(1e-9);
+    expect(Math.abs(s.keptStdL)).toBeLessThan(1e-9);
     expect(s.excludedRatio).toBe(0);
     expect(s.meanL).toBeCloseTo(srgbToLab(200, 150, 140)[0], 6);
   });

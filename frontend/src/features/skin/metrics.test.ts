@@ -3,7 +3,7 @@ import { gateCapture, measure } from './metrics';
 import { GATE, type FaceGeometry, type Measurement, type RoiKey, type RoiStats } from './types';
 
 function okStats(meanA: number): RoiStats {
-  return { meanL: 65, meanA, meanB: 15, stdL: 5, excludedRatio: 0, pixels: 1000 };
+  return { meanL: 65, meanA, meanB: 15, stdL: 5, keptStdL: 2, excludedRatio: 0, pixels: 1000 };
 }
 
 const BASE_GEO: FaceGeometry = { faceWidthRatio: 0.5, noseCenterRatio: 0.5, clippedRatio: 0 };
@@ -67,6 +67,17 @@ describe('gateCapture', () => {
   it('gate_앞머리', () => {
     expect(gateCapture(1, measurementWith({}, { excludedRatio: GATE.MAX_FOREHEAD_EXCLUDED + 0.01 }))).toBe('forehead-occluded');
     expect(gateCapture(1, measurementWith({}, { excludedRatio: GATE.MAX_FOREHEAD_EXCLUDED }))).toBeNull();
+  });
+
+  it('gate_절사후_이마분산이_크면_forehead_occluded', () => {
+    expect(gateCapture(1, measurementWith({}, { keptStdL: GATE.MAX_FOREHEAD_KEPT_STD_L + 0.01 }))).toBe('forehead-occluded');
+    expect(gateCapture(1, measurementWith({}, { keptStdL: GATE.MAX_FOREHEAD_KEPT_STD_L }))).toBeNull();
+  });
+
+  it('gate_비유한수는_analyze_failed', () => {
+    // NaN 은 모든 비교가 거짓이라 검사 없이는 게이트를 통과한다.
+    expect(gateCapture(1, measurementWith({}, { meanL: Number.NaN }))).toBe('analyze-failed');
+    expect(gateCapture(1, measurementWith({ faceWidthRatio: Number.POSITIVE_INFINITY }))).toBe('analyze-failed');
   });
 
   it('gate_우선순위는_프레임밖_크기_정면_밝기_앞머리_순', () => {
