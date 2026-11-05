@@ -192,11 +192,12 @@ describe('Header — 앱(로그인 이후) 내비', () => {
     useAuthStore.setState({ accessToken: null, member: null, isBootstrapping: false });
   });
 
-  it('랜딩이 아닌 화면에서도 루틴 가이드·랭킹·전체 상품 링크가 실제 라우트를 가리킨다', () => {
+  it('랜딩이 아닌 화면에서도 루틴 가이드·랭킹·전체 상품·피부 분석 링크가 실제 라우트를 가리킨다', () => {
     renderHeaderAt('/main');
     expect(screen.getByRole('link', { name: '루틴 가이드' })).toHaveAttribute('href', '/routine');
     expect(screen.getByRole('link', { name: '랭킹' })).toHaveAttribute('href', '/ranking');
     expect(screen.getByRole('link', { name: '전체 상품' })).toHaveAttribute('href', '/goods');
+    expect(screen.getByRole('link', { name: '피부 분석' })).toHaveAttribute('href', '/skin-analysis');
   });
 
   it('현재 위치와 일치하는 항목에 aria-current="page"가 붙는다', () => {
@@ -205,7 +206,7 @@ describe('Header — 앱(로그인 이후) 내비', () => {
     expect(screen.getByRole('link', { name: '루틴 가이드' })).not.toHaveAttribute('aria-current');
   });
 
-  it('우측 그룹이 루틴 가이드 → 랭킹 → 전체 상품 → 장바구니 → 프로필 → 로그아웃 순서다', () => {
+  it('우측 그룹이 루틴 가이드 → 랭킹 → 전체 상품 → 피부 분석 → 장바구니 → 프로필 → 로그아웃 순서다', () => {
     useAuthStore.getState().setAuth('token-abc', {
       id: 1,
       email: 'test@beautyboy.dev',
@@ -220,7 +221,7 @@ describe('Header — 앱(로그인 이후) 내비', () => {
     const labels = Array.from(nav.querySelectorAll('a, button')).map((el) =>
       el.textContent?.trim(),
     );
-    expect(labels).toEqual(['루틴 가이드', '랭킹', '전체 상품', '장바구니', '민수님', '로그아웃']);
+    expect(labels).toEqual(['루틴 가이드', '랭킹', '전체 상품', '피부 분석', '장바구니', '민수님', '로그아웃']);
   });
 });
 
@@ -295,7 +296,7 @@ describe('모바일 햄버거 내비', () => {
     expect(toggle).toHaveAttribute('aria-expanded', 'false');
   });
 
-  it('메뉴를 열면 PRIMARY_NAV 세 링크가 모두 보인다 — 768px 이하에서 사라지던 것들이다', async () => {
+  it('메뉴를 열면 PRIMARY_NAV 네 링크가 모두 보인다 — 768px 이하에서 사라지던 것들이다', async () => {
     renderHeaderAt('/main');
 
     fireEvent.click(screen.getByRole('button', { name: '메뉴 열기' }));
@@ -309,6 +310,10 @@ describe('모바일 햄버거 내비', () => {
     expect(within(sheet).getByRole('link', { name: '전체 상품' })).toHaveAttribute(
       'href',
       '/goods',
+    );
+    expect(within(sheet).getByRole('link', { name: '피부 분석' })).toHaveAttribute(
+      'href',
+      '/skin-analysis',
     );
   });
 
