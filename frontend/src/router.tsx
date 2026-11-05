@@ -19,6 +19,12 @@ import { RouteError } from './components/common/RouteError';
 // 쪼개면 첫 클릭마다 네트워크 왕복이 하나 더 붙어 번들을 줄이려다 체감 속도를 깎는다.
 const Search = lazy(() => import('./pages/Search').then((m) => ({ default: m.Search })));
 const Ranking = lazy(() => import('./pages/Ranking').then((m) => ({ default: m.Ranking })));
+// 헤더 링크는 실기기 타당성 통과(T4) 뒤에만 단다. 그 전까지 진입은 직접 URL 뿐이다(설계 6.5).
+// 위 lazy 들과 같은 only-export-components 경고라 새 경고를 늘리지 않으려 이 줄만 끈다(계획: 기점 대비 새 경고 0).
+// oxlint-disable-next-line react/only-export-components
+const SkinAnalysis = lazy(() =>
+  import('./pages/SkinAnalysis').then((m) => ({ default: m.SkinAnalysis })),
+);
 const Order = lazy(() => import('./pages/Order').then((m) => ({ default: m.Order })));
 const OrderComplete = lazy(() =>
   import('./pages/OrderComplete').then((m) => ({ default: m.OrderComplete })),
@@ -107,6 +113,14 @@ export const router = createBrowserRouter([
           element: (
             <RequireAuth>
               <Ranking />
+            </RequireAuth>
+          ),
+        },
+        {
+          path: 'skin-analysis',
+          element: (
+            <RequireAuth>
+              <SkinAnalysis />
             </RequireAuth>
           ),
         },
