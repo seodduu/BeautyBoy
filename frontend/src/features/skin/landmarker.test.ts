@@ -43,14 +43,13 @@ describe('createMediaPipeDetector', () => {
   });
 
   it('생성_중_재호출은_같은_생성을_넘겨받는다', async () => {
+    // 30초 창이 만료되기 전의 재호출이다. 만료 뒤의 재호출은 아래 '생성이_멈추면' 테스트가 본다(설계 6.2 정정).
     vi.useFakeTimers();
     const createMediaPipeDetector = await load();
     const lm = fakeLandmarker();
 
     const p1 = createMediaPipeDetector();
-    const check = expect(p1).rejects.toThrow('model-load-failed');
-    await vi.advanceTimersByTimeAsync(31_000);
-    await check;
+    await vi.advanceTimersByTimeAsync(10_000);
     expect(mp.createFromOptions).toHaveBeenCalledTimes(1);
 
     const p2 = createMediaPipeDetector();
@@ -59,8 +58,53 @@ describe('createMediaPipeDetector', () => {
     mp.state.resolve(lm);
     const detector: FaceLandmarkDetector = await p2;
     expect(detector).toBeDefined();
+    expect(await p1).toBe(detector);
     expect(mp.createFromOptions).toHaveBeenCalledTimes(1);
     expect(lm.close).not.toHaveBeenCalled();
+  });
+
+  it('생성이_멈추면_재시도는_새로_생성한다', async () => {
+    vi.useFakeTimers();
+    // 첫 생성은 끝나지 않는다(reject 도 resolve 도 없음).
+    mp.forVisionTasks.mockReturnValueOnce(new Promise(() => {}));
+    const createMediaPipeDetector = await load();
+    const lm = fakeLandmarker();
+    mp.state.resolve(lm);
+
+    const p1 = createMediaPipeDetector();
+    const check = expect(p1).rejects.toThrow('model-load-failed');
+    await vi.advanceTimersByTimeAsync(31_000);
+    await check;
+
+    const detector = await createMediaPipeDetector();
+    expect(mp.forVisionTasks).toHaveBeenCalledTimes(2);
+    expect(detector).toBeDefined();
+  });
+
+  it('버린_생성이_늦게_완성되면_캐시가_있으면_닫는다', async () => {
+    vi.useFakeTimers();
+    let resolveFirst: (v: unknown) => void = () => {};
+    const late = fakeLandmarker();
+    const fresh = fakeLandmarker();
+    mp.createFromOptions
+      .mockImplementationOnce(() => new Promise((res) => { resolveFirst = res; }))
+      .mockImplementationOnce(() => Promise.resolve(fresh));
+    const createMediaPipeDetector = await load();
+
+    const p1 = createMediaPipeDetector();
+    const check = expect(p1).rejects.toThrow('model-load-failed');
+    await vi.advanceTimersByTimeAsync(31_000);
+    await check;
+
+    const detector = await createMediaPipeDetector();
+    expect(mp.createFromOptions).toHaveBeenCalledTimes(2);
+
+    resolveFirst(late);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(late.close).toHaveBeenCalledTimes(1);
+    expect(fresh.close).not.toHaveBeenCalled();
+    // 캐시는 새 검출기 그대로다
+    expect(await createMediaPipeDetector()).toBe(detector);
   });
 
   it('언마운트_close는_캐시도_비운다', async () => {

@@ -1,6 +1,6 @@
 import { StrictMode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { http, HttpResponse } from 'msw';
@@ -298,6 +298,28 @@ describe('SkinAnalysis — 피부분석 화면', () => {
 
     expect(detector.close).toHaveBeenCalledTimes(1);
     expect(track.stop).toHaveBeenCalled();
+  });
+
+  it('모델_로딩_중_탭이_숨으면_카메라를_켜지_않고_다시_보이면_켠다', async () => {
+    // 숨은 탭에서 카메라가 켜지던 결함(설계 6.3 정정).
+    let resolveDetector: (d: FaceLandmarkDetector) => void = () => {};
+    vi.mocked(createMediaPipeDetector).mockReturnValue(new Promise((res) => { resolveDetector = res; }));
+    const visibility = vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('hidden');
+    renderPage();
+
+    await act(async () => {
+      resolveDetector(detector as unknown as FaceLandmarkDetector);
+    });
+    expect(getUserMedia).not.toHaveBeenCalled();
+
+    visibility.mockReturnValue('visible');
+    await act(async () => {
+      document.dispatchEvent(new Event('visibilitychange'));
+    });
+
+    await captureButtonWhenReady();
+    expect(getUserMedia).toHaveBeenCalledTimes(1);
+    visibility.mockRestore();
   });
 
   it('StrictMode로_렌더해도_촬영_전에_close가_불리지_않는다', async () => {
