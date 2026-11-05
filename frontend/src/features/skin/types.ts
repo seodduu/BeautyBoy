@@ -64,8 +64,12 @@ export interface FaceGeometry { faceWidthRatio: number; noseCenterRatio: number;
 
 // 4.5 게이트
 export const GATE = {
-  /** 얼굴 폭 비율(4.2)이 이 값 미만이면 "더 가까이". */
-  MIN_FACE_WIDTH_RATIO: 0.4,
+  /**
+   * 얼굴 폭 비율(4.2)이 이 값 미만이면 "더 가까이".
+   * 가로 영상에서 윤곽선 폭은 짧은 변의 0.45 다(3:4 크롭 0.75 × 60%). 0.3 이면 얼굴이 윤곽선 폭의
+   * 약 2/3 만 채워도 통과한다. 0.4 는 약 89% 를 요구해 데스크톱 웹캠에서 윤곽선 안에 들어와도 거부됐다.
+   */
+  MIN_FACE_WIDTH_RATIO: 0.3,
   /** ROI 가 프레임 밖으로 잘린 비율이 이 값 초과면 거부. */
   MAX_CLIPPED_RATIO: 0.1,
   /** 코끝 위치 비율(4.2)이 0.5 ± 이 값을 벗어나면 정면이 아님. */
