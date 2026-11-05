@@ -73,9 +73,44 @@ function withTimeout(p: Promise<FaceLandmarkDetector>): Promise<FaceLandmarkDete
   });
 }
 
+/** 둘 중 먼저 완성되는 쪽으로 resolve, 둘 다 실패해야 reject. */
+function firstSuccess(a: Promise<FaceLandmarkDetector>, b: Promise<FaceLandmarkDetector>): Promise<FaceLandmarkDetector> {
+  return new Promise((resolve, reject) => {
+    let failures = 0;
+    const fail = (e: unknown) => {
+      failures += 1;
+      if (failures === 2) reject(e);
+    };
+    a.then(resolve, fail);
+    b.then(resolve, fail);
+  });
+}
+
+/**
+ * 오래된 inflight 를 두고 새 생성을 시작한다. 옛 생성은 느리지만 진행 중일 수 있으므로 버리지 않고, 둘 중 먼저 완성되는 쪽을
+ * inflight 로 삼는다(설계 6.2 재검토 N1). 늦게 끝난 쪽은 startBuild 의 규칙대로 cached 가 있으면 close 된다.
+ */
+function restartBuild(stale: Promise<FaceLandmarkDetector>): Promise<FaceLandmarkDetector> {
+  const fresh = startBuild();
+  const either = firstSuccess(stale, fresh);
+  inflight = either;
+  inflightStale = false;
+  const settle = () => {
+    if (inflight === either) {
+      inflight = null;
+      inflightStale = false;
+    }
+  };
+  either.then(settle, settle);
+  return either;
+}
+
 // async 함수로 만들면 호출마다 새 Promise 로 감싸져 inflight 를 그대로 넘겨줄 수 없다.
 export function createMediaPipeDetector(): Promise<FaceLandmarkDetector> {
   if (cached) return Promise.resolve(cached);
-  const current = inflight && !inflightStale ? inflight : startBuild();
+  let current: Promise<FaceLandmarkDetector>;
+  if (!inflight) current = startBuild();
+  else if (inflightStale) current = restartBuild(inflight);
+  else current = inflight;
   return withTimeout(current);
 }
