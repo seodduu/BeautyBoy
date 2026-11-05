@@ -80,8 +80,17 @@ describe('gateCapture', () => {
     expect(gateCapture(1, measurementWith({ faceWidthRatio: Number.POSITIVE_INFINITY }))).toBe('analyze-failed');
   });
 
-  it('gate_우선순위는_프레임밖_크기_정면_밝기_앞머리_순', () => {
+  it('gate_우선순위는_프레임밖_크기_정면_과다노출_앞머리_어두움_순', () => {
     expect(gateCapture(1, measurementWith({ clippedRatio: 0.5, faceWidthRatio: 0.1 }, { meanL: 10 }))).toBe('face-out-of-frame');
     expect(gateCapture(1, measurementWith({ clippedRatio: 0, faceWidthRatio: 0.1 }, { meanL: 10 }))).toBe('face-too-small');
+    expect(gateCapture(1, measurementWith({}, { meanL: GATE.MAX_FOREHEAD_L + 1, keptStdL: 20 }))).toBe('too-bright');
+  });
+
+  it('gate_앞머리가_절반넘게_덮어_이마평균이_어두워지면_too_dark_가_아니라_forehead_occluded', () => {
+    // 머리카락 L* 20 과 피부 L* 65 가 섞이면 평균이 35 아래로 내려가고 분포는 두 봉우리라 편차가 크다.
+    expect(gateCapture(1, measurementWith({}, { meanL: GATE.MIN_FOREHEAD_L - 2, keptStdL: 20 }))).toBe('forehead-occluded');
+    expect(gateCapture(1, measurementWith({}, { meanL: GATE.MIN_FOREHEAD_L - 2, excludedRatio: 0.3 }))).toBe('forehead-occluded');
+    // 가림 없이 고르게 어두우면 그대로 too-dark.
+    expect(gateCapture(1, measurementWith({}, { meanL: GATE.MIN_FOREHEAD_L - 2, keptStdL: 2 }))).toBe('too-dark');
   });
 });

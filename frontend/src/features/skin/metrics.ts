@@ -23,9 +23,12 @@ export function gateCapture(faces: number, m: Measurement | null): GateError | n
   if (m.clippedRatio > GATE.MAX_CLIPPED_RATIO) return 'face-out-of-frame';
   if (m.faceWidthRatio < GATE.MIN_FACE_WIDTH_RATIO) return 'face-too-small';
   if (Math.abs(m.noseCenterRatio - 0.5) > GATE.MAX_NOSE_OFFSET) return 'face-not-frontal';
-  if (m.foreheadL < GATE.MIN_FOREHEAD_L) return 'too-dark';
   if (m.foreheadL > GATE.MAX_FOREHEAD_L) return 'too-bright';
+  // 가림을 어두움보다 먼저 본다. 앞머리가 이마 ROI 의 절반을 넘게 덮으면 중앙값이 머리카락 쪽으로 넘어가
+  // 절사가 꺼지고 foreheadL 이 머리카락과 피부의 평균으로 내려간다. 그때 밝기를 먼저 보면 밝은 곳에서도
+  // "너무 어두워요" 가 뜬다(2026-11-05 Windows 웹캠에서 확인).
   if (m.foreheadExcludedRatio > GATE.MAX_FOREHEAD_EXCLUDED) return 'forehead-occluded';
   if (m.rois.forehead.keptStdL > GATE.MAX_FOREHEAD_KEPT_STD_L) return 'forehead-occluded';
+  if (m.foreheadL < GATE.MIN_FOREHEAD_L) return 'too-dark';
   return null;
 }
