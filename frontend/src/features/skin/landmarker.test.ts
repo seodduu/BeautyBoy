@@ -35,7 +35,12 @@ beforeEach(() => {
   vi.resetModules();
   mp.newDeferred();
 });
-afterEach(() => vi.useRealTimers());
+afterEach(() => {
+  vi.useRealTimers();
+  // 테스트가 바꾼 mock 구현을 되돌린다(clearAllMocks 는 구현을 지우지 않는다).
+  mp.forVisionTasks.mockResolvedValue({});
+  mp.createFromOptions.mockImplementation(() => mp.state.promise);
+});
 
 describe('createMediaPipeDetector', () => {
   it('createMediaPipeDetector는_함수다', async () => {
@@ -79,6 +84,44 @@ describe('createMediaPipeDetector', () => {
     const detector = await createMediaPipeDetector();
     expect(mp.forVisionTasks).toHaveBeenCalledTimes(2);
     expect(detector).toBeDefined();
+  });
+
+  it('느린_옛_생성이_먼저_끝나면_재시도가_그것을_받는다', async () => {
+    // 생성 한 번에 40초가 걸린다. 31초에 창이 만료돼 재시도가 새 생성을 시작해도, 40초에 끝나는 옛 생성을 받아야 한다(재검토 N1).
+    vi.useFakeTimers();
+    const t0 = Date.now();
+    mp.forVisionTasks.mockImplementation(() => new Promise((res) => setTimeout(() => res({}), 40_000)));
+    const made: ReturnType<typeof fakeLandmarker>[] = [];
+    mp.createFromOptions.mockImplementation(() => {
+      const lm = fakeLandmarker();
+      made.push(lm);
+      return Promise.resolve(lm);
+    });
+    const createMediaPipeDetector = await load();
+
+    const p1 = createMediaPipeDetector();
+    const check = expect(p1).rejects.toThrow('model-load-failed');
+    await vi.advanceTimersByTimeAsync(31_000);
+    await check;
+
+    let resolvedAt = -1;
+    const p2 = createMediaPipeDetector().then((d) => {
+      resolvedAt = Date.now() - t0;
+      return d;
+    });
+    await vi.advanceTimersByTimeAsync(9_000);   // t = 40초: 옛 생성 완료
+    const detector = await p2;
+    expect(resolvedAt).toBe(40_000);
+    expect(mp.forVisionTasks).toHaveBeenCalledTimes(2);
+    expect(made).toHaveLength(1);
+    expect(made[0].close).not.toHaveBeenCalled();
+
+    // 새 생성은 71초에 끝나고, 캐시가 이미 있으므로 기존 규칙대로 닫힌다. 캐시는 그대로다.
+    await vi.advanceTimersByTimeAsync(31_000);
+    expect(made).toHaveLength(2);
+    expect(made[1].close).toHaveBeenCalledTimes(1);
+    expect(made[0].close).not.toHaveBeenCalled();
+    expect(await createMediaPipeDetector()).toBe(detector);
   });
 
   it('버린_생성이_늦게_완성되면_캐시가_있으면_닫는다', async () => {
